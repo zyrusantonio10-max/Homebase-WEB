@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Homebase: Find student housing that actually fits your life</title>
+  <meta name="description"
+    content="Homebase matches students to housing based on budget, commute, and priorities — not just listing photos. 92% match accuracy in under 3 minutes." />
+  <meta name="keywords" content="student housing, dormitory finder, university housing, rent matching, student accommodation" />
+  <meta property="og:title" content="Homebase — Student Housing, Reimagined" />
+  <meta property="og:description" content="Find your perfect student housing match in under 3 minutes." />
+  <meta property="og:type" content="website" />
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- ======================= ANIMATED BACKGROUND ======================= -->
+  <div class="hb-bg-canvas" aria-hidden="true">
+    <div class="hb-orb hb-orb--1"></div>
+    <div class="hb-orb hb-orb--2"></div>
+    <div class="hb-orb hb-orb--3"></div>
+    <div class="hb-grid-overlay"></div>
+  </div>
+
+  <!-- ======================= NAVBAR ======================= -->
+  <nav class="navbar navbar-expand-md sticky-top hb-navbar" id="mainNavbar">
+    <div class="container">
+      <a class="navbar-brand hb-logo" href="#">Homebase</a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain"
+        aria-controls="navMain" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navMain">
+        <ul class="navbar-nav me-auto mb-2 mb-md-0">
+          <li class="nav-item"><a class="nav-link" href="#how-it-works">How it works</a></li>
+          <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
+          <li class="nav-item"><a class="nav-link" href="#testimonials">Reviews</a></li>
+          <li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
+        </ul>
+        <div class="d-flex gap-2 flex-column flex-md-row align-items-center">
+          <button class="btn btn-link hb-btn-ghost" type="button" data-bs-toggle="modal" data-bs-target="#authModal"
+            data-panel="login">Log in</button>
+          <button class="btn btn-primary rounded-pill px-3" type="button" data-bs-toggle="modal"
+            data-bs-target="#authModal" data-panel="register"><span>Get started free</span></button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ======================= MAIN APP ROOT ======================= -->
+  <main id="landingRoot">
+
+    <!-- ======================= HERO ======================= -->
+    <section class="hb-hero py-5" id="hero">
+      <div class="container">
+        <div class="row align-items-center gy-5">
+
+          <div class="col-lg-6">
+            <div class="hb-hero__badge">
+              <span class="hb-hero__badge-dot"></span>
+              Student housing, reimagined
+            </div>
+
+            <h1 class="hb-hero__headline">
+              Find a place that fits
+              <span class="hb-gradient-text">your life,</span>
+              not just your budget.
+            </h1>
+
+            <p class="lead hb-hero__desc">
+              Homebase analyzes rent, location, transportation, amenities, utilities, and student
+              preferences to surface your perfect housing match — in under 3 minutes.
+            </p>
+
+            <div class="d-flex gap-3 flex-wrap hb-hero__actions">
+              <button class="btn btn-primary btn-lg rounded-pill px-4" id="heroCta" type="button" data-bs-toggle="modal"
+                data-bs-target="#authModal" data-panel="register"><span>Get started free →</span></button>
+              <a href="#how-it-works" class="btn btn-lg rounded-pill px-4 hb-btn-outline">See how it works</a>
+            </div>
+
+            <p class="hb-hero__trust-note">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1L10.2 5.5L15 6.2L11.5 9.5L12.4 14.3L8 12L3.6 14.3L4.5 9.5L1 6.2L5.8 5.5L8 1Z" fill="#E0A83E"/></svg>
+              Trusted by 1,200+ students across 5 universities
+            </p>
+
+            <!-- Stats -->
+            <div class="hb-hero__stats">
+              <div>
+                <span class="hb-stat__number" data-count="500">0</span>
+                <span class="hb-stat__label">Listings analyzed</span>
+              </div>
+              <div>
+                <span class="hb-stat__number" data-count="92" data-suffix="%">0</span>
+                <span class="hb-stat__label">Match accuracy</span>
+              </div>
+              <div>
+                <span class="hb-stat__number" data-count="3" data-suffix=" min">0</span>
+                <span class="hb-stat__label">Avg. search time</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-6">
+            <div class="hb-hero__visual" aria-hidden="true">
+
+              <!-- Secondary card peeking behind -->
+              <div class="card hb-matchcard hb-matchcard--back">
+                <div class="card-body">
+                  <div class="d-flex flex-column">
+                    <span class="hb-matchcard__score">78%</span>
+                    <span class="hb-matchcard__label">Match</span>
+                  </div>
+                  <p class="mb-0 mt-2 text-muted small">Yorktown Residences</p>
+                </div>
+              </div>
+
+              <!-- Primary "Property Match Card" -->
+              <div class="card hb-matchcard hb-matchcard--front">
+                <div class="card-body">
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="hb-matchcard__ring">
+                      <svg viewBox="0 0 64 64" width="64" height="64">
+                        <circle cx="32" cy="32" r="27" fill="none" stroke="rgba(196,190,168,0.15)" stroke-width="6"></circle>
+                        <circle cx="32" cy="32" r="27" fill="none" stroke="#E0A83E" stroke-width="6"
+                          stroke-linecap="round" stroke-dasharray="169.6" stroke-dashoffset="15.6"
+                          transform="rotate(-90 32 32)"></circle>
+                      </svg>
+                      <span class="hb-matchcard__ring-text">92%</span>
+                    </div>
+                    <div>
+                      <div class="text-muted small">Match score</div>
+                      <div class="fw-semibold fs-5">Ariante Dormitory</div>
+                    </div>
+                  </div>
+                  <ul class="list-unstyled mt-3 pt-3 border-top mb-0">
+                    <li class="d-flex justify-content-between small mb-2"><span
+                        class="text-muted">Rent</span><strong>₱5,000/mo — within budget</strong></li>
+                    <li class="d-flex justify-content-between small mb-2"><span
+                        class="text-muted">Commute</span><strong>2 min to UNC</strong></li>
+                    <li class="d-flex justify-content-between small"><span
+                        class="text-muted">Amenities</span><strong>Wi-Fi, Electricity, CCTV</strong></li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Floating info chip -->
+              <div class="card hb-matchcard hb-matchcard--chip">
+                <div class="card-body">
+                  <div class="hb-chip-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  </div>
+                  <div>
+                    <div class="hb-chip-text">2 min walk</div>
+                    <div class="hb-chip-sub">to campus</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- NEW: Floating budget chip -->
+              <div class="card hb-matchcard hb-matchcard--chip hb-matchcard--chip-budget">
+                <div class="card-body">
+                  <div class="hb-chip-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/></svg>
+                  </div>
+                  <div>
+                    <div class="hb-chip-text">Within budget</div>
+                    <div class="hb-chip-sub">₱3k–6k range</div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= SOCIAL PROOF LOGOS ======================= -->
+    <section class="hb-logos-section" aria-label="Trusted by universities">
+      <div class="container">
+        <p class="hb-logos-label">Trusted by students from</p>
+        <div class="hb-logos-track">
+          <div class="hb-logo-item">
+            <svg class="hb-logo-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><path d="M9 21v-6h6v6"/><path d="M9 9h.01"/><path d="M15 9h.01"/></svg>
+            University of Nueva Caceres
+          </div>
+          <div class="hb-logo-item">
+            <svg class="hb-logo-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><path d="M9 21v-6h6v6"/><path d="M9 9h.01"/><path d="M15 9h.01"/></svg>
+            Ateneo de Naga University
+          </div>
+          <div class="hb-logo-item">
+            <svg class="hb-logo-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><path d="M9 21v-6h6v6"/><path d="M9 9h.01"/><path d="M15 9h.01"/></svg>
+            Universidad de Sta. Isabel
+          </div>
+          <div class="hb-logo-item">
+            <svg class="hb-logo-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><path d="M9 21v-6h6v6"/><path d="M9 9h.01"/><path d="M15 9h.01"/></svg>
+            Naga College Foundation
+          </div>
+          <div class="hb-logo-item">
+            <svg class="hb-logo-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><path d="M9 21v-6h6v6"/><path d="M9 9h.01"/><path d="M15 9h.01"/></svg>
+            CamSur Polytechnic Colleges
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= PAIN POINT / PROBLEM ======================= -->
+    <section class="py-5 hb-problem-section hb-reveal-section" id="problem">
+      <div class="container">
+        <div class="row align-items-center gy-5">
+          <div class="col-lg-5 hb-reveal">
+            <div class="hb-problem-visual">
+              <div class="hb-problem-card hb-problem-card--1">
+                <span class="hb-problem-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </span>
+                <span>"I've been scrolling for 3 hours..."</span>
+              </div>
+              <div class="hb-problem-card hb-problem-card--2">
+                <span class="hb-problem-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                </span>
+                <span>"Hidden fees I didn't expect"</span>
+              </div>
+              <div class="hb-problem-card hb-problem-card--3">
+                <span class="hb-problem-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="11" rx="2"/><path d="M6 18v2"/><path d="M18 18v2"/><path d="M3 12h18"/><circle cx="7.5" cy="15" r="0.5" fill="currentColor"/><circle cx="16.5" cy="15" r="0.5" fill="currentColor"/></svg>
+                </span>
+                <span>"45 minute commute every day"</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-7 hb-reveal">
+            <span class="hb-section-eyebrow">The Problem</span>
+            <h2 class="hb-section-title text-start">Finding student housing shouldn't feel like a full-time job.</h2>
+            <p class="hb-section-desc">
+              You're stuck comparing dozens of listings on scattered Facebook groups and outdated websites.
+              Rent ranges are vague, commute details are missing, and you can't tell what's actually
+              worth your budget until it's too late.
+            </p>
+            <p class="hb-section-desc">
+              <strong class="hb-text-gradient">Homebase fixes that.</strong> We pull every factor that matters
+              into one smart comparison — so you stop guessing and start choosing.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= HOW IT WORKS ======================= -->
+    <section class="py-5 hb-how-section hb-reveal-section" id="how-it-works">
+      <div class="container">
+        <span class="hb-section-eyebrow text-center d-block">How It Works</span>
+        <h2 class="hb-section-title">Your perfect place in 3 easy steps</h2>
+        <p class="hb-section-subtitle">No spreadsheets. No guesswork. Just answers.</p>
+
+        <div class="hb-steps-timeline">
+          <div class="hb-steps-connector" aria-hidden="true"></div>
+          <div class="row g-4">
+            <div class="col-md-4 hb-reveal">
+              <div class="hb-step-card">
+                <div class="hb-step-icon hb-step-icon--1">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                </div>
+                <p class="hb-step-number">Step 01</p>
+                <p class="hb-step-title">Tell us what matters</p>
+                <p class="hb-step-desc">Set your budget, max commute time, and the amenities you refuse to live without. Takes 60 seconds.</p>
+              </div>
+            </div>
+            <div class="col-md-4 hb-reveal">
+              <div class="hb-step-card">
+                <div class="hb-step-icon hb-step-icon--2">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                </div>
+                <p class="hb-step-number">Step 02</p>
+                <p class="hb-step-title">We score every listing</p>
+                <p class="hb-step-desc">Our algorithm weighs rent, location, utilities, and amenities against your priorities to produce a match score.</p>
+              </div>
+            </div>
+            <div class="col-md-4 hb-reveal">
+              <div class="hb-step-card">
+                <div class="hb-step-icon hb-step-icon--3">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                </div>
+                <p class="hb-step-number">Step 03</p>
+                <p class="hb-step-title">Book with confidence</p>
+                <p class="hb-step-desc">Compare your top matches side-by-side, message hosts, and secure your new home — all in one place.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= FEATURES GRID ======================= -->
+    <section class="py-5 hb-features-section hb-reveal-section" id="features">
+      <div class="container">
+        <span class="hb-section-eyebrow text-center d-block">What We Analyze</span>
+        <h2 class="hb-section-title">Every factor that makes or breaks a place</h2>
+        <p class="hb-section-subtitle">We don't just list properties — we understand what makes them right for <em>you</em>.</p>
+
+        <div class="row g-4 mt-2">
+          <div class="col-md-6 col-lg-4 hb-reveal">
+            <div class="hb-feature-card" id="feature-rent">
+              <div class="hb-feature-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--hb-accent-1)" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              </div>
+              <h3 class="hb-feature-title">Rent vs. Real Budget</h3>
+              <p class="hb-feature-desc">We compare rent against your actual budget — including hidden utilities and deposits — not just the listing price.</p>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-4 hb-reveal">
+            <div class="hb-feature-card" id="feature-commute">
+              <div class="hb-feature-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--hb-accent-2)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <h3 class="hb-feature-title">Commute Analysis</h3>
+              <p class="hb-feature-desc">Know the exact walk, jeep, or trike time to campus — calculated from real routes, not straight-line distance.</p>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-4 hb-reveal">
+            <div class="hb-feature-card" id="feature-amenities">
+              <div class="hb-feature-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--hb-accent-3)" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              </div>
+              <h3 class="hb-feature-title">Amenity Matching</h3>
+              <p class="hb-feature-desc">Wi-Fi, laundry, CCTV, curfew rules — we check what each place actually offers against your must-haves.</p>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-4 hb-reveal">
+            <div class="hb-feature-card" id="feature-utilities">
+              <div class="hb-feature-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#E0A83E" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              </div>
+              <h3 class="hb-feature-title">Utility Breakdown</h3>
+              <p class="hb-feature-desc">Electricity, water, internet — we estimate true monthly costs so you never get blindsided by bills.</p>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-4 hb-reveal">
+            <div class="hb-feature-card" id="feature-safety">
+              <div class="hb-feature-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B8C5A" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <h3 class="hb-feature-title">Safety & Environment</h3>
+              <p class="hb-feature-desc">Flood risk, neighborhood safety indicators, and security features — so you can feel at home.</p>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-4 hb-reveal">
+            <div class="hb-feature-card" id="feature-score">
+              <div class="hb-feature-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#B65C38" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              </div>
+              <h3 class="hb-feature-title">Smart Match Score</h3>
+              <p class="hb-feature-desc">One clear percentage that tells you how well a place fits your life — powered by weighted multi-criteria analysis.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= COMPARISON: OLD WAY vs HOMEBASE ======================= -->
+    <section class="py-5 hb-compare-section hb-reveal-section" id="comparison">
+      <div class="container">
+        <span class="hb-section-eyebrow text-center d-block">Why Homebase</span>
+        <h2 class="hb-section-title">Stop settling. Start choosing.</h2>
+        <p class="hb-section-subtitle">See how Homebase changes the game.</p>
+
+        <div class="row g-4 mt-2 justify-content-center">
+          <div class="col-md-5 hb-reveal">
+            <div class="hb-compare-card hb-compare-card--old">
+              <div class="hb-compare-header">
+                <span class="hb-compare-icon hb-compare-icon--old">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                </span>
+                <h3 class="hb-compare-title">The Old Way</h3>
+              </div>
+              <ul class="hb-compare-list">
+                <li><span class="hb-compare-x">✕</span> Scroll through Facebook groups for hours</li>
+                <li><span class="hb-compare-x">✕</span> No idea about real commute times</li>
+                <li><span class="hb-compare-x">✕</span> Surprise utility bills every month</li>
+                <li><span class="hb-compare-x">✕</span> Compare listings in your head or spreadsheets</li>
+                <li><span class="hb-compare-x">✕</span> Settle because you're running out of time</li>
+              </ul>
+            </div>
+          </div>
+          <div class="col-md-5 hb-reveal">
+            <div class="hb-compare-card hb-compare-card--new">
+              <div class="hb-compare-header">
+                <span class="hb-compare-icon hb-compare-icon--new">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l1.8 5.5L19 9l-5.2 1.5L12 16l-1.8-5.5L5 9l5.2-1.5L12 2z"/><path d="M19 15l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2z"/></svg>
+                </span>
+                <h3 class="hb-compare-title">The Homebase Way</h3>
+              </div>
+              <ul class="hb-compare-list">
+                <li><span class="hb-compare-check">✓</span> All listings in one smart dashboard</li>
+                <li><span class="hb-compare-check">✓</span> Real commute times to your campus</li>
+                <li><span class="hb-compare-check">✓</span> Full cost breakdown before you commit</li>
+                <li><span class="hb-compare-check">✓</span> Side-by-side comparison with match scores</li>
+                <li><span class="hb-compare-check">✓</span> Choose with confidence in under 3 minutes</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= TESTIMONIALS ======================= -->
+    <section class="py-5 hb-testimonials-section hb-reveal-section" id="testimonials">
+      <div class="container">
+        <span class="hb-section-eyebrow text-center d-block">What Students Say</span>
+        <h2 class="hb-section-title">Real students. Real results.</h2>
+        <p class="hb-section-subtitle">Here's what our users have to say about finding their place with Homebase.</p>
+
+        <div class="row g-4 mt-2">
+          <div class="col-md-4 hb-reveal">
+            <div class="hb-testimonial-card" id="testimonial-1">
+              <div class="hb-testimonial-stars">★★★★★</div>
+              <p class="hb-testimonial-quote">"I found my dorm in literally 10 minutes. The match score was spot-on — the place was exactly what I needed for my budget and schedule."</p>
+              <div class="hb-testimonial-author">
+                <div class="hb-testimonial-avatar">MC</div>
+                <div>
+                  <p class="hb-testimonial-name">Maria C.</p>
+                  <p class="hb-testimonial-role">BS IT, University of Nueva Caceres</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 hb-reveal">
+            <div class="hb-testimonial-card" id="testimonial-2">
+              <div class="hb-testimonial-stars">★★★★★</div>
+              <p class="hb-testimonial-quote">"I used to spend days comparing places on different pages. Homebase put everything side by side and showed me costs I would have missed."</p>
+              <div class="hb-testimonial-author">
+                <div class="hb-testimonial-avatar">JR</div>
+                <div>
+                  <p class="hb-testimonial-name">James R.</p>
+                  <p class="hb-testimonial-role">AB PolSci, Ateneo de Naga University</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 hb-reveal">
+            <div class="hb-testimonial-card" id="testimonial-3">
+              <div class="hb-testimonial-stars">★★★★★</div>
+              <p class="hb-testimonial-quote">"The commute analysis saved me. My first choice looked cheap but was 45 mins away. Homebase flagged that instantly and found me a better fit."</p>
+              <div class="hb-testimonial-author">
+                <div class="hb-testimonial-avatar">AS</div>
+                <div>
+                  <p class="hb-testimonial-name">Ana S.</p>
+                  <p class="hb-testimonial-role">BSN, Universidad de Sta. Isabel</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= FAQ ======================= -->
+    <section class="py-5 hb-faq-section hb-reveal-section" id="faq">
+      <div class="container">
+        <span class="hb-section-eyebrow text-center d-block">FAQ</span>
+        <h2 class="hb-section-title">Got questions? We've got answers.</h2>
+        <p class="hb-section-subtitle">Everything you need to know about Homebase.</p>
+
+        <div class="hb-faq-wrapper mx-auto mt-4">
+          <div class="accordion" id="faqAccordion">
+
+            <div class="accordion-item hb-faq-item hb-reveal">
+              <h3 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="false" aria-controls="faq1">
+                  Is Homebase free to use?
+                </button>
+              </h3>
+              <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                  Yes! Homebase is completely free for students. Create an account, set your preferences, and start finding your perfect match — no hidden charges.
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item hb-faq-item hb-reveal">
+              <h3 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2" aria-expanded="false" aria-controls="faq2">
+                  How accurate are the match scores?
+                </button>
+              </h3>
+              <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                  Our matching algorithm considers rent, commute, amenities, utilities, and your personal preferences using a weighted multi-criteria model. In testing, 92% of users said their top match was a place they'd actually choose.
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item hb-faq-item hb-reveal">
+              <h3 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3" aria-expanded="false" aria-controls="faq3">
+                  Which universities are supported?
+                </button>
+              </h3>
+              <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                  We currently serve students at University of Nueva Caceres, Ateneo de Naga University, Universidad de Sta. Isabel, Naga College Foundation, and Camarines Sur Polytechnic Colleges. We're expanding to more schools soon!
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item hb-faq-item hb-reveal">
+              <h3 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4" aria-expanded="false" aria-controls="faq4">
+                  Can landlords list their properties?
+                </button>
+              </h3>
+              <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                  Absolutely. Property owners and dormitory managers can register and add their listings for free. The more details you provide, the better we can match you with the right tenants.
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item hb-faq-item hb-reveal">
+              <h3 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5" aria-expanded="false" aria-controls="faq5">
+                  How is my data protected?
+                </button>
+              </h3>
+              <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                  We only collect the information needed to generate your match results. We never share personal data with third parties. Your preferences and search history stay private.
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= FINAL CTA ======================= -->
+    <section class="py-5 hb-cta-section hb-reveal-section" id="final-cta">
+      <div class="container">
+        <div class="hb-cta-card hb-reveal">
+          <div class="hb-cta-glow" aria-hidden="true"></div>
+          <span class="hb-section-eyebrow text-center d-block">Ready?</span>
+          <h2 class="hb-cta-headline">Your perfect place is waiting.</h2>
+          <p class="hb-cta-desc">Join 1,200+ students who found their ideal housing with Homebase. It's free, fast, and actually works.</p>
+          <div class="d-flex gap-3 justify-content-center flex-wrap">
+            <button class="btn btn-primary btn-lg rounded-pill px-5" id="finalCta" type="button" data-bs-toggle="modal"
+              data-bs-target="#authModal" data-panel="register"><span>Get started free →</span></button>
+          </div>
+          <p class="hb-cta-note">Free forever for students · No credit card required · Setup in 60 seconds</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= FOOTER ======================= -->
+    <footer class="hb-footer" id="footer">
+      <div class="container">
+        <div class="row gy-4">
+          <div class="col-md-4">
+            <a class="hb-footer-logo" href="#">Homebase</a>
+            <p class="hb-footer-desc">Helping students find housing that fits their life, not just their budget.</p>
+          </div>
+          <div class="col-6 col-md-2">
+            <h4 class="hb-footer-heading">Product</h4>
+            <ul class="hb-footer-links">
+              <li><a href="#how-it-works">How it works</a></li>
+              <li><a href="#features">Features</a></li>
+              <li><a href="#comparison">Why Homebase</a></li>
+            </ul>
+          </div>
+          <div class="col-6 col-md-2">
+            <h4 class="hb-footer-heading">Support</h4>
+            <ul class="hb-footer-links">
+              <li><a href="#faq">FAQ</a></li>
+              <li><a href="#testimonials">Reviews</a></li>
+              <li><a href="mailto:hello@homebase.ph">Contact</a></li>
+            </ul>
+          </div>
+          <div class="col-md-4">
+            <h4 class="hb-footer-heading">Stay updated</h4>
+            <p class="hb-footer-desc">Get notified when we add new universities and features.</p>
+            <form class="hb-footer-newsletter" id="newsletterForm">
+              <input type="email" placeholder="you@school.edu" aria-label="Email for newsletter" required>
+              <button type="submit"><span>→</span></button>
+            </form>
+          </div>
+        </div>
+        <div class="hb-footer-bottom">
+          <p>© 2026 Homebase. All rights reserved.</p>
+          <div class="hb-footer-bottom-links">
+            <a href="#">Privacy</a>
+            <a href="#">Terms</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+  </main>
+
+  <!-- ======================= DASHBOARD PLACEHOLDER (Phase 2 hook) ======================= -->
+  <main id="dashboardRoot" class="d-none hb-dashboard-placeholder">
+    <div class="container">
+      <div class="card hb-placeholder-card mx-auto text-center">
+        <div class="card-body p-5">
+          <p class="hb-placeholder-card__greeting mb-1" id="dashboardGreeting">Welcome back!</p>
+          <p class="text-muted mb-4">Dashboard module loading<span
+              class="hb-dots"><span>.</span><span>.</span><span>.</span></span></p>
+          <div class="placeholder-glow mb-2">
+            <span class="placeholder col-12 rounded-pill"></span>
+          </div>
+          <div class="placeholder-glow mb-4">
+            <span class="placeholder col-6 rounded-pill"></span>
+          </div>
+          <button class="btn btn-outline-secondary rounded-pill px-4" id="logoutBtn" type="button">Log out</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ======================= AUTH MODAL ======================= -->
+  <div class="modal fade" id="authModal" tabindex="-1" aria-labelledby="authTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content hb-modal-content">
+        <div class="modal-header border-0 pb-0">
+          <h2 class="modal-title fs-4" id="authTitle">Log in</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body pt-2">
+
+          <!-- LOGIN PANEL -->
+          <form id="loginForm" data-panel="login" novalidate>
+            <div class="alert alert-danger py-2 small d-none" id="loginError" role="alert"></div>
+
+            <div class="mb-3">
+              <label for="loginEmail" class="form-label fw-semibold">Email</label>
+              <input type="email" class="form-control" id="loginEmail" required autocomplete="email"
+                placeholder="you@school.edu">
+            </div>
+            <div class="mb-4">
+              <label for="loginPassword" class="form-label fw-semibold">Password</label>
+              <input type="password" class="form-control" id="loginPassword" required autocomplete="current-password"
+                placeholder="••••••••">
+            </div>
+
+            <button class="btn btn-primary w-100 rounded-pill" type="submit"><span>Log in</span></button>
+
+            <p class="text-center text-muted small mt-3 mb-0">
+              New to Homebase? <button type="button" class="btn btn-link p-0 align-baseline"
+                data-switch-to="register">Create an account</button>
+            </p>
+          </form>
+
+          <!-- REGISTER PANEL -->
+          <form id="registerForm" data-panel="register" class="d-none" novalidate>
+            <div class="alert alert-danger py-2 small d-none" id="registerError" role="alert"></div>
+
+            <div class="mb-3">
+              <label for="registerName" class="form-label fw-semibold">Full name</label>
+              <input type="text" class="form-control" id="registerName" required autocomplete="name"
+                placeholder="Juana Dela Cruz">
+            </div>
+            <div class="mb-3">
+              <label for="registerEmail" class="form-label fw-semibold">Email</label>
+              <input type="email" class="form-control" id="registerEmail" required autocomplete="email"
+                placeholder="you@school.edu">
+            </div>
+            <div class="mb-3">
+              <label for="registerPassword" class="form-label fw-semibold">Password</label>
+              <input type="password" class="form-control" id="registerPassword" required autocomplete="new-password"
+                minlength="6" placeholder="At least 6 characters">
+            </div>
+            <div class="mb-4">
+              <label for="registerUniversity" class="form-label fw-semibold">University</label>
+              <select class="form-select" id="registerUniversity" required>
+                <option value="" disabled selected>Select your university</option>
+                <option>University of Nueva Caceres</option>
+                <option>Ateneo de Naga University</option>
+                <option>Universidad de Sta. Isabel</option>
+                <option>Naga College Foundation</option>
+                <option>Camarines Sur Polytechnic Colleges</option>
+                <option>Other</option>
+              </select>
+            </div>
+
+            <button class="btn btn-primary w-100 rounded-pill" type="submit"><span>Create account</span></button>
+
+            <p class="text-center text-muted small mt-3 mb-0">
+              Already have an account? <button type="button" class="btn btn-link p-0 align-baseline"
+                data-switch-to="login">Log in</button>
+            </p>
+          </form>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS + App scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="auth.js"></script>
+  <script src="app.js"></script>
+
+  <!-- Scroll reveal animation + Counter animation -->
+  <script>
+    // Scroll reveal
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('hb-visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll('.hb-reveal').forEach(el => observer.observe(el));
+
+    // Animated stat counters
+    const counterObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const el = entry.target;
+          const target = parseInt(el.dataset.count, 10);
+          const suffix = el.dataset.suffix || '+';
+          const duration = 1600;
+          const start = performance.now();
+
+          function animate(now) {
+            const elapsed = now - start;
+            const progress = Math.min(elapsed / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 4); // ease-out quart
+            const current = Math.round(eased * target);
+            el.textContent = current + (progress >= 1 ? suffix : '');
+            if (progress < 1) requestAnimationFrame(animate);
+          }
+          requestAnimationFrame(animate);
+          counterObserver.unobserve(el);
+        }
+      });
+    }, { threshold: 0.5 });
+
+    document.querySelectorAll('[data-count]').forEach(el => counterObserver.observe(el));
+
+    // Navbar scroll effect
+    let lastScroll = 0;
+    window.addEventListener('scroll', () => {
+      const navbar = document.getElementById('mainNavbar');
+      if (!navbar) return;
+      const currentScroll = window.pageYOffset;
+      if (currentScroll > 60) {
+        navbar.classList.add('hb-navbar--scrolled');
+      } else {
+        navbar.classList.remove('hb-navbar--scrolled');
+      }
+      lastScroll = currentScroll;
+    }, { passive: true });
+
+    // Newsletter form
+    const nlForm = document.getElementById('newsletterForm');
+    if (nlForm) {
+      nlForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const input = nlForm.querySelector('input');
+        const btn = nlForm.querySelector('button');
+        btn.innerHTML = '<span>✓</span>';
+        btn.style.background = '#5B8C5A';
+        input.value = '';
+        input.placeholder = 'Subscribed!';
+        setTimeout(() => {
+          btn.innerHTML = '<span>→</span>';
+          btn.style.background = '';
+          input.placeholder = 'you@school.edu';
+        }, 3000);
+      });
+    }
+  </script>
+
+</body>
+
+</html>
