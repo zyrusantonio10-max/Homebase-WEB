@@ -56,24 +56,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
   authModalEl.addEventListener("hidden.bs.modal", clearErrors);
 
-  // ---- Landing <-> Dashboard placeholder swap --------------------------------
-  function showDashboard(user) {
-    landingRoot.classList.add("d-none");
-    navbar.classList.add("d-none");
-    dashboardRoot.classList.remove("d-none");
-    dashboardGreeting.textContent = `Welcome back, ${user.name}! Dashboard module loading...`;
+  // ---- Session and Navbar update --------------------------------------------
+  function updateNavForUser(user) {
+    const navLoginBtn = document.getElementById("navLoginBtn");
+    const navCta = document.getElementById("navCta");
+    if (!navLoginBtn) return;
+
+    if (user) {
+      navLoginBtn.innerHTML = `👤 <strong>${user.name}</strong> (${user.role === 'manager' ? 'Manager' : user.university || 'Student'})`;
+      navLoginBtn.setAttribute("data-bs-toggle", "");
+      navLoginBtn.onclick = () => {
+        window.location.href = "dashboard.html";
+      };
+      if (navCta) {
+        navCta.innerHTML = `<span>Go to Dashboard →</span>`;
+      }
+    } else {
+      navLoginBtn.textContent = "Log in / Demo";
+      navLoginBtn.setAttribute("data-bs-toggle", "modal");
+      navLoginBtn.onclick = null;
+      if (navCta) {
+        navCta.innerHTML = `<span>Find My Perfect Room →</span>`;
+      }
+    }
   }
 
-  function showLanding() {
-    dashboardRoot.classList.add("d-none");
-    landingRoot.classList.remove("d-none");
-    navbar.classList.remove("d-none");
-  }
-
-  // If someone reloads the page while "logged in", keep them on the dashboard
-  // placeholder instead of dropping them back on the landing page.
   const existingUser = HomebaseAuth.getCurrentUser();
-  if (existingUser) showDashboard(existingUser);
+  updateNavForUser(existingUser);
 
   // ---- Form submissions -------------------------------------------------------
   loginForm.addEventListener("submit", (e) => {
@@ -90,7 +99,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     authModal.hide();
     loginForm.reset();
-    showDashboard(result.user);
+    updateNavForUser(result.user);
+    window.location.href = "dashboard.html";
   });
 
   registerForm.addEventListener("submit", (e) => {
@@ -111,12 +121,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     authModal.hide();
     registerForm.reset();
-    showDashboard(result.user);
+    updateNavForUser(result.user);
+    window.location.href = "dashboard.html";
   });
 
   // ---- Logout ------------------------------------------------------------------
-  logoutBtn.addEventListener("click", () => {
-    HomebaseAuth.logoutUser();
-    showLanding();
-  });
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      HomebaseAuth.logoutUser();
+      updateNavForUser(null);
+    });
+  }
 });

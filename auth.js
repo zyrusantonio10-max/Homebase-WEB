@@ -7,15 +7,37 @@ const HomebaseAuth = (() => {
   function getUsers() {
     try {
       const raw = localStorage.getItem(USERS_KEY);
-      return raw ? JSON.parse(raw) : [];
-    } catch (err) {
+      if (raw) return JSON.parse(raw);
       
+      // Default demo accounts per project requirements
+      const defaultUsers = [
+        {
+          name: "Alex Santos",
+          email: "alex@unc.edu.ph",
+          password: "password123",
+          university: "UNC",
+          course: "BS Computer Science",
+          role: "student",
+          budget: 6000,
+          createdAt: new Date().toISOString()
+        },
+        {
+          name: "Ariate Dorm Manager",
+          email: "manager@ariatedorm.com",
+          password: "manager123",
+          university: "UNC",
+          role: "manager",
+          createdAt: new Date().toISOString()
+        }
+      ];
+      localStorage.setItem(USERS_KEY, JSON.stringify(defaultUsers));
+      return defaultUsers;
+    } catch (err) {
       console.error("Homebase: could not read users from storage", err);
       return [];
     }
   }
 
-  
   function saveUsers(users) {
     localStorage.setItem(USERS_KEY, JSON.stringify(users));
   }

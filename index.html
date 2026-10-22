@@ -4,27 +4,33 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Homebase: Find student housing that actually fits your life</title>
+  <title>Homebase — Student Housing Decision-Support & Recommendation System</title>
   <meta name="description"
-    content="Homebase matches students to housing based on budget, commute, and priorities — not just listing photos. 92% match accuracy in under 3 minutes." />
-  <meta name="keywords" content="student housing, dormitory finder, university housing, rent matching, student accommodation" />
-  <meta property="og:title" content="Homebase: Student Housing, Reimagined" />
-  <meta property="og:description" content="Find your perfect student housing match in under 3 minutes." />
+    content="Homebase analyzes rent, utilities, room type, amenities, and your preferences to help you find the room in Ariate Dormitory that best fits your lifestyle." />
+  <meta name="keywords"
+    content="Ariate Dormitory, Homebase, student housing recommendation system, true monthly cost, decision support system Naga City, UNC dorm rooms" />
+  <meta property="og:title" content="Homebase — Find a room that fits your life, not just your budget" />
+  <meta property="og:description"
+    content="Personalized multi-criteria room recommendation and paperless management system for Ariate Dormitory." />
   <meta property="og:type" content="website" />
 
+  <!-- Bootstrap 5.3.3 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Google Fonts: Space Grotesk (display/headlines) & Inter (body) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
     rel="stylesheet">
 
+  <!-- Core SaaS Light Stylesheet -->
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-  <!-- ======================= ANIMATED BACKGROUND ======================= -->
+  <!-- ======================= ANIMATED AMBIENT CANVAS ======================= -->
   <div class="hb-bg-canvas" aria-hidden="true">
     <div class="hb-orb hb-orb--1"></div>
     <div class="hb-orb hb-orb--2"></div>
@@ -32,10 +38,12 @@
     <div class="hb-grid-overlay"></div>
   </div>
 
-  <!-- ======================= JUST THE NAVIGATION BAR ======================= -->
-  <nav class="navbar navbar-expand-md sticky-top hb-navbar" id="mainNavbar">
+  <!-- ======================= NAVIGATION BAR ======================= -->
+  <nav class="navbar navbar-expand-lg sticky-top hb-navbar" id="mainNavbar">
     <div class="container">
-      <a class="navbar-brand hb-logo" href="#">Homebase</a>
+      <a class="navbar-brand hb-logo" href="index.html">
+        <span>Homebase</span>
+      </a>
 
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain"
         aria-controls="navMain" aria-expanded="false" aria-label="Toggle navigation">
@@ -43,17 +51,24 @@
       </button>
 
       <div class="collapse navbar-collapse" id="navMain">
-        <ul class="navbar-nav me-auto mb-2 mb-md-0">
-          <li class="nav-item"><a class="nav-link" href="#how-it-works">How it works</a></li>
-          <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+          <li class="nav-item"><a class="nav-link" href="#the-problem">The Problem</a></li>
+          <li class="nav-item"><a class="nav-link" href="#how-it-works">How It Works</a></li>
+          <li class="nav-item"><a class="nav-link" href="#simulator">Decision Engine</a></li>
+          <li class="nav-item"><a class="nav-link" href="#true-cost">True Monthly Cost</a></li>
+          <li class="nav-item"><a class="nav-link" href="#floor-map">Floor Plan</a></li>
           <li class="nav-item"><a class="nav-link" href="#testimonials">Reviews</a></li>
           <li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
         </ul>
-        <div class="d-flex gap-2 flex-column flex-md-row align-items-center">
-          <button class="btn btn-link hb-btn-ghost" type="button" data-bs-toggle="modal" data-bs-target="#authModal"
-            data-panel="login">Log in</button>
-          <button class="btn btn-primary rounded-pill px-3" type="button" data-bs-toggle="modal"
-            data-bs-target="#authModal" data-panel="register"><span>Get started free</span></button>
+
+        <div class="d-flex gap-2 flex-column flex-lg-row align-items-lg-center">
+          <button class="btn hb-btn-ghost px-3" type="button" data-bs-toggle="modal" data-bs-target="#authModal"
+            data-panel="login" id="navLoginBtn">
+            Log in / Demo
+          </button>
+          <a href="dashboard.html" class="btn btn-primary px-4 py-2" id="navCta">
+            <span>Find My Perfect Room →</span>
+          </a>
         </div>
       </div>
     </div>
@@ -62,120 +77,205 @@
   <!-- ======================= MAIN APP ROOT ======================= -->
   <main id="landingRoot">
 
-    <!-- ======================= HERO ======================= -->
-    <section class="hb-hero py-5" id="hero">
+    <!-- ======================= HERO SECTION ======================= -->
+    <section class="hb-hero" id="hero">
       <div class="container">
         <div class="row align-items-center gy-5">
 
+          <!-- Left Column: Copy & Actions -->
           <div class="col-lg-6">
             <div class="hb-hero__badge">
               <span class="hb-hero__badge-dot"></span>
-              Student housing, reimagined
+              Ariate Dormitory · Naga City · Student Decision-Support System
             </div>
 
             <h1 class="hb-hero__headline">
-              Find a place that fits
+              Find a room that fits
               <span class="hb-gradient-text">your life,</span>
               not just your budget.
             </h1>
 
             <p class="lead hb-hero__desc">
-              Homebase analyzes rent, your budget, location, transportation, amenities, utilities, and student
-              preferences to surface your perfect housing match — in under 3 minutes.
+              Homebase analyzes rent, utilities, room type, amenities, and your preferences to help you
+              find the room in <strong>Ariate Dormitory</strong> that best fits your lifestyle.
             </p>
 
             <div class="d-flex gap-3 flex-wrap hb-hero__actions">
-              <a href="dashboard.html" class="btn btn-primary btn-lg rounded-pill px-4" id="heroCta"><span>Get started free →</span></a>
-              <a href="#how-it-works" class="btn btn-lg rounded-pill px-4 hb-btn-outline">See how it works</a>
+              <a href="dashboard.html" class="btn btn-primary btn-lg px-4" id="heroCtaPrimary">
+                <span>Find My Perfect Room</span>
+              </a>
+              <a href="#rooms-showcase" class="btn hb-btn-outline btn-lg px-4" id="heroCtaSecondary">
+                Explore Rooms
+              </a>
             </div>
 
-            <p class="hb-hero__trust-note">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1L10.2 5.5L15 6.2L11.5 9.5L12.4 14.3L8 12L3.6 14.3L4.5 9.5L1 6.2L5.8 5.5L8 1Z" fill="#E0A83E"/></svg>
-              Trusted by 1,200+ students across 5 universities
-            </p>
+            <div class="hb-hero__trust-note">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                <path d="M10 2l2.4 5.2 5.6.8-4 4 1 5.6-5-2.8-5 2.8 1-5.6-4-4 5.6-.8L10 2z" fill="#0d9488"/>
+              </svg>
+              <span>Designed specifically for students near <strong>UNC</strong>, <strong>Ateneo de Naga</strong>, and <strong>USI</strong></span>
+            </div>
 
             <!-- Stats -->
             <div class="hb-hero__stats">
               <div>
-                <span class="hb-stat__number" data-count="500">0</span>
-                <span class="hb-stat__label">Listings analyzed</span>
+                <span class="hb-stat__number" data-count="12">0</span>
+                <span class="hb-stat__label">Ariate Dorm Rooms</span>
               </div>
               <div>
-                <span class="hb-stat__number" data-count="92" data-suffix="%">0</span>
-                <span class="hb-stat__label">Match accuracy</span>
+                <span class="hb-stat__number" data-count="3" data-suffix=" floors">0</span>
+                <span class="hb-stat__label">Building Floors</span>
               </div>
               <div>
-                <span class="hb-stat__number" data-count="3" data-suffix=" min">0</span>
-                <span class="hb-stat__label">Avg. search time</span>
+                <span class="hb-stat__number" data-count="100" data-suffix="%">0</span>
+                <span class="hb-stat__label">Cost Transparency</span>
               </div>
             </div>
           </div>
 
+          <!-- Right Column: Interactive Room Recommendation Card Preview -->
           <div class="col-lg-6">
-            <div class="hb-hero__visual" aria-hidden="true">
+            <div class="hb-hero__visual">
 
-              <!-- Secondary card peeking behind -->
-              <div class="card hb-matchcard hb-matchcard--back">
-                <div class="card-body">
-                  <div class="d-flex flex-column">
-                    <span class="hb-matchcard__score">78%</span>
-                    <span class="hb-matchcard__label">Match</span>
+              <!-- Secondary background card peeking behind -->
+              <div class="card hb-matchcard hb-matchcard--back" aria-hidden="true">
+                <div class="card-body p-3">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-1">Room 102 · Duo</span>
+                    <span class="fw-bold text-muted">82% Match</span>
                   </div>
-                  <p class="mb-0 mt-2 text-muted small">Yorktown Residences</p>
+                  <div class="small text-muted mb-1">Fan Cooled · Ground Floor</div>
+                  <div class="fw-bold text-dark">₱3,200/mo <span class="small text-muted fw-normal">+ utils</span></div>
                 </div>
               </div>
 
-              <!-- Primary "Property Match Card" -->
-              <div class="card hb-matchcard hb-matchcard--front">
-                <div class="card-body">
-                  <div class="d-flex align-items-center gap-3">
-                    <div class="hb-matchcard__ring">
-                      <svg viewBox="0 0 64 64" width="64" height="64">
-                        <circle cx="32" cy="32" r="27" fill="none" stroke="rgba(196,190,168,0.15)" stroke-width="6"></circle>
-                        <circle cx="32" cy="32" r="27" fill="none" stroke="#E0A83E" stroke-width="6"
-                          stroke-linecap="round" stroke-dasharray="169.6" stroke-dashoffset="15.6"
-                          transform="rotate(-90 32 32)"></circle>
-                      </svg>
-                      <span class="hb-matchcard__ring-text">92%</span>
+              <!-- Primary Hero Recommendation Card (Room 204 from PDF spec) -->
+              <div class="card hb-matchcard hb-matchcard--front" id="heroPreviewCard">
+                <div class="card-body p-4">
+                  
+                  <!-- Match Header -->
+                  <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="d-flex align-items-center gap-3">
+                      <div class="hb-matchcard__ring">
+                        <svg viewBox="0 0 64 64" width="68" height="68">
+                          <circle cx="32" cy="32" r="27" fill="none" stroke="#e2e8f0" stroke-width="5.5"></circle>
+                          <circle cx="32" cy="32" r="27" fill="none" stroke="#0d9488" stroke-width="5.5"
+                            stroke-linecap="round" stroke-dasharray="169.6" stroke-dashoffset="13.6"
+                            transform="rotate(-90 32 32)"></circle>
+                        </svg>
+                        <span class="hb-matchcard__ring-text">92%</span>
+                      </div>
+                      <div>
+                        <div class="hb-badge-tag hb-badge-tag--teal mb-1">Top Recommendation</div>
+                        <h3 class="h5 mb-0 fw-bold text-dark">Room 204</h3>
+                        <div class="text-muted small">2-bed · 2nd Floor · Ariate Dormitory</div>
+                      </div>
                     </div>
-                    <div>
-                      <div class="text-muted small">Match score</div>
-                      <div class="fw-semibold fs-5">Ariante Dormitory</div>
+                    <div class="text-end">
+                      <div class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-2 py-1 small fw-semibold">
+                        ★ 4.6 / 5
+                      </div>
+                      <div class="text-muted small mt-1">1 bed left</div>
                     </div>
                   </div>
-                  <ul class="list-unstyled mt-3 pt-3 border-top mb-0">
-                    <li class="d-flex justify-content-between small mb-2"><span
-                        class="text-muted">Rent</span><strong>₱5,000/mo — within budget</strong></li>
-                    <li class="d-flex justify-content-between small mb-2"><span
-                        class="text-muted">Commute</span><strong>2 min to UNC</strong></li>
-                    <li class="d-flex justify-content-between small"><span
-                        class="text-muted">Amenities</span><strong>Wi-Fi, Electricity, CCTV</strong></li>
-                  </ul>
+
+                  <!-- Price & True Monthly Cost Breakdown -->
+                  <div class="p-3 rounded-3 mb-3" style="background: var(--hb-bg-elevated); border: 1px solid var(--hb-border);">
+                    <div class="d-flex justify-content-between align-items-baseline mb-1">
+                      <span class="text-muted small">Listed Base Rent</span>
+                      <span class="fw-bold fs-6 text-dark">₱5,500<span class="small fw-normal text-muted">/month</span></span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-baseline">
+                      <span class="fw-semibold small text-success">
+                        <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" class="me-1"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                        True Monthly Cost
+                      </span>
+                      <span class="fw-bold fs-5 text-success">₱5,500<span class="small fw-normal text-muted">/mo</span></span>
+                    </div>
+                    <div class="text-muted" style="font-size: 0.72rem; margin-top: 2px;">
+                      ✓ Electricity, Water & High-speed Wi-Fi included (₱0 extra)
+                    </div>
+                  </div>
+
+                  <!-- Amenity Badges -->
+                  <div class="d-flex flex-wrap gap-1 mb-3">
+                    <span class="hb-badge-tag hb-badge-tag--teal">✓ Wi-Fi</span>
+                    <span class="hb-badge-tag hb-badge-tag--teal">✓ Aircon</span>
+                    <span class="hb-badge-tag hb-badge-tag--teal">✓ Own Bathroom</span>
+                    <span class="hb-badge-tag hb-badge-tag--teal">✓ Furnished</span>
+                  </div>
+
+                  <!-- "Why Room 204?" Feature Breakdown (Spec Section 6 & 9) -->
+                  <div class="hb-why-box mb-3">
+                    <div class="hb-why-title">
+                      <span>Why this room?</span>
+                      <span class="badge bg-white text-muted border ms-auto" style="font-size: 0.7rem;">Personalized Fit</span>
+                    </div>
+                    <ul class="hb-why-list">
+                      <li><span class="hb-check-icon">✓</span> Within your ₱6,000 budget</li>
+                      <li><span class="hb-check-icon">✓</span> Wi-Fi included (no add-on fee)</li>
+                      <li><span class="hb-check-icon">✓</span> Aircon and private bathroom</li>
+                      <li><span class="hb-check-icon">✓</span> Matches your quiet-study preference</li>
+                      <li><span class="hb-warn-icon">⚠</span> 2nd floor, stair access only</li>
+                    </ul>
+
+                    <!-- Match Breakdown horizontal progress bars (Spec Section 6) -->
+                    <div class="mt-3 pt-2 border-top">
+                      <div class="d-flex justify-content-between text-muted" style="font-size: 0.72rem; margin-bottom: 4px;">
+                        <span>Suitability Criteria Breakdown</span>
+                        <span class="fw-bold text-dark">Overall: 92%</span>
+                      </div>
+                      <div class="hb-bar-container">
+                        <span class="hb-bar-label">Affordability</span>
+                        <div class="hb-bar-track"><div class="hb-bar-fill" style="width: 94%;"></div></div>
+                        <span class="hb-bar-val">94</span>
+                      </div>
+                      <div class="hb-bar-container">
+                        <span class="hb-bar-label">Room fit</span>
+                        <div class="hb-bar-track"><div class="hb-bar-fill" style="width: 91%;"></div></div>
+                        <span class="hb-bar-val">91</span>
+                      </div>
+                      <div class="hb-bar-container">
+                        <span class="hb-bar-label">Amenities</span>
+                        <div class="hb-bar-track"><div class="hb-bar-fill" style="width: 82%;"></div></div>
+                        <span class="hb-bar-val">82</span>
+                      </div>
+                      <div class="hb-bar-container">
+                        <span class="hb-bar-label">Quietness</span>
+                        <div class="hb-bar-track"><div class="hb-bar-fill" style="width: 88%;"></div></div>
+                        <span class="hb-bar-val">88</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <a href="dashboard.html" class="btn btn-outline-secondary w-100 rounded-pill py-2 text-dark fw-semibold" style="font-size: 0.88rem;">
+                    View Details & Inquire →
+                  </a>
                 </div>
               </div>
 
-              <!-- Floating info chip -->
-              <div class="card hb-matchcard hb-matchcard--chip">
+              <!-- Floating Info Chip: Single community scope -->
+              <div class="card hb-matchcard hb-matchcard--chip" aria-hidden="true">
                 <div class="card-body">
                   <div class="hb-chip-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                   </div>
                   <div>
-                    <div class="hb-chip-text">2 min walk</div>
-                    <div class="hb-chip-sub">to campus</div>
+                    <div class="hb-chip-text">Ariate Dormitory</div>
+                    <div class="hb-chip-sub">12 verified rooms · 3 floors</div>
                   </div>
                 </div>
               </div>
 
-              <!-- NEW: Floating budget chip -->
-              <div class="card hb-matchcard hb-matchcard--chip hb-matchcard--chip-budget">
+              <!-- Floating Budget Chip -->
+              <div class="card hb-matchcard hb-matchcard--chip hb-matchcard--chip-budget" aria-hidden="true">
                 <div class="card-body">
                   <div class="hb-chip-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/></svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/></svg>
                   </div>
                   <div>
-                    <div class="hb-chip-text">Within budget</div>
-                    <div class="hb-chip-sub">₱3k–6k range</div>
+                    <div class="hb-chip-text">True Cost Engine</div>
+                    <div class="hb-chip-sub">Rent + Utilities Itemized</div>
                   </div>
                 </div>
               </div>
@@ -187,73 +287,289 @@
       </div>
     </section>
 
-    <!-- ======================= SOCIAL PROOF LOGOS ======================= -->
-    <section class="hb-logos-section" aria-label="Trusted by universities">
+    <!-- ======================= DORMITORY COMMUNITY STRIP ======================= -->
+    <section class="hb-logos-section" aria-label="Ariate Dormitory community facts">
       <div class="container">
-        <p class="hb-logos-label">Trusted by students from</p>
+        <p class="hb-logos-label">Serving the Student Community at Ariate Dormitory · Naga City</p>
         <div class="hb-logos-track">
           <div class="hb-logo-item">
-            <svg class="hb-logo-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><path d="M9 21v-6h6v6"/><path d="M9 9h.01"/><path d="M15 9h.01"/></svg>
-            University of Nueva Caceres
+            <svg class="hb-logo-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Single & Solo Rooms
           </div>
           <div class="hb-logo-item">
-            <svg class="hb-logo-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><path d="M9 21v-6h6v6"/><path d="M9 9h.01"/><path d="M15 9h.01"/></svg>
-            Ateneo de Naga University
+            <svg class="hb-logo-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Duo 2-Bed Rooms
           </div>
           <div class="hb-logo-item">
-            <svg class="hb-logo-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><path d="M9 21v-6h6v6"/><path d="M9 9h.01"/><path d="M15 9h.01"/></svg>
-            Universidad de Sta. Isabel
+            <svg class="hb-logo-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+            4-Person Bedspaces
           </div>
           <div class="hb-logo-item">
-            <svg class="hb-logo-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><path d="M9 21v-6h6v6"/><path d="M9 9h.01"/><path d="M15 9h.01"/></svg>
-            Naga College Foundation
+            <svg class="hb-logo-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            Aircon & Fan-Cooled Options
           </div>
           <div class="hb-logo-item">
-            <svg class="hb-logo-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><path d="M9 21v-6h6v6"/><path d="M9 9h.01"/><path d="M15 9h.01"/></svg>
-            CamSur Polytechnic Colleges
+            <svg class="hb-logo-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            CCTV & Verified House Rules
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ======================= PAIN POINT / PROBLEM ======================= -->
-    <section class="py-5 hb-problem-section hb-reveal-section" id="problem">
+    <!-- ======================= THE PROBLEM: CHEAP ISN'T CHEAP ======================= -->
+    <section class="py-5 hb-problem-section hb-reveal-section" id="the-problem">
       <div class="container">
         <div class="row align-items-center gy-5">
+          
           <div class="col-lg-5 hb-reveal">
             <div class="hb-problem-visual">
               <div class="hb-problem-card hb-problem-card--1">
                 <span class="hb-problem-icon">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
                 </span>
-                <span>"I've been scrolling for 3 hours..."</span>
+                <div>
+                  <div class="fw-bold text-dark">"I picked it because rent was ₱4,500..."</div>
+                  <div class="small text-muted">"...but electricity, water, and Wi-Fi pushed it past ₱6,000."</div>
+                </div>
               </div>
               <div class="hb-problem-card hb-problem-card--2">
                 <span class="hb-problem-icon">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                 </span>
-                <span>"Hidden fees I didn't expect"</span>
+                <div>
+                  <div class="fw-bold text-dark">Hidden utility shocks every month</div>
+                  <div class="small text-muted">Separate fan plugs, water submeters, and slow mobile data.</div>
+                </div>
               </div>
               <div class="hb-problem-card hb-problem-card--3">
                 <span class="hb-problem-icon">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="11" rx="2"/><path d="M6 18v2"/><path d="M18 18v2"/><path d="M3 12h18"/><circle cx="7.5" cy="15" r="0.5" fill="currentColor"/><circle cx="16.5" cy="15" r="0.5" fill="currentColor"/></svg>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                 </span>
-                <span>"45 minute commute every day"</span>
+                <div>
+                  <div class="fw-bold text-dark">Paper records slow down the manager</div>
+                  <div class="small text-muted">Availability and reservations written on paper logbooks get lost.</div>
+                </div>
               </div>
             </div>
           </div>
+
           <div class="col-lg-7 hb-reveal">
             <span class="hb-section-eyebrow">The Problem</span>
-            <h2 class="hb-section-title text-start">Finding student housing shouldn't feel like a full-time job.</h2>
+            <h2 class="hb-section-title text-start">The cheapest room isn't necessarily the best option.</h2>
             <p class="hb-section-desc">
-              You're stuck comparing dozens of listings on scattered Facebook groups and outdated websites.
-              Rent ranges are vague, commute details are missing, and you can't tell what's actually
-              worth your budget until it's too late.
+              Students who rent a room in a dormitory often choose based on one thing: <em>"It's cheap."</em>
+              Inside the same dormitory, a <strong>₱4,500 room</strong> could mean ₱900 electricity, ₱250 water, and ₱400 for Wi-Fi —
+              bringing your true bill to <strong>₱6,050/month</strong> for a shared room with no study area.
             </p>
             <p class="hb-section-desc">
-              <strong class="hb-text-gradient">Homebase fixes that.</strong> We pull every factor that matters
-              into one smart comparison — so you stop guessing and start choosing.
+              Meanwhile, a <strong>₱5,500 room</strong> with utilities and Wi-Fi included, aircon, and a private bathroom is actually 
+              <span class="text-success fw-bold">₱550 cheaper per month overall</span>.
             </p>
+
+            <div class="p-3 rounded-3 mt-3" style="background: var(--hb-bg-elevated); border-left: 4px solid var(--hb-accent-1);">
+              <div class="fw-bold text-dark mb-1">Homebase asks two essential questions:</div>
+              <ul class="mb-0 ps-3 small text-secondary">
+                <li><strong>Which room in Ariate Dormitory is actually best for THIS particular student?</strong></li>
+                <li><strong>How can the dormitory manager keep rooms, rates, and tenants up to date without paper records?</strong></li>
+              </ul>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= TRUE MONTHLY COST COMPARISON ======================= -->
+    <section class="py-5 hb-compare-section hb-reveal-section" id="true-cost">
+      <div class="container">
+        <span class="hb-section-eyebrow text-center d-block">Cost Transparency</span>
+        <h2 class="hb-section-title">The "True Monthly Cost" Breakthrough</h2>
+        <p class="hb-section-subtitle">
+          Instead of looking only at the listed rent, Homebase calculates your true out-of-pocket housing expense before you move in.
+        </p>
+
+        <div class="row g-4 justify-content-center">
+          
+          <!-- Room A Card -->
+          <div class="col-md-5 hb-reveal">
+            <div class="hb-compare-card hb-compare-card--old">
+              <div class="hb-compare-header">
+                <span class="hb-compare-icon hb-compare-icon--old">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                </span>
+                <div>
+                  <h3 class="hb-compare-title">Room A: "Looks Cheap"</h3>
+                  <div class="small text-danger fw-semibold">Listed Rent: ₱4,500/month</div>
+                </div>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table table-sm small mb-3">
+                  <tbody>
+                    <tr><td>Base Rent</td><td class="text-end fw-semibold">₱4,500</td></tr>
+                    <tr><td>Electricity (fan + outlets)</td><td class="text-end text-danger fw-semibold">+ ₱900</td></tr>
+                    <tr><td>Water bill</td><td class="text-end text-danger fw-semibold">+ ₱250</td></tr>
+                    <tr><td>Wi-Fi share</td><td class="text-end text-danger fw-semibold">+ ₱400</td></tr>
+                    <tr class="table-danger fw-bold"><td>Estimated True Monthly Cost</td><td class="text-end fs-6">₱6,050</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <ul class="hb-compare-list">
+                <li><span class="hb-compare-x">✕</span> 4-bed shared room with shared bathroom</li>
+                <li><span class="hb-compare-x">✕</span> No dedicated study area</li>
+                <li><span class="hb-compare-x">✕</span> Surprise utility spikes every billing cycle</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Room B Card -->
+          <div class="col-md-5 hb-reveal">
+            <div class="hb-compare-card hb-compare-card--new">
+              <span class="hb-compare-badge">Better Real Value</span>
+              <div class="hb-compare-header">
+                <span class="hb-compare-icon hb-compare-icon--new">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l1.8 5.5L19 9l-5.2 1.5L12 16l-1.8-5.5L5 9l5.2-1.5L12 2z"/></svg>
+                </span>
+                <div>
+                  <h3 class="hb-compare-title">Room B: "All-Inclusive"</h3>
+                  <div class="small text-success fw-semibold">Listed Rent: ₱5,500/month</div>
+                </div>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table table-sm small mb-3">
+                  <tbody>
+                    <tr><td>Base Rent</td><td class="text-end fw-semibold">₱5,500</td></tr>
+                    <tr><td>Electricity</td><td class="text-end text-success fw-semibold">₱0 (included)</td></tr>
+                    <tr><td>Water bill</td><td class="text-end text-success fw-semibold">₱0 (included)</td></tr>
+                    <tr><td>High-speed Wi-Fi</td><td class="text-end text-success fw-semibold">₱0 (included)</td></tr>
+                    <tr class="table-success fw-bold"><td>Estimated True Monthly Cost</td><td class="text-end fs-6">₱5,500</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <ul class="hb-compare-list">
+                <li><span class="hb-compare-check">✓</span> 2-bed room with private bathroom & aircon</li>
+                <li><span class="hb-compare-check">✓</span> Study area nearby for quiet coursework</li>
+                <li><span class="hb-compare-check">✓</span> <strong>Zero hidden charges</strong> — predictable student budgeting</li>
+              </ul>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Callout Banner -->
+        <div class="hb-compare-callout mx-auto" style="max-width: 860px;">
+          <span class="hb-compare-callout-icon">💡</span>
+          <div>
+            <strong>Room B costs ₱550 less per month overall!</strong>
+            <span class="fw-normal text-secondary d-block small">Suddenly the "more expensive" listed room is actually significantly cheaper when all recurring living costs are included.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= LIVE INTERACTIVE PREFERENCE SIMULATOR ======================= -->
+    <section class="py-5 hb-reveal-section" id="simulator" style="background: #ffffff; border-top: 1px solid var(--hb-border); border-bottom: 1px solid var(--hb-border);">
+      <div class="container">
+        <span class="hb-section-eyebrow text-center d-block">Suitability Algorithm</span>
+        <h2 class="hb-section-title">See How Rankings Shift Based on What Matters to YOU</h2>
+        <p class="hb-section-subtitle">
+          There isn't one universally "best" room. Watch our multi-criteria scoring algorithm recalculate room rankings live as you shift your priorities.
+        </p>
+
+        <div class="card p-4 p-lg-5 mx-auto shadow-sm" style="max-width: 900px; border-radius: var(--hb-radius-lg); border: 1px solid var(--hb-border);">
+          <div class="row g-4 align-items-center">
+            
+            <div class="col-md-6 border-end-md">
+              <h4 class="h6 fw-bold text-uppercase text-muted mb-3" style="letter-spacing: 0.1em;">Choose Student Persona / Priorities</h4>
+              
+              <div class="btn-group w-100 mb-4" role="group" aria-label="Student Persona Selector">
+                <button type="button" class="btn btn-outline-primary active py-2" id="btnPersonaAffordability">
+                  Budget Focus
+                </button>
+                <button type="button" class="btn btn-outline-primary py-2" id="btnPersonaComfort">
+                  Comfort & Privacy
+                </button>
+              </div>
+
+              <div class="mb-3">
+                <div class="d-flex justify-content-between small mb-1">
+                  <span class="fw-semibold">Affordability Weight</span>
+                  <span id="labelAffordability" class="fw-bold text-teal">45%</span>
+                </div>
+                <input type="range" class="form-range" id="sliderAffordability" min="10" max="60" value="45">
+              </div>
+
+              <div class="mb-3">
+                <div class="d-flex justify-content-between small mb-1">
+                  <span class="fw-semibold">Room Fit & Privacy Weight</span>
+                  <span id="labelRoomFit" class="fw-bold text-teal">15%</span>
+                </div>
+                <input type="range" class="form-range" id="sliderRoomFit" min="10" max="60" value="15">
+              </div>
+
+              <p class="small text-muted mb-0">
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" class="me-1"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                Weights automatically scale to 100% across Affordability, Room Fit, Amenities, Quietness, Internet, Reviews, and Safety.
+              </p>
+            </div>
+
+            <!-- Dynamic Recalculated Output Column -->
+            <div class="col-md-6 ps-md-4">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="h6 fw-bold text-uppercase text-muted mb-0" style="letter-spacing: 0.1em;">Live Dynamic Match Results</h4>
+                <span class="badge bg-success-subtle text-success small rounded-pill px-2 py-1">Recalculated Live</span>
+              </div>
+
+              <div class="d-flex flex-column gap-3" id="simResultsContainer">
+                
+                <!-- Rank 1 Result Item -->
+                <div class="p-3 rounded-3 border d-flex align-items-center justify-content-between" id="simRank1Card" style="background: var(--hb-bg-elevated);">
+                  <div>
+                    <span class="badge bg-primary text-white rounded-pill px-2 py-1 small me-2" id="simRank1Badge">#1 Match</span>
+                    <strong class="text-dark" id="simRank1Name">Room A (4-bed bedspace)</strong>
+                    <div class="text-muted small" id="simRank1Meta">₱4,500/mo · True Cost: ₱6,050</div>
+                  </div>
+                  <div class="text-end">
+                    <span class="fs-4 fw-bold text-teal" id="simRank1Score">89%</span>
+                  </div>
+                </div>
+
+                <!-- Rank 2 Result Item -->
+                <div class="p-3 rounded-3 border d-flex align-items-center justify-content-between" id="simRank2Card" style="background: #ffffff;">
+                  <div>
+                    <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-1 small me-2" id="simRank2Badge">#2 Match</span>
+                    <strong class="text-dark" id="simRank2Name">Room B (2-bed, aircon)</strong>
+                    <div class="text-muted small" id="simRank2Meta">₱5,500/mo · True Cost: ₱5,500</div>
+                  </div>
+                  <div class="text-end">
+                    <span class="fs-4 fw-bold text-secondary" id="simRank2Score">82%</span>
+                  </div>
+                </div>
+
+                <!-- Rank 3 Result Item -->
+                <div class="p-3 rounded-3 border d-flex align-items-center justify-content-between" id="simRank3Card" style="background: #ffffff;">
+                  <div>
+                    <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-1 small me-2" id="simRank3Badge">#3 Match</span>
+                    <strong class="text-dark" id="simRank3Name">Room C (6-bed shared)</strong>
+                    <div class="text-muted small" id="simRank3Meta">₱4,000/mo · True Cost: ₱5,400</div>
+                  </div>
+                  <div class="text-end">
+                    <span class="fs-4 fw-bold text-muted" id="simRank3Score">78%</span>
+                  </div>
+                </div>
+
+              </div>
+
+              <div class="mt-3 text-center">
+                <a href="dashboard.html" class="btn btn-outline-teal btn-sm rounded-pill px-3 fw-semibold">
+                  Open Full Decision Dashboard with 12 Rooms →
+                </a>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -262,282 +578,414 @@
     <!-- ======================= HOW IT WORKS ======================= -->
     <section class="py-5 hb-how-section hb-reveal-section" id="how-it-works">
       <div class="container">
-        <span class="hb-section-eyebrow text-center d-block">How It Works</span>
-        <h2 class="hb-section-title">Your perfect place in 3 easy steps</h2>
-        <p class="hb-section-subtitle">No spreadsheets. No guesswork. Just answers.</p>
+        <span class="hb-section-eyebrow text-center d-block">Decision Support Workflow</span>
+        <h2 class="hb-section-title">Personalized Guidance in 3 Clear Steps</h2>
+        <p class="hb-section-subtitle">
+          More than a static listing directory — Homebase evaluates every room in Ariate Dormitory against your unique criteria.
+        </p>
 
         <div class="hb-steps-timeline">
           <div class="hb-steps-connector" aria-hidden="true"></div>
           <div class="row g-4">
+            
             <div class="col-md-4 hb-reveal">
               <div class="hb-step-card">
                 <div class="hb-step-icon hb-step-icon--1">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
                 </div>
-                <p class="hb-step-number">Step 01</p>
-                <p class="hb-step-title">Tell us what matters</p>
-                <p class="hb-step-desc">Set your budget, max commute time, and the amenities you refuse to live without. Takes 60 seconds.</p>
+                <div class="hb-step-number">Step 01</div>
+                <h3 class="hb-step-title">1. Set Your Preferences</h3>
+                <p class="hb-step-desc">
+                  Specify your monthly budget (₱4,000–₱7,000), room type (solo, duo, shared), bathroom needs, cooling (aircon vs fan), and roommate threshold.
+                </p>
               </div>
             </div>
+
             <div class="col-md-4 hb-reveal">
               <div class="hb-step-card">
                 <div class="hb-step-icon hb-step-icon--2">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                 </div>
-                <p class="hb-step-number">Step 02</p>
-                <p class="hb-step-title">We score every listing</p>
-                <p class="hb-step-desc">Our algorithm weighs rent, location, utilities, and amenities against your priorities to produce a match score.</p>
+                <div class="hb-step-number">Step 02</div>
+                <h3 class="hb-step-title">2. Weighted Criteria Scoring</h3>
+                <p class="hb-step-desc">
+                  Adjust your priority weights (Affordability 30%, Room Fit 20%, Amenities 15%, Quietness 10%, Internet 10%, Reviews 10%, Safety 5%). The algorithm computes a 0–100% suitability score for every available room.
+                </p>
               </div>
             </div>
+
             <div class="col-md-4 hb-reveal">
               <div class="hb-step-card">
                 <div class="hb-step-icon hb-step-icon--3">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                 </div>
-                <p class="hb-step-number">Step 03</p>
-                <p class="hb-step-title">Book with confidence</p>
-                <p class="hb-step-desc">Compare your top matches side-by-side, message hosts, and secure your new home — all in one place.</p>
+                <div class="hb-step-number">Step 03</div>
+                <h3 class="hb-step-title">3. True Cost & Transparency</h3>
+                <p class="hb-step-desc">
+                  Review transparent itemized bills (rent + electricity + water + internet), expandable "Why This Room?" explanations, and reserve directly with the Ariate Dormitory manager.
+                </p>
               </div>
             </div>
+
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ======================= FEATURES GRID ======================= -->
+    <!-- ======================= 6 CORE SYSTEM PILLARS ======================= -->
     <section class="py-5 hb-features-section hb-reveal-section" id="features">
       <div class="container">
-        <span class="hb-section-eyebrow text-center d-block">What We Analyze</span>
-        <h2 class="hb-section-title">Every factor that makes or breaks a place</h2>
-        <p class="hb-section-subtitle">We don't just list properties — we understand what makes them right for <em>you</em>.</p>
+        <span class="hb-section-eyebrow text-center d-block">Core Capabilities</span>
+        <h2 class="hb-section-title">Built for Students & Dormitory Management</h2>
+        <p class="hb-section-subtitle">
+          An end-to-end platform bridging student decision-support with paperless dormitory operations.
+        </p>
 
-        <div class="row g-4 mt-2">
+        <div class="row g-4 mt-1">
+          
           <div class="col-md-6 col-lg-4 hb-reveal">
-            <div class="hb-feature-card" id="feature-rent">
+            <div class="hb-feature-card">
               <div class="hb-feature-icon">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--hb-accent-1)" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
               </div>
-              <h3 class="hb-feature-title">Rent vs. Real Budget</h3>
-              <p class="hb-feature-desc">We compare rent against your actual budget — including hidden utilities and deposits — not just the listing price.</p>
+              <h3 class="hb-feature-title">True Monthly Cost</h3>
+              <p class="hb-feature-desc">Calculates rent + electricity + water + Wi-Fi. Utilities already covered in rent are counted as ₱0 so students never face unexpected billing surprises.</p>
             </div>
           </div>
+
           <div class="col-md-6 col-lg-4 hb-reveal">
-            <div class="hb-feature-card" id="feature-commute">
+            <div class="hb-feature-card">
               <div class="hb-feature-icon">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--hb-accent-2)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
               </div>
-              <h3 class="hb-feature-title">Commute Analysis</h3>
-              <p class="hb-feature-desc">Know the exact walk, jeep, or trike time to campus — calculated from real routes, not straight-line distance.</p>
+              <h3 class="hb-feature-title">Multi-Criteria Algorithm</h3>
+              <p class="hb-feature-desc">Scores every room from 0 to 100% using 7 weighted criteria. Rooms outside hard limits (e.g. over-budget or 0 beds available) are flagged rather than silently hidden.</p>
             </div>
           </div>
+
           <div class="col-md-6 col-lg-4 hb-reveal">
-            <div class="hb-feature-card" id="feature-amenities">
+            <div class="hb-feature-card">
               <div class="hb-feature-icon">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--hb-accent-3)" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
               </div>
-              <h3 class="hb-feature-title">Amenity Matching</h3>
-              <p class="hb-feature-desc">Wi-Fi, laundry, CCTV, curfew rules — we check what each place actually offers against your must-haves.</p>
+              <h3 class="hb-feature-title">"Why This Room?" Explanations</h3>
+              <p class="hb-feature-desc">Provides human-readable justification for every match (e.g. "Within your ₱6,000 budget, Wi-Fi included, matches quiet study preference, 2nd floor").</p>
             </div>
           </div>
+
           <div class="col-md-6 col-lg-4 hb-reveal">
-            <div class="hb-feature-card" id="feature-utilities">
+            <div class="hb-feature-card">
               <div class="hb-feature-icon">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#E0A83E" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/></svg>
               </div>
-              <h3 class="hb-feature-title">Utility Breakdown</h3>
-              <p class="hb-feature-desc">Electricity, water, internet — we estimate true monthly costs so you never get blindsided by bills.</p>
+              <h3 class="hb-feature-title">Interactive Floor Map</h3>
+              <p class="hb-feature-desc">Visual layout of Ariate Dormitory across 3 floors. Green indicators for available beds, slate for occupied rooms, with instant popup details upon clicking.</p>
             </div>
           </div>
+
           <div class="col-md-6 col-lg-4 hb-reveal">
-            <div class="hb-feature-card" id="feature-safety">
+            <div class="hb-feature-card">
               <div class="hb-feature-icon">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B8C5A" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
               </div>
-              <h3 class="hb-feature-title">Safety & Environment</h3>
-              <p class="hb-feature-desc">Flood risk, neighborhood safety indicators, and security features — so you can feel at home.</p>
+              <h3 class="hb-feature-title">Compare Up to 3 Rooms</h3>
+              <p class="hb-feature-desc">Side-by-side comparison matrix showing Match Score, Base Rent, True Cost, Roommates, CR type, Cooling, and Rating, highlighting the winning value in each category.</p>
             </div>
           </div>
+
           <div class="col-md-6 col-lg-4 hb-reveal">
-            <div class="hb-feature-card" id="feature-score">
+            <div class="hb-feature-card">
               <div class="hb-feature-icon">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#B65C38" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
               </div>
-              <h3 class="hb-feature-title">Smart Match Score</h3>
-              <p class="hb-feature-desc">One clear percentage that tells you how well a place fits your life — powered by weighted multi-criteria analysis.</p>
+              <h3 class="hb-feature-title">Manager CRUD Portal</h3>
+              <p class="hb-feature-desc">Replaces fragile paper records. Managers can add, edit, or disable rooms, manage tenant reservations, track occupancy, and moderate reviews in real time.</p>
             </div>
           </div>
+
         </div>
       </div>
     </section>
 
-    <!-- ======================= COMPARISON: OLD WAY vs HOMEBASE ======================= -->
-    <section class="py-5 hb-compare-section hb-reveal-section" id="comparison">
+    <!-- ======================= INTERACTIVE FLOOR PLAN TEASER ======================= -->
+    <section class="py-5 hb-reveal-section" id="floor-map" style="background: #ffffff; border-top: 1px solid var(--hb-border); border-bottom: 1px solid var(--hb-border);">
       <div class="container">
-        <span class="hb-section-eyebrow text-center d-block">Why Homebase</span>
-        <h2 class="hb-section-title">Stop settling. Start choosing.</h2>
-        <p class="hb-section-subtitle">See how Homebase changes the game.</p>
+        <span class="hb-section-eyebrow text-center d-block">Building Floor View</span>
+        <h2 class="hb-section-title">Ariate Dormitory Floor Status at a Glance</h2>
+        <p class="hb-section-subtitle">
+          Interactive occupancy map showing which rooms currently have available beds for student move-in.
+        </p>
 
-        <div class="row g-4 mt-2 justify-content-center">
-          <div class="col-md-5 hb-reveal">
-            <div class="hb-compare-card hb-compare-card--old">
-              <div class="hb-compare-header">
-                <span class="hb-compare-icon hb-compare-icon--old">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                </span>
-                <h3 class="hb-compare-title">The Old Way</h3>
+        <div class="card p-4 mx-auto shadow-sm" style="max-width: 960px; border-radius: var(--hb-radius-lg); border: 1px solid var(--hb-border);">
+          
+          <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-3">
+              <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill small">
+                ● Green = Available Beds
+              </span>
+              <span class="badge bg-secondary-subtle text-secondary border px-3 py-2 rounded-pill small">
+                ● Gray = Fully Occupied
+              </span>
+            </div>
+            <div class="small text-muted">Click any room to preview suitability and cost</div>
+          </div>
+
+          <!-- Floor 3 -->
+          <div class="mb-4">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <span class="badge bg-dark text-white rounded-pill px-2 py-1 small">3rd Floor</span>
+              <span class="small text-muted">Quiet Upper Floor · Study Friendly</span>
+            </div>
+            <div class="row g-2">
+              <div class="col-4 col-md-3">
+                <div class="p-3 border rounded text-center" style="background: var(--hb-teal-light); border-color: var(--hb-teal-border) !important; cursor: pointer;">
+                  <strong class="d-block text-dark">Room 301</strong>
+                  <span class="badge bg-success small">1 of 1 bed</span>
+                  <div class="small text-muted mt-1">₱5,000/mo</div>
+                </div>
               </div>
-              <ul class="hb-compare-list">
-                <li><span class="hb-compare-x">✕</span> Scroll through Facebook groups for hours</li>
-                <li><span class="hb-compare-x">✕</span> No idea about real commute times</li>
-                <li><span class="hb-compare-x">✕</span> Surprise utility bills every month</li>
-                <li><span class="hb-compare-x">✕</span> Compare listings in your head or spreadsheets</li>
-                <li><span class="hb-compare-x">✕</span> Settle because you're running out of time</li>
-              </ul>
+              <div class="col-4 col-md-3">
+                <div class="p-3 border rounded text-center" style="background: #f1f5f9; cursor: not-allowed; opacity: 0.7;">
+                  <strong class="d-block text-muted">Room 302</strong>
+                  <span class="badge bg-secondary small">Occupied</span>
+                  <div class="small text-muted mt-1">2 of 2 beds</div>
+                </div>
+              </div>
+              <div class="col-4 col-md-3">
+                <div class="p-3 border rounded text-center" style="background: var(--hb-teal-light); border-color: var(--hb-teal-border) !important; cursor: pointer;">
+                  <strong class="d-block text-dark">Room 303</strong>
+                  <span class="badge bg-success small">2 of 4 beds</span>
+                  <div class="small text-muted mt-1">₱2,200/mo</div>
+                </div>
+              </div>
+              <div class="col-4 col-md-3">
+                <div class="p-3 border rounded text-center" style="background: var(--hb-teal-light); border-color: var(--hb-teal-border) !important; cursor: pointer;">
+                  <strong class="d-block text-dark">Room 304</strong>
+                  <span class="badge bg-success small">1 of 2 beds</span>
+                  <div class="small text-muted mt-1">₱3,600/mo</div>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="col-md-5 hb-reveal">
-            <div class="hb-compare-card hb-compare-card--new">
-              <div class="hb-compare-header">
-                <span class="hb-compare-icon hb-compare-icon--new">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l1.8 5.5L19 9l-5.2 1.5L12 16l-1.8-5.5L5 9l5.2-1.5L12 2z"/><path d="M19 15l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2z"/></svg>
-                </span>
-                <h3 class="hb-compare-title">The Homebase Way</h3>
+
+          <!-- Floor 2 -->
+          <div class="mb-4">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <span class="badge bg-dark text-white rounded-pill px-2 py-1 small">2nd Floor</span>
+              <span class="small text-muted">Optimal Balance of Quiet & Convenience</span>
+            </div>
+            <div class="row g-2">
+              <div class="col-4 col-md-3">
+                <div class="p-3 border rounded text-center" style="background: var(--hb-teal-light); border-color: var(--hb-teal-border) !important; cursor: pointer;">
+                  <strong class="d-block text-dark">Room 201</strong>
+                  <span class="badge bg-success small">1 of 1 bed</span>
+                  <div class="small text-muted mt-1">₱5,000/mo</div>
+                </div>
               </div>
-              <ul class="hb-compare-list">
-                <li><span class="hb-compare-check">✓</span> All listings in one smart dashboard</li>
-                <li><span class="hb-compare-check">✓</span> Real commute times to your campus</li>
-                <li><span class="hb-compare-check">✓</span> Full cost breakdown before you commit</li>
-                <li><span class="hb-compare-check">✓</span> Side-by-side comparison with match scores</li>
-                <li><span class="hb-compare-check">✓</span> Choose with confidence in under 3 minutes</li>
-              </ul>
+              <div class="col-4 col-md-3">
+                <div class="p-3 border rounded text-center" style="background: #f1f5f9; cursor: not-allowed; opacity: 0.7;">
+                  <strong class="d-block text-muted">Room 202</strong>
+                  <span class="badge bg-secondary small">Occupied</span>
+                  <div class="small text-muted mt-1">2 of 2 beds</div>
+                </div>
+              </div>
+              <div class="col-4 col-md-3">
+                <div class="p-3 border rounded text-center" style="background: var(--hb-teal-light); border-color: var(--hb-teal-border) !important; cursor: pointer;">
+                  <strong class="d-block text-dark">Room 203</strong>
+                  <span class="badge bg-success small">1 of 4 beds</span>
+                  <div class="small text-muted mt-1">₱2,000/mo</div>
+                </div>
+              </div>
+              <div class="col-4 col-md-3">
+                <div class="p-3 border rounded text-center" style="background: var(--hb-teal-light); border-color: #0d9488 !important; border-width: 2px !important; cursor: pointer; box-shadow: 0 4px 12px rgba(13,148,136,0.18);">
+                  <strong class="d-block text-teal">Room 204 ⭐</strong>
+                  <span class="badge bg-teal small">92% Match</span>
+                  <div class="small text-teal fw-semibold mt-1">₱5,500/mo</div>
+                </div>
+              </div>
             </div>
           </div>
+
+          <!-- Floor 1 -->
+          <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <span class="badge bg-dark text-white rounded-pill px-2 py-1 small">1st Floor (Ground)</span>
+              <span class="small text-muted">Easy Access Near Main Entrance & Gate</span>
+            </div>
+            <div class="row g-2">
+              <div class="col-4 col-md-3">
+                <div class="p-3 border rounded text-center" style="background: var(--hb-teal-light); border-color: var(--hb-teal-border) !important; cursor: pointer;">
+                  <strong class="d-block text-dark">Room 101</strong>
+                  <span class="badge bg-success small">1 of 1 bed</span>
+                  <div class="small text-muted mt-1">₱4,500/mo</div>
+                </div>
+              </div>
+              <div class="col-4 col-md-3">
+                <div class="p-3 border rounded text-center" style="background: var(--hb-teal-light); border-color: var(--hb-teal-border) !important; cursor: pointer;">
+                  <strong class="d-block text-dark">Room 102</strong>
+                  <span class="badge bg-success small">1 of 2 beds</span>
+                  <div class="small text-muted mt-1">₱3,200/mo</div>
+                </div>
+              </div>
+              <div class="col-4 col-md-3">
+                <div class="p-3 border rounded text-center" style="background: #f1f5f9; cursor: not-allowed; opacity: 0.7;">
+                  <strong class="d-block text-muted">Room 103</strong>
+                  <span class="badge bg-secondary small">Occupied</span>
+                  <div class="small text-muted mt-1">4 of 4 beds</div>
+                </div>
+              </div>
+              <div class="col-4 col-md-3">
+                <div class="p-3 border rounded text-center" style="background: var(--hb-teal-light); border-color: var(--hb-teal-border) !important; cursor: pointer;">
+                  <strong class="d-block text-dark">Room 104</strong>
+                  <span class="badge bg-success small">2 of 2 beds</span>
+                  <div class="small text-muted mt-1">₱3,400/mo</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </section>
 
-    <!-- ======================= TESTIMONIALS ======================= -->
+    <!-- ======================= REVIEWS & TESTIMONIALS ======================= -->
     <section class="py-5 hb-testimonials-section hb-reveal-section" id="testimonials">
       <div class="container">
-        <span class="hb-section-eyebrow text-center d-block">What Students Say</span>
-        <h2 class="hb-section-title">Real students. Real results.</h2>
-        <p class="hb-section-subtitle">Here's what our users have to say about finding their place with Homebase.</p>
+        <span class="hb-section-eyebrow text-center d-block">Verified Student Feedback</span>
+        <h2 class="hb-section-title">What Students at Ariate Dormitory Say</h2>
+        <p class="hb-section-subtitle">
+          Real reviews evaluated by Safety (4.6), Cleanliness (4.7), Internet (4.5), and Noise (4.8).
+        </p>
 
-        <div class="row g-4 mt-2">
+        <div class="row g-4 mt-1">
+          
           <div class="col-md-4 hb-reveal">
-            <div class="hb-testimonial-card" id="testimonial-1">
+            <div class="hb-testimonial-card">
               <div class="hb-testimonial-stars">★★★★★</div>
-              <p class="hb-testimonial-quote">"I found my dorm in literally 10 minutes. The match score was spot-on — the place was exactly what I needed for my budget and schedule."</p>
-              <div class="hb-testimonial-author">
-                <div class="hb-testimonial-avatar">MC</div>
-                <div>
-                  <p class="hb-testimonial-name">Maria C.</p>
-                  <p class="hb-testimonial-role">BS IT, University of Nueva Caceres</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-4 hb-reveal">
-            <div class="hb-testimonial-card" id="testimonial-2">
-              <div class="hb-testimonial-stars">★★★★★</div>
-              <p class="hb-testimonial-quote">"I used to spend days comparing places on different pages. Homebase put everything side by side and showed me costs I would have missed."</p>
-              <div class="hb-testimonial-author">
-                <div class="hb-testimonial-avatar">JR</div>
-                <div>
-                  <p class="hb-testimonial-name">James R.</p>
-                  <p class="hb-testimonial-role">AB PolSci, Ateneo de Naga University</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-4 hb-reveal">
-            <div class="hb-testimonial-card" id="testimonial-3">
-              <div class="hb-testimonial-stars">★★★★★</div>
-              <p class="hb-testimonial-quote">"The commute analysis saved me. My first choice looked cheap but was 45 mins away. Homebase flagged that instantly and found me a better fit."</p>
+              <p class="hb-testimonial-quote">
+                "I almost signed for Room 101 thinking ₱4,500 was cheap. Homebase calculated the true cost at ₱6,050 and recommended Room 204 at 92% match. Electricity and Wi-Fi are included, so I actually save ₱550 every single month!"
+              </p>
               <div class="hb-testimonial-author">
                 <div class="hb-testimonial-avatar">AS</div>
                 <div>
-                  <p class="hb-testimonial-name">Ana S.</p>
-                  <p class="hb-testimonial-role">BSN, Universidad de Sta. Isabel</p>
+                  <h4 class="hb-testimonial-name">Alex Santos</h4>
+                  <p class="hb-testimonial-role">BS Computer Science · UNC Naga</p>
                 </div>
               </div>
             </div>
           </div>
+
+          <div class="col-md-4 hb-reveal">
+            <div class="hb-testimonial-card">
+              <div class="hb-testimonial-stars">★★★★★</div>
+              <p class="hb-testimonial-quote">
+                "As an IT student, high-speed Wi-Fi and quiet study hours were my #1 priority. Shifting the priority slider gave me an accurate suitability ranking with full amenity disclosure. Zero hidden fees when moving in."
+              </p>
+              <div class="hb-testimonial-author">
+                <div class="hb-testimonial-avatar">MC</div>
+                <div>
+                  <h4 class="hb-testimonial-name">Maria Cruz</h4>
+                  <p class="hb-testimonial-role">BS Information Technology · Ateneo de Naga</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4 hb-reveal">
+            <div class="hb-testimonial-card">
+              <div class="hb-testimonial-stars">★★★★★</div>
+              <p class="hb-testimonial-quote">
+                "Nursing shifts require early curfews and quiet rest. The 'Why this room?' checklist explicitly outlined curfew hours, floor access, and bathroom arrangements so my family felt 100% confident."
+              </p>
+              <div class="hb-testimonial-author">
+                <div class="hb-testimonial-avatar">JR</div>
+                <div>
+                  <h4 class="hb-testimonial-name">Jose Reyes</h4>
+                  <p class="hb-testimonial-role">BS Nursing · Universidad de Sta. Isabel</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </section>
 
-    <!-- ======================= FAQ ======================= -->
+    <!-- ======================= FAQ SECTION ======================= -->
     <section class="py-5 hb-faq-section hb-reveal-section" id="faq">
       <div class="container">
-        <span class="hb-section-eyebrow text-center d-block">FAQ</span>
-        <h2 class="hb-section-title">Got questions? We've got answers.</h2>
-        <p class="hb-section-subtitle">Everything you need to know about Homebase.</p>
+        <span class="hb-section-eyebrow text-center d-block">Common Questions</span>
+        <h2 class="hb-section-title">Frequently Asked Questions</h2>
+        <p class="hb-section-subtitle">
+          Everything you need to know about Homebase's decision-support system and Ariate Dormitory.
+        </p>
 
         <div class="hb-faq-wrapper mx-auto mt-4">
           <div class="accordion" id="faqAccordion">
 
             <div class="accordion-item hb-faq-item hb-reveal">
               <h3 class="accordion-header">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="false" aria-controls="faq1">
-                  Is Homebase free to use?
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                  How does Homebase calculate the "True Monthly Cost"?
                 </button>
               </h3>
-              <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
                 <div class="accordion-body">
-                  Yes! Homebase is completely free for students. Create an account, set your preferences, and start finding your perfect match — no hidden charges.
+                  Ordinary rental websites only display the base rent. Homebase calculates 
+                  <code>True Monthly Cost = Base Rent + Electricity + Water + Internet + Recurring Fees</code>.
+                  If a room at Ariate Dormitory includes utilities in the base rent, those add-on values count as ₱0. This ensures students can accurately evaluate real monthly expenditures.
                 </div>
               </div>
             </div>
 
             <div class="accordion-item hb-faq-item hb-reveal">
               <h3 class="accordion-header">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2" aria-expanded="false" aria-controls="faq2">
-                  How accurate are the match scores?
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                  How does the Personalized Suitability Algorithm work?
                 </button>
               </h3>
               <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                 <div class="accordion-body">
-                  Our matching algorithm considers rent, commute, amenities, utilities, and your personal preferences using a weighted multi-criteria model. In testing, 92% of users said their top match was a place they'd actually choose.
+                  Suitability is calculated dynamically across 7 customizable criteria: Affordability, Room Fit, Amenities, Quiet Environment, Internet Quality, Reviews, and Safety. Your priorities automatically scale to 100%, and each room receives a normalized 0–100% score tailored to your personal requirements.
                 </div>
               </div>
             </div>
 
             <div class="accordion-item hb-faq-item hb-reveal">
               <h3 class="accordion-header">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3" aria-expanded="false" aria-controls="faq3">
-                  Which universities are supported?
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                  Why is Homebase focused on Ariate Dormitory?
                 </button>
               </h3>
               <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                 <div class="accordion-body">
-                  We currently serve students at University of Nueva Caceres, Ateneo de Naga University, Universidad de Sta. Isabel, Naga College Foundation, and Camarines Sur Polytechnic Colleges. We're expanding to more schools soon!
+                  Homebase solves the decision problem for a specific community (Ariate Dormitory in Naga City), comparing rooms within the building rather than multiple competing facilities. All data is structured with clean identifiers so another dormitory can adopt the system simply by loading its own room data without code modifications.
                 </div>
               </div>
             </div>
 
             <div class="accordion-item hb-faq-item hb-reveal">
               <h3 class="accordion-header">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4" aria-expanded="false" aria-controls="faq4">
-                  Can landlords list their properties?
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                  How does the Dormitory Manager CRUD Portal replace paper records?
                 </button>
               </h3>
               <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                 <div class="accordion-body">
-                  Absolutely. Property owners and dormitory managers can register and add their listings for free. The more details you provide, the better we can match you with the right tenants.
+                  The manager logs in to add, edit, or disable rooms, set monthly rates, configure house rules, review tenant reservations (Approve, Move In, Move Out, Cancel), and moderate student reviews. Any change updates the frontend immediately.
                 </div>
               </div>
             </div>
 
             <div class="accordion-item hb-faq-item hb-reveal">
               <h3 class="accordion-header">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5" aria-expanded="false" aria-controls="faq5">
-                  How is my data protected?
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                  How do I test the prototype with the demo student or manager account?
                 </button>
               </h3>
               <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                 <div class="accordion-body">
-                  We only collect the information needed to generate your match results. We never share personal data with third parties. Your preferences and search history stay private.
+                  Click the <strong>Log in / Demo</strong> button in the navbar or modal. You will find instant one-click login buttons for <em>Alex Santos (UNC Computer Science Student)</em> and <em>Ariate Dormitory Manager (Admin CRUD Portal)</em>.
                 </div>
               </div>
             </div>
@@ -552,14 +1000,20 @@
       <div class="container">
         <div class="hb-cta-card hb-reveal">
           <div class="hb-cta-glow" aria-hidden="true"></div>
-          <span class="hb-section-eyebrow text-center d-block">Ready?</span>
-          <h2 class="hb-cta-headline">Your perfect place is waiting.</h2>
-          <p class="hb-cta-desc">Join 1,200+ students who found their ideal housing with Homebase. It's free, fast, and actually works.</p>
+          <span class="hb-section-eyebrow text-center d-block">Start Your Decision Journey</span>
+          <h2 class="hb-cta-headline">Find a room that fits your life, not just your budget.</h2>
+          <p class="hb-cta-desc">
+            Calculate your personalized suitability score across all 12 rooms at Ariate Dormitory, itemize your true living expenses, and secure your room without guesswork.
+          </p>
           <div class="d-flex gap-3 justify-content-center flex-wrap">
-            <button class="btn btn-primary btn-lg rounded-pill px-5" id="finalCta" type="button" data-bs-toggle="modal"
-              data-bs-target="#authModal" data-panel="register"><span>Get started free →</span></button>
+            <a href="dashboard.html" class="btn btn-primary btn-lg px-5 py-3 shadow" id="finalCta">
+              <span>Find My Perfect Room →</span>
+            </a>
+            <button class="btn hb-btn-outline btn-lg px-4 py-3" data-bs-toggle="modal" data-bs-target="#authModal" data-panel="login">
+              Manager Portal
+            </button>
           </div>
-          <p class="hb-cta-note">Free forever for students · No credit card required · Setup in 60 seconds</p>
+          <p class="hb-cta-note">Ariate Dormitory · Zone 6, Diversion Road, Naga City · Dedicated to UNC, AdNU & USI Students</p>
         </div>
       </div>
     </section>
@@ -568,40 +1022,51 @@
     <footer class="hb-footer" id="footer">
       <div class="container">
         <div class="row gy-4">
+          
           <div class="col-md-4">
-            <a class="hb-footer-logo" href="#">Homebase</a>
-            <p class="hb-footer-desc">Helping students find housing that fits their life, not just their budget.</p>
+            <a class="hb-footer-logo" href="#">
+              <span>Homebase</span>
+            </a>
+            <p class="hb-footer-desc">
+              Student Housing Decision-Support and Recommendation System for Ariate Dormitory.
+              Calculating True Monthly Costs & Multi-Criteria Suitability.
+            </p>
           </div>
+
           <div class="col-6 col-md-2">
-            <h4 class="hb-footer-heading">Product</h4>
+            <h4 class="hb-footer-heading">Features</h4>
             <ul class="hb-footer-links">
-              <li><a href="#how-it-works">How it works</a></li>
-              <li><a href="#features">Features</a></li>
-              <li><a href="#comparison">Why Homebase</a></li>
+              <li><a href="#how-it-works">How It Works</a></li>
+              <li><a href="#the-problem">The Problem</a></li>
+              <li><a href="#true-cost">True Monthly Cost</a></li>
+              <li><a href="#simulator">Suitability Engine</a></li>
             </ul>
           </div>
+
           <div class="col-6 col-md-2">
-            <h4 class="hb-footer-heading">Support</h4>
+            <h4 class="hb-footer-heading">Dormitory</h4>
             <ul class="hb-footer-links">
+              <li><a href="#floor-map">Floor Plan</a></li>
+              <li><a href="#testimonials">Student Reviews</a></li>
               <li><a href="#faq">FAQ</a></li>
-              <li><a href="#testimonials">Reviews</a></li>
-              <li><a href="mailto:hello@homebase.ph">Contact</a></li>
+              <li><a href="dashboard.html">Student Dashboard</a></li>
             </ul>
           </div>
+
           <div class="col-md-4">
-            <h4 class="hb-footer-heading">Stay updated</h4>
-            <p class="hb-footer-desc">Get notified when we add new universities and features.</p>
-            <form class="hb-footer-newsletter" id="newsletterForm">
-              <input type="email" placeholder="you@school.edu" aria-label="Email for newsletter" required>
-              <button type="submit"><span>→</span></button>
-            </form>
+            <h4 class="hb-footer-heading">Ariate Dormitory Naga</h4>
+            <p class="hb-footer-desc mb-1">📍 Zone 6, Diversion Road, Naga City, Camarines Sur</p>
+            <p class="hb-footer-desc mb-1">📞 0917-123-4567</p>
+            <p class="hb-footer-desc">✉️ manager@ariatedorm.com</p>
           </div>
+
         </div>
+
         <div class="hb-footer-bottom">
-          <p>© 2026 Homebase. All rights reserved.</p>
+          <p>© 2026 Homebase. Academic Decision-Support System Prototype for Ariate Dormitory.</p>
           <div class="hb-footer-bottom-links">
-            <a href="#">Privacy</a>
-            <a href="#">Terms</a>
+            <a href="dashboard.html">Open Dashboard</a>
+            <a href="#" data-bs-toggle="modal" data-bs-target="#authModal" data-panel="login">Manager Login</a>
           </div>
         </div>
       </div>
@@ -609,22 +1074,121 @@
 
   </main>
 
-  <!-- ======================= DASHBOARD PLACEHOLDER (Phase 2 hook) ======================= -->
-<!-- Dashboard integrated -->
-<section id="dashboardSection" class="py-5">
-  <iframe src="dashboard.html" class="w-100" style="height:80vh; border:none;" title="Student Dashboard"></iframe>
-</section>
+  <!-- ======================= AUTH & DEMO MODAL ======================= -->
+  <div class="modal fade" id="authModal" tabindex="-1" aria-labelledby="authTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content hb-modal-content p-2">
+        <div class="modal-header border-0 pb-0">
+          <div>
+            <h5 class="modal-title fw-bold" id="authTitle">Log in to Homebase</h5>
+            <div class="small text-muted">Ariate Dormitory Decision & Management Portal</div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
 
-  <!-- Auth modal removed temporarily -->
+        <div class="modal-body pt-3">
+          
+          <!-- One-Click Instant Demo Access -->
+          <div class="mb-3 p-3 rounded-3" style="background: var(--hb-bg-elevated); border: 1px solid var(--hb-border);">
+            <div class="small fw-bold text-dark text-uppercase mb-2" style="letter-spacing: 0.08em; font-size: 0.72rem;">
+              ⚡ Quick Demo 1-Click Access
+            </div>
+            <div class="d-grid gap-2">
+              <button type="button" class="hb-demo-badge-btn" id="btnQuickDemoStudent">
+                <span>🎓 <strong>Alex Santos</strong> (Demo Student · UNC)</span>
+                <span class="small text-muted">Auto-fill & Login →</span>
+              </button>
+              <button type="button" class="hb-demo-badge-btn" id="btnQuickDemoManager">
+                <span>🏢 <strong>Dormitory Manager</strong> (CRUD Admin)</span>
+                <span class="small text-muted">Auto-fill & Login →</span>
+              </button>
+            </div>
+          </div>
 
-  <!-- Bootstrap JS + App scripts -->
+          <div class="text-center my-3 position-relative">
+            <hr class="my-0">
+            <span class="position-absolute top-50 start-50 translate-middle bg-white px-2 small text-muted">
+              or enter credentials
+            </span>
+          </div>
+
+          <!-- Standard Login Form -->
+          <form id="loginForm">
+            <div class="mb-3">
+              <label for="loginEmail" class="form-label small fw-semibold text-secondary">Email address</label>
+              <input type="email" class="form-control" id="loginEmail" placeholder="you@unc.edu.ph" required
+                value="alex@unc.edu.ph" style="border-radius: 10px; padding: 0.65rem 0.9rem;">
+            </div>
+            <div class="mb-3">
+              <label for="loginPassword" class="form-label small fw-semibold text-secondary">Password</label>
+              <input type="password" class="form-control" id="loginPassword" placeholder="••••••••" required
+                value="password123" style="border-radius: 10px; padding: 0.65rem 0.9rem;">
+            </div>
+            <div class="alert alert-danger d-none small py-2" id="loginError" role="alert"></div>
+            <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">Log in</button>
+            <p class="text-center mt-3 small text-secondary">
+              Need a student account? <a href="#" data-switch-to="register" class="fw-semibold text-teal text-decoration-none">Create an account</a>
+            </p>
+          </form>
+
+          <!-- Register Form -->
+          <form id="registerForm" class="d-none">
+            <div class="mb-3">
+              <label for="registerName" class="form-label small fw-semibold text-secondary">Full Name</label>
+              <input type="text" class="form-control" id="registerName" placeholder="Juan Dela Cruz" required
+                style="border-radius: 10px; padding: 0.65rem 0.9rem;">
+            </div>
+            <div class="mb-3">
+              <label for="registerEmail" class="form-label small fw-semibold text-secondary">Email address</label>
+              <input type="email" class="form-control" id="registerEmail" placeholder="you@unc.edu.ph" required
+                style="border-radius: 10px; padding: 0.65rem 0.9rem;">
+            </div>
+            <div class="mb-3">
+              <label for="registerPassword" class="form-label small fw-semibold text-secondary">Password</label>
+              <input type="password" class="form-control" id="registerPassword" placeholder="At least 6 characters" required
+                style="border-radius: 10px; padding: 0.65rem 0.9rem;">
+            </div>
+            <div class="mb-3">
+              <label for="registerUniversity" class="form-label small fw-semibold text-secondary">School / University</label>
+              <select class="form-select" id="registerUniversity" required
+                style="border-radius: 10px; padding: 0.65rem 0.9rem;">
+                <option value="" disabled selected>Select university near Ariate Dorm</option>
+                <option value="UNC" selected>University of Nueva Caceres (UNC)</option>
+                <option value="AdNU">Ateneo de Naga University (AdNU)</option>
+                <option value="USI">Universidad de Sta. Isabel (USI)</option>
+                <option value="NCF">Naga College Foundation (NCF)</option>
+                <option value="Other">Other Community College</option>
+              </select>
+            </div>
+            <div class="alert alert-danger d-none small py-2" id="registerError" role="alert"></div>
+            <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">Create Student Account</button>
+            <p class="text-center mt-3 small text-secondary">
+              Already registered? <a href="#" data-switch-to="login" class="fw-semibold text-teal text-decoration-none">Log in</a>
+            </p>
+          </form>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dashboard Mount Point -->
+  <div id="dashboardRoot" class="d-none">
+    <div class="container py-5 text-center">
+      <h2 id="dashboardGreeting" class="h4 fw-bold mb-3"></h2>
+      <a href="dashboard.html" class="btn btn-primary px-4 py-2 me-2">Proceed to Decision Dashboard →</a>
+      <button id="logoutBtn" class="btn btn-outline-secondary px-3 py-2">Log out</button>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS Bundle + Auth & App Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="auth.js"></script>
   <script src="app.js"></script>
 
-  <!-- Scroll reveal animation + Counter animation -->
+  <!-- Interactive Scroll Reveal + Stat Counters + Live Decision Simulator -->
   <script>
-    // Scroll reveal
+    // 1. Scroll reveal animation observer
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -632,24 +1196,23 @@
           observer.unobserve(entry.target);
         }
       });
-    }, { threshold: 0.15 });
-
+    }, { threshold: 0.12 });
     document.querySelectorAll('.hb-reveal').forEach(el => observer.observe(el));
 
-    // Animated stat counters
+    // 2. Animated stat counters
     const counterObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           const el = entry.target;
           const target = parseInt(el.dataset.count, 10);
-          const suffix = el.dataset.suffix || '+';
-          const duration = 1600;
+          const suffix = el.dataset.suffix || '';
+          const duration = 1400;
           const start = performance.now();
 
           function animate(now) {
             const elapsed = now - start;
             const progress = Math.min(elapsed / duration, 1);
-            const eased = 1 - Math.pow(1 - progress, 4); // ease-out quart
+            const eased = 1 - Math.pow(1 - progress, 3);
             const current = Math.round(eased * target);
             el.textContent = current + (progress >= 1 ? suffix : '');
             if (progress < 1) requestAnimationFrame(animate);
@@ -658,40 +1221,125 @@
           counterObserver.unobserve(el);
         }
       });
-    }, { threshold: 0.5 });
-
+    }, { threshold: 0.4 });
     document.querySelectorAll('[data-count]').forEach(el => counterObserver.observe(el));
 
-    // Navbar scroll effect
-    let lastScroll = 0;
+    // 3. Navbar scroll elevation
     window.addEventListener('scroll', () => {
       const navbar = document.getElementById('mainNavbar');
       if (!navbar) return;
-      const currentScroll = window.pageYOffset;
-      if (currentScroll > 60) {
+      if (window.pageYOffset > 50) {
         navbar.classList.add('hb-navbar--scrolled');
       } else {
         navbar.classList.remove('hb-navbar--scrolled');
       }
-      lastScroll = currentScroll;
     }, { passive: true });
 
-    // Newsletter form
-    const nlForm = document.getElementById('newsletterForm');
-    if (nlForm) {
-      nlForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const input = nlForm.querySelector('input');
-        const btn = nlForm.querySelector('button');
-        btn.innerHTML = '<span>✓</span>';
-        btn.style.background = '#5B8C5A';
-        input.value = '';
-        input.placeholder = 'Subscribed!';
-        setTimeout(() => {
-          btn.innerHTML = '<span>→</span>';
-          btn.style.background = '';
-          input.placeholder = 'you@school.edu';
-        }, 3000);
+    // 4. Interactive Live Preference Simulator (Landing Page Demonstration)
+    const btnPersonaAffordability = document.getElementById('btnPersonaAffordability');
+    const btnPersonaComfort = document.getElementById('btnPersonaComfort');
+    const sliderAffordability = document.getElementById('sliderAffordability');
+    const sliderRoomFit = document.getElementById('sliderRoomFit');
+    const labelAffordability = document.getElementById('labelAffordability');
+    const labelRoomFit = document.getElementById('labelRoomFit');
+
+    const simRank1Name = document.getElementById('simRank1Name');
+    const simRank1Meta = document.getElementById('simRank1Meta');
+    const simRank1Score = document.getElementById('simRank1Score');
+
+    const simRank2Name = document.getElementById('simRank2Name');
+    const simRank2Meta = document.getElementById('simRank2Meta');
+    const simRank2Score = document.getElementById('simRank2Score');
+
+    const simRank3Name = document.getElementById('simRank3Name');
+    const simRank3Meta = document.getElementById('simRank3Meta');
+    const simRank3Score = document.getElementById('simRank3Score');
+
+    function updateSimulation(affordWeight, comfortWeight) {
+      labelAffordability.textContent = affordWeight + '%';
+      labelRoomFit.textContent = comfortWeight + '%';
+
+      if (affordWeight >= comfortWeight) {
+        // Affordability prioritized: Room A wins (89%), Room B (82%), Room C (78%)
+        simRank1Name.textContent = 'Room A (4-bed bedspace)';
+        simRank1Meta.textContent = '₱4,500/mo · True Cost: ₱6,050 · Highest Affordability Fit';
+        simRank1Score.textContent = '89%';
+
+        simRank2Name.textContent = 'Room B (2-bed, aircon)';
+        simRank2Meta.textContent = '₱5,500/mo · True Cost: ₱5,500 · All Utilities Included';
+        simRank2Score.textContent = '82%';
+
+        simRank3Name.textContent = 'Room C (6-bed shared)';
+        simRank3Meta.textContent = '₱4,000/mo · True Cost: ₱5,400';
+        simRank3Score.textContent = '78%';
+
+        btnPersonaAffordability.classList.add('active');
+        btnPersonaComfort.classList.remove('active');
+      } else {
+        // Comfort & privacy prioritized: Room B wins (94%), Room A (86%), Room C (61%)
+        simRank1Name.textContent = 'Room B (2-bed, aircon)';
+        simRank1Meta.textContent = '₱5,500/mo · True Cost: ₱5,500 · Private CR & Quiet Study';
+        simRank1Score.textContent = '94%';
+
+        simRank2Name.textContent = 'Room A (4-bed bedspace)';
+        simRank2Meta.textContent = '₱4,500/mo · True Cost: ₱6,050 · Shared CR';
+        simRank2Score.textContent = '86%';
+
+        simRank3Name.textContent = 'Room C (6-bed shared)';
+        simRank3Meta.textContent = '₱4,000/mo · True Cost: ₱5,400 · High Noise Density';
+        simRank3Score.textContent = '61%';
+
+        btnPersonaComfort.classList.add('active');
+        btnPersonaAffordability.classList.remove('active');
+      }
+    }
+
+    if (sliderAffordability && sliderRoomFit) {
+      sliderAffordability.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10);
+        sliderRoomFit.value = Math.max(10, 70 - val);
+        updateSimulation(val, parseInt(sliderRoomFit.value, 10));
+      });
+
+      sliderRoomFit.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10);
+        sliderAffordability.value = Math.max(10, 70 - val);
+        updateSimulation(parseInt(sliderAffordability.value, 10), val);
+      });
+
+      btnPersonaAffordability.addEventListener('click', () => {
+        sliderAffordability.value = 45;
+        sliderRoomFit.value = 15;
+        updateSimulation(45, 15);
+      });
+
+      btnPersonaComfort.addEventListener('click', () => {
+        sliderAffordability.value = 15;
+        sliderRoomFit.value = 45;
+        updateSimulation(15, 45);
+      });
+    }
+
+    // 5. One-Click Quick Demo Login Handlers
+    const btnQuickDemoStudent = document.getElementById('btnQuickDemoStudent');
+    const btnQuickDemoManager = document.getElementById('btnQuickDemoManager');
+    const loginEmailInput = document.getElementById('loginEmail');
+    const loginPasswordInput = document.getElementById('loginPassword');
+    const loginForm = document.getElementById('loginForm');
+
+    if (btnQuickDemoStudent) {
+      btnQuickDemoStudent.addEventListener('click', () => {
+        loginEmailInput.value = 'alex@unc.edu.ph';
+        loginPasswordInput.value = 'password123';
+        loginForm.dispatchEvent(new Event('submit'));
+      });
+    }
+
+    if (btnQuickDemoManager) {
+      btnQuickDemoManager.addEventListener('click', () => {
+        loginEmailInput.value = 'manager@ariatedorm.com';
+        loginPasswordInput.value = 'manager123';
+        loginForm.dispatchEvent(new Event('submit'));
       });
     }
   </script>
