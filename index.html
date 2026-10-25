@@ -7,30 +7,28 @@
   <meta name="description" content="Homebase scores student housing against your budget, commute, amenities and safety needs.">
 
   <!--
-    Design Read: student housing landing + auth, for students studying far from home (and the landlords who house them),
-    warm and plain-spoken, dial ENERGY 2 / RHYTHM 2 / MOTION 1.
+    Design Read: student housing login page for students studying far from home (and the landlords who house them),
+    in a login-first, collage-on-the-left layout, warm and plain-spoken, dial ENERGY 2 / RHYTHM 2 / MOTION 1.
 
     Reasons (R-31):
-    - Palette: deep green + white + one lime accent. Green reads "home, safe, go"; white keeps the form half calm. Lime is used ONLY on the lit window and the focus ring, so the accent stays singular.
-    - Layout: 50/50 split because the brief asked for half design, half login/register. No nav, no sections, nothing to scroll to (R-24).
-    - Identity motif: one lit window in a dark facade = "one room out of many that fits you". It is the single focal point of the design half.
-    - Type: Sora for headlines (carried over from the HomeBase wordmark), Public Sans for body and forms (built for legible form text).
-    - Radius: 8px on inputs/buttons/tabs, no pills, so the controls feel solid and tappable.
-    - Shadow: only the selected tab gets one (elevation = "this is the active one").
-    - Motion: the lit window switches on once at load to pull the eye there; disabled under prefers-reduced-motion.
-    - Role choice on register: the product serves both students and landlords, so the account type has to be captured at sign-up.
-    - Logo: text wordmark placeholder, no invented logo (R-23). No stats, testimonials or trust claims (R-17, R-18, R-36).
-
-    Dashboard hand-off: a successful login or register opens dashboard.html. Opening index.html while already signed in shows a link to it instead of redirecting, so the landing page stays reachable.
-
-    Added with the floating nav + photo pass:
-    - Nav: the one pill-shaped, blurred, shadowed element on the page, on purpose (it is the only thing that floats over both halves, so it needs to read as a separate layer). Inputs and buttons stay 8px.
-    - Nav links are real controls, not anchors to nowhere (R-24, R-26): "For students" / "For landlords" switch the left-side story and preselect the account type; "How matching works" opens a dialog (Esc closes it).
-    - Nav CTA: "Create account" opens the register tab; it becomes "Log out" when someone is signed in.
-    - Nav logo mark: a placeholder built from the page's own motif (dark square, one lime window). Replace with the real logo when there is one.
-    - Photo slot: drop your own photo at assets/hero.jpg (a real photo of the case-study dorm beats stock). The page never invents one. If the file is missing, the illustration shows instead.
-    - Scrim over the photo: a green gradient, there only so white text stays readable on any photo (R-25). Strongest behind the text, lightest at the bottom so the photo still shows.
-    - Illustration scene: school, dashed commute path and the dorm with one lit window, so the left side says "commute" and "your room" without needing a photo.
+    - Layout: login-first split. Left = logo, one collage, one headline. Right = the log in form, nothing else competing with it.
+      Register moved into a dialog so the page has one job: get a returning user in.
+    - Palette: white page, deep green, a mint tint for the quiet cards, one lime accent. Lime is used ONLY on the lit window
+      and the focus ring, so it stays the single accent.
+    - Collage (replaces the old flat illustration): four product cards that show what Homebase does, not decoration (R-22):
+      the dorm with one lit window (identity motif, focal point), a budget bar card, a commute chip, a fit summary card,
+      plus two round badges for amenities and safety. They overlap the way a stack of screens would.
+    - Collage values are SAMPLE placeholders and the page says so ("Sample preview", R-38). No real statistics, no people.
+    - Photo slot: drop your own photo at assets/hero.jpg and it fills the big dorm card. If the file is missing, the SVG dorm shows.
+    - Radius: 12px inputs, 20 to 28px cards, full pill on the two actions only (Log in, Create new account). Each radius
+      matches one kind of element, so the shapes read as a system, not a default.
+    - Shadow: only the elements that sit on top of others (fit card, commute chip, safety badge) lift. Everything behind stays flat.
+    - Type: Sora for headlines (the wordmark voice), Public Sans for body and forms.
+    - Motion: the lit window switches on once at load; disabled under prefers-reduced-motion.
+    - Logo: text wordmark plus a placeholder mark built from the motif. Replace with the real logo when there is one (R-23).
+    - Removed on purpose: the floating nav and the For students / For landlords toggle. Role is now picked inside Register.
+    - Not built: "Forgot password?". There is no backend to send a reset yet, so a link would do nothing (R-26).
+      Add it in the PHP + MySQL phase.
   -->
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -38,39 +36,141 @@
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
 
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="assets/tw-config.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            forest: { DEFAULT: '#0B4A2F', deep: '#083A25', body: '#0E5435' },
+            lime: '#C6F24E',
+            ink: '#14211A',
+            muted: '#46564D',
+            line: '#CBD5CF',
+            danger: '#B42318'
+          },
+          fontFamily: {
+            display: ['Sora', 'system-ui', 'sans-serif'],
+            body: ['"Public Sans"', 'system-ui', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
 
   <style type="text/tailwindcss">
     @layer components {
       .label { @apply mb-1.5 block text-sm font-medium text-ink; }
       .field {
-        @apply block w-full rounded-lg border border-line bg-white px-3.5 py-3 text-base text-ink
-               placeholder:text-[#667369] outline-none transition-colors
+        @apply block h-[60px] w-full rounded-xl border border-line bg-white px-3.5 pb-2 pt-6 text-base text-ink
+               placeholder:text-transparent outline-none transition-colors
                hover:border-[#8FA397] focus-visible:border-forest focus-visible:ring-2 focus-visible:ring-forest/30
                aria-[invalid=true]:border-danger aria-[invalid=true]:ring-danger/20;
       }
+      .float-label {
+        @apply pointer-events-none absolute left-3.5 top-1.5 text-xs text-muted transition-all
+               peer-placeholder-shown:top-[19px] peer-placeholder-shown:text-base
+               peer-focus:top-1.5 peer-focus:text-xs;
+      }
       .err { @apply mt-1.5 text-sm font-medium text-danger; }
       .btn {
-        @apply flex min-h-[48px] w-full items-center justify-center rounded-lg bg-forest px-4 py-3 text-base font-semibold text-white
+        @apply flex min-h-[48px] w-full items-center justify-center rounded-full border border-transparent bg-forest px-4 py-3 text-base font-semibold text-white
                transition-colors hover:bg-forest-deep outline-none
                focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-70;
       }
+      .btn-outline { @apply border-forest bg-white text-forest hover:bg-[#F4F8F5]; }
       .linkbtn { @apply inline-flex min-h-[44px] items-center rounded px-1 font-semibold text-forest underline underline-offset-4 outline-none hover:text-forest-deep focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2; }
     }
+  </style>
+
+  <!-- Layout shell and the collage are plain CSS: they need absolute positioning and per-card sizes that utilities would only obscure. -->
+  <style>
+    :root { --forest:#0B4A2F; --forest-deep:#083A25; --forest-body:#0E5435; --lime:#C6F24E; --ink:#14211A; --muted:#46564D; --mint:#E3EEE7; --mint-deep:#CFE3D6; }
+
+    /* ---------- page shell ---------- */
+    .lp { display: grid; grid-template-rows: auto 1fr; min-height: 100dvh; }
+    .lp-left { position: relative; background: #fff; padding: 24px 24px 8px; }
+    .lp-logo { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; border-radius: 8px; font: 700 1.25rem/1 Sora, system-ui, sans-serif; letter-spacing: -.01em; color: var(--ink); text-decoration: none; outline: none; }
+    .lp-logo:focus-visible { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--forest); }
+    .lp-logo svg { width: 40px; height: 40px; flex: none; }
+    .lp-title { margin: 20px 0 0; font: 700 1.875rem/1.1 Sora, system-ui, sans-serif; letter-spacing: -.02em; color: var(--ink); }
+    .lp-title span { display: block; }
+    .lp-title .g { color: var(--forest); }
+    .lp-stage, .lp-note { display: none; }
+
+    @media (min-width: 1024px) {
+      .lp { grid-template-columns: minmax(0, 1fr) minmax(400px, 34%); grid-template-rows: minmax(0, 1fr); height: 100dvh; }
+      .lp-left { padding: 0; }
+      .lp-logo { position: absolute; top: 32px; left: 56px; z-index: 3; }
+      .lp-title { position: absolute; left: 56px; bottom: 48px; margin: 0; font-size: 2.5rem; z-index: 3; }
+    }
+    @media (min-width: 1100px) {
+      .lp-stage { display: flex; position: absolute; inset: 0; align-items: center; justify-content: flex-end; padding-right: 5%; pointer-events: none; z-index: 1; }
+      .lp-note { display: block; position: absolute; right: 24px; bottom: 16px; z-index: 3; font-size: 12px; line-height: 1.3; color: var(--muted); }
+    }
+    @media (min-width: 1280px) { .lp-title { font-size: 3rem; } }
+    @media (min-width: 1536px) { .lp-title { font-size: 3.5rem; } }
+
+    /* ---------- collage (design size 540 x 628, scaled with zoom) ---------- */
+    .cl { position: relative; width: 540px; height: 628px; flex: none; zoom: .72; font-family: "Public Sans", system-ui, sans-serif; color: var(--ink); }
+    @media (min-width: 1280px) and (min-height: 760px) { .cl { zoom: .9; } }
+    @media (min-width: 1536px) and (min-height: 900px) { .cl { zoom: 1; } }
+    @media (max-height: 680px) { .cl { zoom: .6; } }
+    .cl, .cl * { box-sizing: border-box; }
+    .cl > * { position: absolute; }
+
+    /* big card: the dorm, one window lit = "the room that fits you" */
+    .cl-dorm { left: 170px; top: 8px; width: 290px; height: 470px; border-radius: 28px; overflow: hidden; background: var(--forest); z-index: 2; }
+    .cl-dorm svg, .cl-dorm img { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .cl-dorm img { object-fit: cover; }
+
+    /* back card: budget */
+    .cl-budget { left: 0; top: 120px; width: 250px; height: 290px; border-radius: 24px; background: var(--mint); padding: 22px 100px 22px 20px; z-index: 1; }
+    .cl-budget h3 { margin: 0 0 16px; font: 600 14px/1.2 Sora, system-ui, sans-serif; }
+    .cl-bar-label { margin: 0 0 5px; font-size: 13px; line-height: 1.2; color: var(--muted); }
+    .cl-track { height: 10px; border-radius: 5px; background: var(--mint-deep); margin-bottom: 14px; }
+    .cl-track i { display: block; height: 100%; border-radius: 5px; background: var(--forest); }
+    .cl-tag { display: inline-block; margin-top: 6px; padding: 6px 10px; border-radius: 8px; background: #fff; font-size: 13px; font-weight: 600; color: var(--forest); }
+
+    /* round badges */
+    .cl-round { display: grid; place-items: center; border-radius: 50%; }
+    .cl-round svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .cl-wifi { left: 14px; top: 24px; width: 72px; height: 72px; background: var(--mint-deep); color: var(--forest); z-index: 3; }
+    .cl-wifi svg { width: 34px; height: 34px; }
+    .cl-wifi circle { fill: currentColor; stroke: none; }
+    .cl-safe { left: 392px; top: 510px; width: 104px; height: 104px; background: var(--forest); color: #fff; border: 6px solid #fff; box-shadow: 0 10px 24px rgba(20,33,26,.18); z-index: 6; }
+    .cl-safe svg { width: 44px; height: 44px; }
+
+    /* commute chip */
+    .cl-commute { left: 372px; top: 60px; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 14px; background: #fff; box-shadow: 0 8px 22px rgba(20,33,26,.16); z-index: 4; }
+    .cl-commute svg { width: 28px; height: 28px; flex: none; fill: none; stroke: var(--forest); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .cl-commute b { display: block; font: 600 15px/1.2 Sora, system-ui, sans-serif; }
+    .cl-commute small { display: block; font-size: 13px; line-height: 1.2; color: var(--muted); }
+
+    /* front card: fit summary */
+    .cl-fit { left: 56px; top: 404px; width: 340px; height: 180px; border-radius: 20px; background: #fff; padding: 18px 20px; box-shadow: 0 14px 34px rgba(20,33,26,.18); z-index: 5; }
+    .cl-fit header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .cl-fit h3 { margin: 0; font: 600 15px/1.2 Sora, system-ui, sans-serif; }
+    .cl-fit header span { padding: 5px 10px; border-radius: 8px; background: var(--forest); color: #fff; font-size: 13px; font-weight: 600; }
+    .cl-row { display: grid; grid-template-columns: 84px 1fr; align-items: center; gap: 10px; margin-bottom: 11px; font-size: 13.5px; }
+    .cl-row .cl-track { margin: 0; height: 8px; }
+
+    /* the lit window switches on once */
     @keyframes switch-on { from { fill: #083A25; } to { fill: #C6F24E; } }
     .lit-window { animation: switch-on 900ms ease-out 400ms both; }
     @media (prefers-reduced-motion: reduce) { .lit-window { animation: none; } }
   </style>
 </head>
 
-<body class="h-dvh overflow-hidden bg-white font-body text-ink antialiased">
+<body class="bg-white font-body text-ink antialiased">
 
-  <!-- FLOATING NAV -->
-  <header class="pointer-events-none fixed inset-x-0 top-3 z-50 flex justify-center px-3">
-    <nav aria-label="Main" class="pointer-events-auto flex w-max max-w-full items-center gap-1 rounded-full border border-ink/10 bg-white/85 p-1.5 shadow-lg shadow-ink/10 backdrop-blur-md">
-      <a href="/" class="flex min-h-[44px] items-center gap-2.5 rounded-full pl-1.5 pr-3 font-display text-base font-bold tracking-tight text-ink outline-none focus-visible:ring-2 focus-visible:ring-forest" aria-label="Homebase home">
+  <main class="lp">
+
+    <!-- LEFT: logo, collage, headline -->
+    <section class="lp-left" aria-label="About Homebase">
+
+      <a href="/" class="lp-logo" aria-label="Homebase home">
         <!-- placeholder mark built from the page motif: dark square, one lit window -->
-        <svg class="h-8 w-8 shrink-0" viewBox="0 0 32 32" aria-hidden="true">
+        <svg viewBox="0 0 32 32" aria-hidden="true">
           <rect width="32" height="32" rx="8" fill="#0B4A2F"/>
           <rect x="7" y="8" width="7" height="8" rx="1.5" fill="#083A25"/>
           <rect x="18" y="8" width="7" height="8" rx="1.5" fill="#C6F24E"/>
@@ -80,202 +180,190 @@
         <span>Homebase</span>
       </a>
 
-      <span class="mx-1 h-6 w-px bg-ink/15" aria-hidden="true"></span>
+      <div class="lp-stage">
+        <div class="cl" role="img" aria-label="Sample preview of a Homebase match: a dorm with one lit window, a budget comparison, a short commute to school, an amenities badge, a safety badge, and a summary showing how well the room fits on budget, commute, amenities and safety.">
 
-      <div class="hidden items-center gap-1 md:flex">
-        <button type="button" data-audience="student" aria-pressed="true"
-          class="min-h-[44px] rounded-full px-4 text-sm font-semibold text-ink outline-none transition-colors aria-[pressed=false]:hover:bg-ink/5 aria-pressed:bg-forest aria-pressed:text-white focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-1">For students</button>
-        <button type="button" data-audience="landlord" aria-pressed="false"
-          class="min-h-[44px] rounded-full px-4 text-sm font-semibold text-ink outline-none transition-colors aria-[pressed=false]:hover:bg-ink/5 aria-pressed:bg-forest aria-pressed:text-white focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-1">For landlords</button>
-        <button type="button" id="open-how" aria-haspopup="dialog"
-          class="min-h-[44px] rounded-full px-4 text-sm font-semibold text-ink outline-none transition-colors hover:bg-ink/5 focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-1">How matching works</button>
-      </div>
+          <div class="cl-budget">
+            <h3>Monthly budget</h3>
+            <p class="cl-bar-label">Your limit</p>
+            <div class="cl-track"><i style="width:100%"></i></div>
+            <p class="cl-bar-label">This room</p>
+            <div class="cl-track"><i style="width:72%"></i></div>
+            <span class="cl-tag">Within budget</span>
+          </div>
 
-      <button type="button" id="nav-cta"
-        class="ml-1 min-h-[44px] rounded-full bg-ink px-5 text-sm font-semibold text-white outline-none transition-colors hover:bg-black focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2">Create account</button>
-    </nav>
-  </header>
+          <div class="cl-dorm">
+            <svg viewBox="0 0 290 470" aria-hidden="true" preserveAspectRatio="xMidYMid slice">
+              <rect width="290" height="470" fill="#0B4A2F"/>
+              <circle cx="205" cy="118" r="98" fill="#0D5033"/>
+              <rect y="438" width="290" height="32" fill="#083A25"/>
+              <rect x="32" y="98" width="226" height="14" rx="3" fill="#0E5435"/>
+              <rect x="40" y="110" width="210" height="328" rx="6" fill="#0E5435"/>
+              <g fill="#083A25">
+                <rect x="60" y="134" width="40" height="52" rx="3"/><rect x="125" y="134" width="40" height="52" rx="3"/><rect x="190" y="134" width="40" height="52" rx="3"/>
+                <rect x="60" y="208" width="40" height="52" rx="3"/><rect x="190" y="208" width="40" height="52" rx="3"/>
+                <rect x="60" y="282" width="40" height="52" rx="3"/><rect x="125" y="282" width="40" height="52" rx="3"/><rect x="190" y="282" width="40" height="52" rx="3"/>
+                <rect x="120" y="370" width="50" height="68" rx="3"/>
+              </g>
+              <rect class="lit-window" x="125" y="208" width="40" height="52" rx="3" fill="#C6F24E"/>
+              <path d="M 24 456 H 266" stroke="#fff" stroke-opacity=".6" stroke-width="3" stroke-dasharray="9 9" stroke-linecap="round" fill="none"/>
+            </svg>
+            <!-- Photo slot: put your own photo at assets/hero.jpg. Hidden until the file actually loads. -->
+            <img id="hero-img" src="assets/hero.jpg" alt="" hidden decoding="async">
+          </div>
 
-  <main class="grid h-dvh grid-rows-[auto_minmax(0,1fr)] lg:grid-cols-2 lg:grid-rows-1">
+          <div class="cl-round cl-wifi">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10a11 11 0 0 1 16 0"/><path d="M7 13.5a7 7 0 0 1 10 0"/><path d="M10 17a3 3 0 0 1 4 0"/><circle cx="12" cy="20" r="1.6"/></svg>
+          </div>
 
-    <!-- DESIGN HALF -->
-    <section aria-label="About Homebase" class="relative flex flex-col overflow-hidden bg-forest px-6 pb-6 pt-[92px] text-white lg:px-14 lg:pb-12 lg:pt-28">
+          <div class="cl-commute">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="18" r="2.2"/><circle cx="19" cy="5.5" r="2.2"/><path d="M7.2 17.5H13a3.5 3.5 0 0 0 0-7h-2a3.5 3.5 0 0 1 0-7h5.8"/></svg>
+            <div><b>8 min walk</b><small>to school</small></div>
+          </div>
 
-      <!-- Scene: school, commute path, dorm with one lit window. Shows when there is no photo. -->
-      <svg class="pointer-events-none absolute bottom-0 right-0 hidden h-[46%] w-full lg:block [@media(max-height:780px)]:hidden" viewBox="0 0 720 420" preserveAspectRatio="xMaxYMax meet" role="img" aria-label="Illustration: a school on the left, a short commute path, and a dorm with one lit window on the right">
-        <circle cx="545" cy="150" r="138" fill="#0D5033"/>
-        <rect x="0" y="372" width="720" height="48" fill="#083A25"/>
+          <div class="cl-fit">
+            <header><h3>How well it fits you</h3><span>Good fit</span></header>
+            <div class="cl-row"><span>Budget</span><div class="cl-track"><i style="width:90%"></i></div></div>
+            <div class="cl-row"><span>Commute</span><div class="cl-track"><i style="width:80%"></i></div></div>
+            <div class="cl-row"><span>Amenities</span><div class="cl-track"><i style="width:65%"></i></div></div>
+            <div class="cl-row"><span>Safety</span><div class="cl-track"><i style="width:85%"></i></div></div>
+          </div>
 
-        <!-- trees -->
-        <g fill="#0E5435">
-          <rect x="217" y="346" width="6" height="26"/><circle cx="220" cy="334" r="18"/>
-          <rect x="297" y="338" width="6" height="34"/><circle cx="300" cy="322" r="23"/>
-        </g>
-
-        <!-- school -->
-        <g fill="#0E5435">
-          <rect x="40" y="288" width="130" height="84"/>
-          <polygon points="30,288 105,244 180,288"/>
-          <rect x="103" y="214" width="3" height="32"/>
-          <polygon points="106,214 134,224 106,234"/>
-        </g>
-        <g fill="#083A25">
-          <rect x="92" y="328" width="26" height="44" rx="2"/>
-          <rect x="56" y="306" width="24" height="26" rx="2"/>
-          <rect x="130" y="306" width="24" height="26" rx="2"/>
-        </g>
-
-        <!-- commute path -->
-        <path d="M 122 386 H 526" stroke="#FFFFFF" stroke-opacity="0.6" stroke-width="3" stroke-dasharray="9 9" stroke-linecap="round" fill="none"/>
-        <text x="324" y="409" text-anchor="middle" font-family="Sora, system-ui, sans-serif" font-size="14" font-weight="600" fill="#FFFFFF" fill-opacity="0.85">Your commute</text>
-
-        <!-- dorm -->
-        <rect x="360" y="60" width="330" height="312" rx="6" fill="#0E5435"/>
-        <rect x="350" y="46" width="350" height="16" rx="3" fill="#0E5435"/>
-        <g fill="#083A25">
-          <rect x="388" y="84" width="46" height="54" rx="3"/><rect x="462" y="84" width="46" height="54" rx="3"/><rect x="536" y="84" width="46" height="54" rx="3"/><rect x="610" y="84" width="46" height="54" rx="3"/>
-          <rect x="388" y="160" width="46" height="54" rx="3"/><rect x="462" y="160" width="46" height="54" rx="3"/><rect x="610" y="160" width="46" height="54" rx="3"/>
-          <rect x="388" y="236" width="46" height="54" rx="3"/><rect x="462" y="236" width="46" height="54" rx="3"/><rect x="536" y="236" width="46" height="54" rx="3"/><rect x="610" y="236" width="46" height="54" rx="3"/>
-          <rect x="388" y="312" width="46" height="54" rx="3"/><rect x="610" y="312" width="46" height="54" rx="3"/>
-          <rect x="497" y="306" width="56" height="66" rx="3"/>
-        </g>
-        <rect class="lit-window" x="536" y="160" width="46" height="54" rx="3" fill="#C6F24E"/>
-      </svg>
-
-      <!-- Photo slot: put your own photo at assets/hero.jpg. Hidden until the file actually loads. -->
-      <div id="hero-photo" class="absolute inset-0 hidden" aria-hidden="true">
-        <img id="hero-img" src="assets/hero.jpg" alt="" class="h-full w-full object-cover" decoding="async">
-        <div class="absolute inset-0 bg-gradient-to-b from-forest/95 via-forest/80 to-forest/35"></div>
-      </div>
-
-      <div class="relative z-10 max-w-xl">
-        <h1 id="hero-title" class="font-display text-2xl font-bold leading-tight sm:text-3xl lg:text-5xl lg:leading-[1.08]">
-          A room that fits your budget and your commute.
-        </h1>
-        <p id="hero-text" class="mt-5 hidden max-w-md text-lg leading-relaxed text-white/90 lg:block">
-          Tell Homebase what matters to you. It scores every dorm and room against it, so studying far from home stops meaning guesswork.
-        </p>
-        <div class="mt-8 hidden lg:block">
-          <p id="hero-factors-label" class="text-sm font-medium text-white/85">Every listing is scored on</p>
-          <ul id="hero-factors" class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 font-display text-base font-semibold">
-            <li>Budget</li>
-            <li class="h-4 w-px bg-white/40" aria-hidden="true"></li>
-            <li>Commute</li>
-            <li class="h-4 w-px bg-white/40" aria-hidden="true"></li>
-            <li>Amenities</li>
-            <li class="h-4 w-px bg-white/40" aria-hidden="true"></li>
-            <li>Safety</li>
-          </ul>
+          <div class="cl-round cl-safe">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5.5c0 4.2-2.9 7.6-7 9.5-4.1-1.9-7-5.3-7-9.5V6z"/><path d="M8.8 12.2l2.4 2.4 4-4.6"/></svg>
+          </div>
         </div>
       </div>
+
+      <h1 class="lp-title">
+        <span>Find a room</span>
+        <span>that fits</span>
+        <span class="g">your budget</span>
+        <span class="g">and commute.</span>
+      </h1>
+
+      <p class="lp-note">Sample preview. Values shown are placeholders.</p>
     </section>
 
-    <!-- AUTH HALF -->
-    <section aria-label="Log in or create an account" class="min-h-0 overflow-y-auto bg-white">
-      <div class="flex min-h-full px-6 pb-8 pt-24 sm:px-10 lg:px-16">
-        <div class="m-auto w-full max-w-sm">
+    <!-- RIGHT: log in -->
+    <section aria-label="Log in" class="flex min-h-0 items-center justify-center overflow-y-auto bg-white px-6 py-10 lg:border-l lg:border-line lg:px-12">
+      <div class="w-full max-w-[420px]">
 
-          <!-- Signed-out view -->
-          <div id="auth-view">
-            <h2 id="auth-heading" class="font-display text-2xl font-bold tracking-tight text-ink">Welcome back</h2>
-            <p id="auth-sub" class="mt-1.5 text-base text-muted">Log in to pick up where you left off.</p>
+        <!-- Signed-out view -->
+        <div id="auth-view">
+          <h2 class="font-display text-xl font-semibold tracking-tight text-ink">Log into Homebase</h2>
 
-            <div role="tablist" aria-label="Account" class="mt-6 grid grid-cols-2 gap-1 rounded-lg bg-[#E8EEEA] p-1">
-              <button type="button" role="tab" id="tab-login" aria-controls="panel-login" aria-selected="true" tabindex="0"
-                class="min-h-[44px] rounded-md px-3 text-base font-semibold text-muted outline-none transition-colors aria-selected:bg-white aria-selected:text-forest aria-selected:shadow-sm focus-visible:ring-2 focus-visible:ring-forest">Log in</button>
-              <button type="button" role="tab" id="tab-register" aria-controls="panel-register" aria-selected="false" tabindex="-1"
-                class="min-h-[44px] rounded-md px-3 text-base font-semibold text-muted outline-none transition-colors aria-selected:bg-white aria-selected:text-forest aria-selected:shadow-sm focus-visible:ring-2 focus-visible:ring-forest">Register</button>
+          <form id="form-login" novalidate class="mt-5 space-y-3">
+            <div id="login-error" role="alert" class="err hidden !mt-0 rounded-xl border border-danger/30 bg-[#FEF3F2] px-3.5 py-3"></div>
+            <div>
+              <div class="relative">
+                <input class="field peer" id="login-email" name="email" type="email" autocomplete="email" inputmode="email" placeholder=" " aria-describedby="login-email-err" required>
+                <label class="float-label" for="login-email">Email</label>
+              </div>
+              <p class="err hidden" id="login-email-err"></p>
             </div>
-
-            <!-- Login -->
-            <div role="tabpanel" id="panel-login" aria-labelledby="tab-login" class="mt-6">
-              <form id="form-login" novalidate class="space-y-4">
-                <div id="login-error" role="alert" class="err hidden !mt-0 rounded-lg border border-danger/30 bg-[#FEF3F2] px-3.5 py-3"></div>
-                <div>
-                  <label class="label" for="login-email">Email</label>
-                  <input class="field" id="login-email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="you@school.edu.ph" aria-describedby="login-email-err" required>
-                  <p class="err hidden" id="login-email-err"></p>
-                </div>
-                <div>
-                  <label class="label" for="login-password">Password</label>
-                  <div class="relative">
-                    <input class="field pr-16" id="login-password" name="password" type="password" autocomplete="current-password" aria-describedby="login-password-err" required>
-                    <button type="button" data-toggle-password="login-password" aria-controls="login-password" aria-pressed="false"
-                      class="absolute inset-y-0 right-0 my-0.5 mr-0.5 rounded-md px-3.5 text-sm font-semibold text-forest outline-none hover:bg-[#E8EEEA] focus-visible:ring-2 focus-visible:ring-forest">Show</button>
-                  </div>
-                  <p class="err hidden" id="login-password-err"></p>
-                </div>
-                <button class="btn" type="submit" id="login-submit">Log in</button>
-              </form>
-              <p class="mt-4 flex flex-wrap items-center justify-center gap-x-1.5 text-center text-base text-muted">
-                New to Homebase?
-                <button type="button" class="linkbtn" data-switch="register">Create an account</button>
-              </p>
+            <div>
+              <div class="relative">
+                <input class="field peer pr-16" id="login-password" name="password" type="password" autocomplete="current-password" placeholder=" " aria-describedby="login-password-err" required>
+                <label class="float-label" for="login-password">Password</label>
+                <button type="button" data-toggle-password="login-password" aria-controls="login-password" aria-pressed="false"
+                  class="absolute inset-y-0 right-0 my-1 mr-1 rounded-lg px-3 text-sm font-semibold text-forest outline-none hover:bg-[#E8EEEA] focus-visible:ring-2 focus-visible:ring-forest">Show</button>
+              </div>
+              <p class="err hidden" id="login-password-err"></p>
             </div>
+            <button class="btn" type="submit" id="login-submit">Log in</button>
+          </form>
 
-            <!-- Register -->
-            <div role="tabpanel" id="panel-register" aria-labelledby="tab-register" class="mt-6" hidden>
-              <form id="form-register" novalidate class="space-y-4">
-                <div id="register-error" role="alert" class="err hidden !mt-0 rounded-lg border border-danger/30 bg-[#FEF3F2] px-3.5 py-3"></div>
+          <div class="my-6 border-t border-line" aria-hidden="true"></div>
 
-                <fieldset>
-                  <legend class="label">I am a</legend>
-                  <div class="grid grid-cols-2 gap-2">
-                    <label class="relative block cursor-pointer">
-                      <input class="peer sr-only" type="radio" name="role" value="student" checked>
-                      <span class="flex min-h-[48px] items-center justify-center rounded-lg border border-line px-3 text-center text-base font-medium text-ink transition-colors hover:border-[#8FA397] peer-checked:border-forest peer-checked:bg-forest peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-forest peer-focus-visible:ring-offset-2">Student</span>
-                    </label>
-                    <label class="relative block cursor-pointer">
-                      <input class="peer sr-only" type="radio" name="role" value="landlord">
-                      <span class="flex min-h-[48px] items-center justify-center rounded-lg border border-line px-3 text-center text-base font-medium text-ink transition-colors hover:border-[#8FA397] peer-checked:border-forest peer-checked:bg-forest peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-forest peer-focus-visible:ring-offset-2">Landlord</span>
-                    </label>
-                  </div>
-                </fieldset>
+          <button type="button" class="btn btn-outline" data-open-register>Create new account</button>
 
-                <div>
-                  <label class="label" for="reg-name">Full name</label>
-                  <input class="field" id="reg-name" name="name" type="text" autocomplete="name" aria-describedby="reg-name-err" required>
-                  <p class="err hidden" id="reg-name-err"></p>
-                </div>
-                <div>
-                  <label class="label" for="reg-email">Email</label>
-                  <input class="field" id="reg-email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="you@school.edu.ph" aria-describedby="reg-email-err" required>
-                  <p class="err hidden" id="reg-email-err"></p>
-                </div>
-                <div>
-                  <label class="label" for="reg-password">Password</label>
-                  <div class="relative">
-                    <input class="field pr-16" id="reg-password" name="password" type="password" autocomplete="new-password" aria-describedby="reg-password-hint reg-password-err" required>
-                    <button type="button" data-toggle-password="reg-password" aria-controls="reg-password" aria-pressed="false"
-                      class="absolute inset-y-0 right-0 my-0.5 mr-0.5 rounded-md px-3.5 text-sm font-semibold text-forest outline-none hover:bg-[#E8EEEA] focus-visible:ring-2 focus-visible:ring-forest">Show</button>
-                  </div>
-                  <p class="mt-1.5 text-sm text-muted" id="reg-password-hint">At least 8 characters.</p>
-                  <p class="err hidden" id="reg-password-err"></p>
-                </div>
-                <button class="btn" type="submit" id="register-submit">Create my account</button>
-              </form>
-              <p class="mt-4 flex flex-wrap items-center justify-center gap-x-1.5 text-center text-base text-muted">
-                Already have an account?
-                <button type="button" class="linkbtn" data-switch="login">Log in</button>
-              </p>
-            </div>
-          </div>
-
-          <!-- Signed-in view -->
-          <div id="session-view" hidden>
-            <h2 class="font-display text-2xl font-bold tracking-tight text-ink" id="session-heading" tabindex="-1">You are logged in</h2>
-            <p class="mt-1.5 text-base text-muted" id="session-detail"></p>
-            <a href="dashboard.html" class="btn mt-6" id="open-dashboard">Open your dashboard</a>
-            <button type="button" id="logout" class="btn mt-3 !bg-white !text-forest ring-1 ring-inset ring-forest hover:!bg-[#F4F8F5]">Log out</button>
-          </div>
-
+          <p class="mt-5 text-center">
+            <button type="button" id="open-how" aria-haspopup="dialog" class="linkbtn font-medium">How matching works</button>
+          </p>
         </div>
+
+        <!-- Signed-in view -->
+        <div id="session-view" hidden>
+          <h2 class="font-display text-2xl font-bold tracking-tight text-ink" id="session-heading" tabindex="-1">You are logged in</h2>
+          <p class="mt-1.5 text-base text-muted" id="session-detail"></p>
+          <div class="mt-6 rounded-xl border border-line bg-[#F4F8F5] p-5 text-base text-ink">
+            <p class="font-semibold text-forest-deep">Ready to find a room?</p>
+            <p class="mt-1 text-sm text-muted">Explore Ariante Dormitory options, set your budget and preferences, and see your suitability score.</p>
+            <a href="dashboard.html" class="btn mt-4 inline-flex items-center justify-center gap-2 text-white no-underline">
+              <span>Go to Student Dashboard</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+          </div>
+          <button type="button" id="logout" class="btn btn-outline mt-4">Log out</button>
+        </div>
+
       </div>
     </section>
   </main>
 
+  <!-- REGISTER -->
+  <dialog id="register-dialog" aria-labelledby="register-title" class="w-[calc(100vw-2rem)] max-w-[440px] rounded-2xl border border-line bg-white p-0 text-ink shadow-xl backdrop:bg-ink/50">
+    <div class="p-6">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h2 id="register-title" class="font-display text-xl font-bold tracking-tight">Create a new account</h2>
+          <p class="mt-1 text-base text-muted">Tell us who you are and we will start matching.</p>
+        </div>
+        <button type="button" id="close-register" aria-label="Close"
+          class="-mr-2 -mt-2 grid h-11 w-11 shrink-0 place-items-center rounded-lg text-muted outline-none hover:bg-[#E8EEEA] focus-visible:ring-2 focus-visible:ring-forest">
+          <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+
+      <form id="form-register" novalidate class="mt-5 space-y-3">
+        <div id="register-error" role="alert" class="err hidden !mt-0 rounded-xl border border-danger/30 bg-[#FEF3F2] px-3.5 py-3"></div>
+
+        <fieldset>
+          <legend class="label">I am a</legend>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="relative block cursor-pointer">
+              <input class="peer sr-only" type="radio" name="role" value="student" checked>
+              <span class="flex min-h-[48px] items-center justify-center rounded-xl border border-line px-3 text-center text-base font-medium text-ink transition-colors hover:border-[#8FA397] peer-checked:border-forest peer-checked:bg-forest peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-forest peer-focus-visible:ring-offset-2">Student</span>
+            </label>
+            <label class="relative block cursor-pointer">
+              <input class="peer sr-only" type="radio" name="role" value="landlord">
+              <span class="flex min-h-[48px] items-center justify-center rounded-xl border border-line px-3 text-center text-base font-medium text-ink transition-colors hover:border-[#8FA397] peer-checked:border-forest peer-checked:bg-forest peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-forest peer-focus-visible:ring-offset-2">Landlord</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <div>
+          <div class="relative">
+            <input class="field peer" id="reg-name" name="name" type="text" autocomplete="name" placeholder=" " aria-describedby="reg-name-err" required>
+            <label class="float-label" for="reg-name">Full name</label>
+          </div>
+          <p class="err hidden" id="reg-name-err"></p>
+        </div>
+        <div>
+          <div class="relative">
+            <input class="field peer" id="reg-email" name="email" type="email" autocomplete="email" inputmode="email" placeholder=" " aria-describedby="reg-email-err" required>
+            <label class="float-label" for="reg-email">Email</label>
+          </div>
+          <p class="err hidden" id="reg-email-err"></p>
+        </div>
+        <div>
+          <div class="relative">
+            <input class="field peer pr-16" id="reg-password" name="password" type="password" autocomplete="new-password" placeholder=" " aria-describedby="reg-password-hint reg-password-err" required>
+            <label class="float-label" for="reg-password">Password</label>
+            <button type="button" data-toggle-password="reg-password" aria-controls="reg-password" aria-pressed="false"
+              class="absolute inset-y-0 right-0 my-1 mr-1 rounded-lg px-3 text-sm font-semibold text-forest outline-none hover:bg-[#E8EEEA] focus-visible:ring-2 focus-visible:ring-forest">Show</button>
+          </div>
+          <p class="mt-1.5 text-sm text-muted" id="reg-password-hint">At least 8 characters.</p>
+          <p class="err hidden" id="reg-password-err"></p>
+        </div>
+        <button class="btn" type="submit" id="register-submit">Create my account</button>
+      </form>
+    </div>
+  </dialog>
+
   <!-- HOW MATCHING WORKS -->
-  <dialog id="how-dialog" aria-labelledby="how-title" class="w-[calc(100vw-2rem)] max-w-md rounded-xl border border-line bg-white p-0 text-ink shadow-xl backdrop:bg-ink/50">
+  <dialog id="how-dialog" aria-labelledby="how-title" class="w-[calc(100vw-2rem)] max-w-md rounded-2xl border border-line bg-white p-0 text-ink shadow-xl backdrop:bg-ink/50">
     <div class="p-6">
       <h2 id="how-title" class="font-display text-xl font-bold tracking-tight">How matching works</h2>
       <p class="mt-2 text-base text-muted">You tell Homebase what you need. It compares each room to that and ranks rooms by how well they fit you.</p>
@@ -307,6 +395,26 @@
       }
       function clear(key) { try { localStorage.removeItem(key); } catch (e) {} }
 
+      // Seed default demo accounts if not already stored
+      if (!read(USERS_KEY, null)) {
+        write(USERS_KEY, [
+          {
+            id: 'demo-student',
+            name: 'Alex Santos',
+            email: 'alex@unc.edu.ph',
+            role: 'student',
+            password: 'sha256:2a6747e1b382015051cf9d7d23f72ed87ffa924d52b234b2b7e8e803c6f42188'
+          },
+          {
+            id: 'demo-manager',
+            name: 'Ariante Dorm Manager',
+            email: 'manager@ariatedorm.com',
+            role: 'landlord',
+            password: 'sha256:324edabe4fea58d0f91f5f8fc20af8ef9df416b2f14ff262216ae5a6a5617fbc'
+          }
+        ]);
+      }
+
       // Prototype only: hashing in the browser is not real security. Move this to the server in the PHP/MySQL phase.
       function hashPassword(pw) {
         if (window.crypto && crypto.subtle && window.TextEncoder) {
@@ -317,45 +425,11 @@
         return Promise.resolve('plain:' + pw);
       }
 
-      // ---- tabs ----
-      var tabs = { login: $('tab-login'), register: $('tab-register') };
-      var panels = { login: $('panel-login'), register: $('panel-register') };
-      var copy = {
-        login: ['Welcome back', 'Log in to pick up where you left off.'],
-        register: ['Create your account', 'Tell us who you are and we will start matching.']
-      };
-
-      function showTab(name, moveFocus) {
-        Object.keys(tabs).forEach(function (k) {
-          var on = k === name;
-          tabs[k].setAttribute('aria-selected', String(on));
-          tabs[k].tabIndex = on ? 0 : -1;
-          panels[k].hidden = !on;
-        });
-        $('auth-heading').textContent = copy[name][0];
-        $('auth-sub').textContent = copy[name][1];
-        clearErrors();
-        if (moveFocus) tabs[name].focus();
-      }
-
-      Object.keys(tabs).forEach(function (k) {
-        tabs[k].addEventListener('click', function () { showTab(k, false); });
-        tabs[k].addEventListener('keydown', function (e) {
-          if (e.key === 'ArrowRight' || e.key === 'ArrowLeft' || e.key === 'Home' || e.key === 'End') {
-            e.preventDefault();
-            var next = (e.key === 'ArrowRight' || e.key === 'End') ? 'register' : 'login';
-            showTab(next, true);
-          }
-        });
-      });
-      document.querySelectorAll('[data-switch]').forEach(function (b) {
-        b.addEventListener('click', function () {
-          var to = b.getAttribute('data-switch');
-          showTab(to, false);
-          var first = panels[to].querySelector('input:not([type=radio])');
-          if (first) first.focus();
-        });
-      });
+      // ---- dialogs ----
+      var regDialog = $('register-dialog');
+      var how = $('how-dialog');
+      function openDialog(d) { if (d.showModal) d.showModal(); else d.setAttribute('open', ''); }
+      function closeDialog(d) { if (d.close) d.close(); else d.removeAttribute('open'); }
 
       // ---- show/hide password ----
       document.querySelectorAll('[data-toggle-password]').forEach(function (btn) {
@@ -384,9 +458,13 @@
         box.textContent = message || '';
         box.classList.toggle('hidden', !message);
       }
-      function clearErrors() {
-        ['login-email', 'login-password', 'reg-name', 'reg-email', 'reg-password'].forEach(function (id) { setFieldError(id, ''); });
-        setFormError('login-error', ''); setFormError('register-error', '');
+      function clearLoginErrors() {
+        ['login-email', 'login-password'].forEach(function (id) { setFieldError(id, ''); });
+        setFormError('login-error', '');
+      }
+      function clearRegisterErrors() {
+        ['reg-name', 'reg-email', 'reg-password'].forEach(function (id) { setFieldError(id, ''); });
+        setFormError('register-error', '');
       }
       function firstInvalid(ids) {
         for (var i = 0; i < ids.length; i++) if ($(ids[i]).getAttribute('aria-invalid') === 'true') return $(ids[i]);
@@ -405,17 +483,28 @@
         var signedIn = !!(user && user.email);
         $('auth-view').hidden = signedIn;
         $('session-view').hidden = !signedIn;
-        $('nav-cta').textContent = signedIn ? 'Log out' : 'Create account';
         if (signedIn) {
           $('session-detail').textContent = user.name + ' (' + (user.role === 'landlord' ? 'landlord' : 'student') + '), ' + user.email;
         }
         return signedIn;
       }
 
+      // ---- open / close register ----
+      document.querySelectorAll('[data-open-register]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          clearRegisterErrors();
+          openDialog(regDialog);
+          $('reg-name').focus();
+        });
+      });
+      $('close-register').addEventListener('click', function () { closeDialog(regDialog); });
+      regDialog.addEventListener('click', function (e) { if (e.target === regDialog) closeDialog(regDialog); });
+      regDialog.addEventListener('close', function () { $('form-register').reset(); clearRegisterErrors(); });
+
       // ---- login ----
       $('form-login').addEventListener('submit', function (e) {
         e.preventDefault();
-        clearErrors();
+        clearLoginErrors();
         var email = $('login-email').value.trim().toLowerCase();
         var pw = $('login-password').value;
 
@@ -439,6 +528,7 @@
             return;
           }
           $('form-login').reset();
+          renderSession();
           window.location.href = 'dashboard.html';
         }).then(function () { setBusy(btn, false, 'Log in', 'Logging in...'); });
       });
@@ -446,7 +536,7 @@
       // ---- register ----
       $('form-register').addEventListener('submit', function (e) {
         e.preventDefault();
-        clearErrors();
+        clearRegisterErrors();
         var form = e.target;
         var name = $('reg-name').value.trim();
         var email = $('reg-email').value.trim().toLowerCase();
@@ -464,7 +554,7 @@
         hashPassword(pw).then(function (hash) {
           var users = read(USERS_KEY, []);
           if (users.some(function (u) { return u.email === email; })) {
-            setFieldError('reg-email', 'An account with this email already exists. Try logging in instead.');
+            setFieldError('reg-email', 'An account with this email already exists. Close this window and log in instead.');
             $('reg-email').focus();
             return;
           }
@@ -475,7 +565,8 @@
             return;
           }
           write(CURRENT_KEY, { id: user.id, name: user.name, email: user.email, role: user.role });
-          form.reset();
+          closeDialog(regDialog);
+          renderSession();
           window.location.href = 'dashboard.html';
         }).then(function () { setBusy(btn, false, 'Create my account', 'Creating account...'); });
       });
@@ -484,82 +575,20 @@
       $('logout').addEventListener('click', function () {
         clear(CURRENT_KEY);
         renderSession();
-        showTab('login', false);
+        clearLoginErrors();
         $('login-email').focus();
       });
 
-      // ---- audience (nav) + hero copy ----
-      var HERO = {
-        student: {
-          title: 'A room that fits your budget and your commute.',
-          text: 'Tell Homebase what matters to you. It scores every dorm and room against it, so studying far from home stops meaning guesswork.',
-          label: 'Every listing is scored on',
-          factors: ['Budget', 'Commute', 'Amenities', 'Safety']
-        },
-        landlord: {
-          title: 'Fill your rooms with students who fit them.',
-          text: 'List your dorm or rooms and keep availability current. Homebase shows them to students whose budget and commute match.',
-          label: 'Students compare your rooms on',
-          factors: ['Price', 'Distance to school', 'Amenities', 'Safety']
-        }
-      };
-      function setAudience(who) {
-        if (!HERO[who]) return;
-        document.querySelectorAll('[data-audience]').forEach(function (b) {
-          b.setAttribute('aria-pressed', String(b.getAttribute('data-audience') === who));
-        });
-        var h = HERO[who];
-        $('hero-title').textContent = h.title;
-        $('hero-text').textContent = h.text;
-        $('hero-factors-label').textContent = h.label;
-        var ul = $('hero-factors');
-        ul.textContent = '';
-        h.factors.forEach(function (f, i) {
-          if (i) {
-            var sep = document.createElement('li');
-            sep.className = 'h-4 w-px bg-white/40';
-            sep.setAttribute('aria-hidden', 'true');
-            ul.appendChild(sep);
-          }
-          var li = document.createElement('li');
-          li.textContent = f;
-          ul.appendChild(li);
-        });
-        var radio = document.querySelector('input[name=role][value=' + who + ']');
-        if (radio) radio.checked = true;
-      }
-      document.querySelectorAll('[data-audience]').forEach(function (b) {
-        b.addEventListener('click', function () { setAudience(b.getAttribute('data-audience')); });
-      });
-      document.querySelectorAll('input[name=role]').forEach(function (r) {
-        r.addEventListener('change', function () { setAudience(r.value); });
-      });
-
-      // ---- nav CTA ----
-      $('nav-cta').addEventListener('click', function () {
-        if (read(CURRENT_KEY, null)) {
-          clear(CURRENT_KEY);
-          renderSession();
-          showTab('login', false);
-          return;
-        }
-        showTab('register', false);
-        $('reg-name').focus();
-      });
-
-      // ---- how matching works dialog ----
-      var how = $('how-dialog');
-      $('open-how').addEventListener('click', function () {
-        if (how.showModal) how.showModal(); else how.setAttribute('open', '');
-      });
-      $('close-how').addEventListener('click', function () { how.close(); });
-      how.addEventListener('click', function (e) { if (e.target === how) how.close(); });
+      // ---- how matching works ----
+      $('open-how').addEventListener('click', function () { openDialog(how); });
+      $('close-how').addEventListener('click', function () { closeDialog(how); });
+      how.addEventListener('click', function (e) { if (e.target === how) closeDialog(how); });
 
       // ---- hero photo: only revealed once the file really loads ----
       var heroImg = $('hero-img');
-      function revealPhoto() { if (heroImg.naturalWidth > 0) $('hero-photo').classList.remove('hidden'); }
+      function revealPhoto() { if (heroImg.naturalWidth > 0) heroImg.hidden = false; }
       if (heroImg.complete) revealPhoto(); else heroImg.addEventListener('load', revealPhoto);
-      heroImg.addEventListener('error', function () { $('hero-photo').remove(); });
+      heroImg.addEventListener('error', function () { heroImg.remove(); });
 
       renderSession();
     })();
