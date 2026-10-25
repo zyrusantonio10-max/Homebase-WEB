@@ -12,6 +12,63 @@
 document.addEventListener("DOMContentLoaded", () => {
 
   // =========================================================================
+  // USER SESSION & AUTH SYNC
+  // =========================================================================
+  const SESSION_KEY = "homebase_currentUser";
+  let currentUser = null;
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (raw) currentUser = JSON.parse(raw);
+  } catch (e) {
+    currentUser = null;
+  }
+
+  const welcomeName = document.getElementById("welcomeName");
+  const profileName = document.getElementById("profileName");
+  const profileUni = document.getElementById("profileUni");
+  const profileAvatar = document.getElementById("profileAvatar");
+  const dashLogoutBtn = document.getElementById("dashLogoutBtn");
+
+  if (currentUser && currentUser.name) {
+    const firstName = currentUser.name.trim().split(/\s+/)[0];
+    if (welcomeName) welcomeName.textContent = firstName;
+    if (profileName) profileName.textContent = currentUser.name;
+    if (profileUni) {
+      profileUni.textContent = (currentUser.role === "landlord" ? "Landlord" : "Student") + " • " + (currentUser.email || "");
+    }
+    if (profileAvatar) {
+      const initials = currentUser.name
+        .trim()
+        .split(/\s+/)
+        .map((p) => p[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2);
+      profileAvatar.textContent = initials || "HB";
+    }
+    if (dashLogoutBtn) {
+      dashLogoutBtn.textContent = "Log out";
+      dashLogoutBtn.addEventListener("click", () => {
+        try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
+        window.location.href = "index.html";
+      });
+    }
+  } else {
+    if (welcomeName) welcomeName.textContent = "Student";
+    if (profileName) profileName.textContent = "Guest Visitor";
+    if (profileUni) profileUni.textContent = "Exploring Dorms";
+    if (profileAvatar) profileAvatar.textContent = "HB";
+    if (dashLogoutBtn) {
+      dashLogoutBtn.textContent = "Log in / Register";
+      dashLogoutBtn.classList.remove("btn-outline-secondary");
+      dashLogoutBtn.classList.add("btn-outline-primary");
+      dashLogoutBtn.addEventListener("click", () => {
+        window.location.href = "index.html";
+      });
+    }
+  }
+
+  // =========================================================================
   // 1. ARIANTE DORMITORY ROOM DATA
   //    This is the dataset the owner/manager would edit.
   //    Nothing is hard-coded to Ariante — swap this object for another dorm.

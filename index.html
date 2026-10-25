@@ -287,10 +287,15 @@
         <div id="session-view" hidden>
           <h2 class="font-display text-2xl font-bold tracking-tight text-ink" id="session-heading" tabindex="-1">You are logged in</h2>
           <p class="mt-1.5 text-base text-muted" id="session-detail"></p>
-          <div class="mt-6 rounded-xl border border-line bg-[#F4F8F5] px-4 py-4 text-base text-ink">
-            Coming soon: your personalized room matches. This page will link there once it is built.
+          <div class="mt-6 rounded-xl border border-line bg-[#F4F8F5] p-5 text-base text-ink">
+            <p class="font-semibold text-forest-deep">Ready to find a room?</p>
+            <p class="mt-1 text-sm text-muted">Explore Ariante Dormitory options, set your budget and preferences, and see your suitability score.</p>
+            <a href="dashboard.html" class="btn mt-4 inline-flex items-center justify-center gap-2 text-white no-underline">
+              <span>Go to Student Dashboard</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
           </div>
-          <button type="button" id="logout" class="btn btn-outline mt-6">Log out</button>
+          <button type="button" id="logout" class="btn btn-outline mt-4">Log out</button>
         </div>
 
       </div>
@@ -389,6 +394,26 @@
         catch (e) { return false; }
       }
       function clear(key) { try { localStorage.removeItem(key); } catch (e) {} }
+
+      // Seed default demo accounts if not already stored
+      if (!read(USERS_KEY, null)) {
+        write(USERS_KEY, [
+          {
+            id: 'demo-student',
+            name: 'Alex Santos',
+            email: 'alex@unc.edu.ph',
+            role: 'student',
+            password: 'sha256:2a6747e1b382015051cf9d7d23f72ed87ffa924d52b234b2b7e8e803c6f42188'
+          },
+          {
+            id: 'demo-manager',
+            name: 'Ariante Dorm Manager',
+            email: 'manager@ariatedorm.com',
+            role: 'landlord',
+            password: 'sha256:324edabe4fea58d0f91f5f8fc20af8ef9df416b2f14ff262216ae5a6a5617fbc'
+          }
+        ]);
+      }
 
       // Prototype only: hashing in the browser is not real security. Move this to the server in the PHP/MySQL phase.
       function hashPassword(pw) {
@@ -504,7 +529,7 @@
           }
           $('form-login').reset();
           renderSession();
-          $('session-heading').focus();
+          window.location.href = 'dashboard.html';
         }).then(function () { setBusy(btn, false, 'Log in', 'Logging in...'); });
       });
 
@@ -542,7 +567,7 @@
           write(CURRENT_KEY, { id: user.id, name: user.name, email: user.email, role: user.role });
           closeDialog(regDialog);
           renderSession();
-          $('session-heading').focus();
+          window.location.href = 'dashboard.html';
         }).then(function () { setBusy(btn, false, 'Create my account', 'Creating account...'); });
       });
 
