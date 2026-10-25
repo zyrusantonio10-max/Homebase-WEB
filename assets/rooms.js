@@ -4,6 +4,9 @@
   Later (PHP + MySQL phase): replace this file with a fetch() to your PHP page that returns the same shape.
 
   Each room: { id, name, floor, type: "Single" | "Double" | "Quad", price (per month, in pesos), amenities: [...], available: true | false }
+
+  Pictures: each room shows assets/rooms/room-<id>.svg, a generated ILLUSTRATION (not a photo).
+  To use a real photo, put it in assets/rooms/ and add  image: 'assets/rooms/room-101.jpg'  to that room. Explore Rooms uses it automatically.
 */
 window.HOMEBASE_AMENITIES = ['Wi-Fi', 'Air conditioning', 'Study desk', 'Private bathroom', 'Laundry access', 'Kitchenette'];
 
