@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Home | Homebase</title>
+  <meta name="description" content="Your Homebase home: best room match, saved rooms and recent comparisons.">
+
+  <!--
+    Design Read: signed-in student home screen for students choosing a room at Ariate Dormitory, same forest green + lime
+    language as index.html, dial ENERGY 2 / RHYTHM 2 / MOTION 1.
+
+    The one decision on this screen: "what is my best room right now, and what do I do next?"
+    So the best-match card is the page. Everything else supports it.
+
+    Reasons (R-31):
+    - Layout: pill navbar on top, no sidebar (your decision). Row 1 = best match (wide, dark green, the focal point) + profile.
+      Row 2 = saved rooms (wide) + recent comparisons (narrow). The widths change on purpose so the rows do not repeat.
+    - Palette: only the colors in assets/tw-config.js. Forest for the focal card and primary actions, tint for the quiet profile card,
+      white for lists. Lime is used ONLY on the lit window and the button inside the match card (one accent, one card).
+    - Identity motif: the dorm with one lit window from the landing page. Empty state = all windows dark ("waiting for a match").
+      When a match exists, one window lights up. Same idea as the landing page, so the two pages belong together.
+    - Radius: pill for the navbar and buttons, 28px for the focal card, 20px for other cards, 12px for rows inside cards.
+    - Shadow and glow: none. Flat cards with a thin border. Nothing here sits on top of anything else.
+    - Numbers: NONE are invented. Every number comes from localStorage (written later by My Matches / Explore Rooms).
+      No data yet = honest empty state that says what to do next (R-17, R-27, R-38).
+    - Avatar: initials in a circle. This is a placeholder, there are no profile photos yet (R-23).
+    - Motion: the lit window fades on once. Turned off under prefers-reduced-motion.
+    - Commute and safety are not shown anywhere on this page (your decision: they only appear inside reviews).
+
+    TODO (for the other pages and the PHP + MySQL phase):
+    - matches.html, rooms.html and floorplan.html do not exist yet. The navbar links are ready for them.
+    - The three storage keys below are the "contract" between this page and the pages you build next.
+      When you move to PHP + MySQL, replace the read() calls in the script with fetch() calls and keep the render functions.
+  -->
+
+  <script>
+    // Guard: nobody gets in without logging in. Runs before the page draws, so there is no flash of content.
+    (function () {
+      try {
+        var u = JSON.parse(localStorage.getItem('homebase_currentUser') || 'null');
+        if (!u || !u.email) window.location.replace('index.html');
+      } catch (e) { window.location.replace('index.html'); }
+    })();
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/tw-config.js"></script>
+
+  <style type="text/tailwindcss">
+    @layer components {
+      .btn {
+        @apply inline-flex min-h-[44px] items-center justify-center rounded-full border border-transparent bg-forest px-5 py-2.5 text-base font-semibold text-white no-underline
+               transition-colors hover:bg-forest-deep outline-none
+               focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2;
+      }
+      .btn-outline { @apply border-forest bg-white text-forest hover:bg-tint; }
+      .btn-lime {
+        @apply bg-lime text-ink hover:bg-[#B5E03F] focus-visible:ring-lime focus-visible:ring-offset-forest;
+      }
+      .textlink { @apply inline-flex min-h-[44px] items-center rounded font-semibold text-forest underline underline-offset-4 outline-none hover:text-forest-deep focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2; }
+      .nav-link {
+        @apply inline-flex min-h-[44px] items-center rounded-full px-4 text-base font-medium text-ink no-underline transition-colors outline-none
+               hover:bg-track focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2
+               aria-[current=page]:bg-forest aria-[current=page]:text-white;
+      }
+      .card-title { @apply font-display text-lg font-semibold tracking-tight text-ink; }
+      .note { @apply text-base text-muted; }
+    }
+  </style>
+
+  <style>
+    /* The dorm motif: all windows dark, one lights up when a best match exists. */
+    .win { fill: #083A25; }
+    .win.lit { fill: #C6F24E; transition: fill 600ms ease-out; }
+    @media (prefers-reduced-motion: reduce) { .win.lit { transition: none; } }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+
+<body class="min-h-screen bg-white font-body text-ink antialiased">
+
+  <!-- NAVBAR: pill, four links, one of them is this page -->
+  <header class="sticky top-0 z-20 bg-white px-4 pb-2 pt-4 sm:px-6">
+    <nav aria-label="Main" class="mx-auto flex max-w-6xl items-center justify-between gap-3 rounded-full border border-line bg-white py-2 pl-4 pr-2">
+      <a href="home.html" aria-label="Homebase home" class="inline-flex min-h-[44px] items-center gap-2.5 rounded-full font-display text-xl font-bold tracking-tight text-ink no-underline outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">
+        <!-- same placeholder mark as index.html: dark square, one lit window -->
+        <svg viewBox="0 0 32 32" class="h-9 w-9 shrink-0" aria-hidden="true">
+          <rect width="32" height="32" rx="8" fill="#0B4A2F"/>
+          <rect x="7" y="8" width="7" height="8" rx="1.5" fill="#083A25"/>
+          <rect x="18" y="8" width="7" height="8" rx="1.5" fill="#C6F24E"/>
+          <rect x="7" y="19" width="7" height="8" rx="1.5" fill="#083A25"/>
+          <rect x="18" y="19" width="7" height="8" rx="1.5" fill="#083A25"/>
+        </svg>
+        <span>Homebase</span>
+      </a>
+
+      <ul id="nav-links" class="hidden items-center gap-1 md:flex">
+        <li><a class="nav-link" href="home.html" aria-current="page">Home</a></li>
+        <li><a class="nav-link" href="matches.html">My Matches</a></li>
+        <li><a class="nav-link" href="rooms.html">Explore Rooms</a></li>
+        <li><a class="nav-link" href="floorplan.html">Floor Plan</a></li>
+      </ul>
+
+      <div class="flex items-center gap-2">
+        <span class="hidden items-center gap-2 pr-1 md:flex">
+          <span id="nav-initial" class="grid h-9 w-9 place-items-center rounded-full bg-forest font-display text-sm font-semibold text-white" aria-hidden="true"></span>
+          <span id="nav-name" class="max-w-[9rem] truncate text-sm font-medium text-ink"></span>
+        </span>
+        <button type="button" data-logout class="btn btn-outline hidden md:inline-flex">Log out</button>
+        <button type="button" id="menu-btn" aria-expanded="false" aria-controls="menu"
+          class="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-forest bg-white px-4 text-base font-semibold text-forest outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 md:hidden">
+          <span id="menu-label">Menu</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Mobile menu: same four links, plus log out -->
+    <div id="menu" hidden class="mx-auto mt-2 max-w-6xl rounded-[20px] border border-line bg-white p-2 md:hidden">
+      <ul id="menu-links" class="grid gap-1">
+        <li><a class="nav-link w-full" href="home.html" aria-current="page">Home</a></li>
+        <li><a class="nav-link w-full" href="matches.html">My Matches</a></li>
+        <li><a class="nav-link w-full" href="rooms.html">Explore Rooms</a></li>
+        <li><a class="nav-link w-full" href="floorplan.html">Floor Plan</a></li>
+      </ul>
+      <div class="mt-2 border-t border-line pt-2">
+        <button type="button" data-logout class="btn btn-outline w-full">Log out</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
+
+    <!-- LANDLORD: this page is for students. The landing page sends every role here, so say so plainly. -->
+    <section id="landlord-view" hidden aria-labelledby="landlord-title" class="mx-auto max-w-xl rounded-[20px] border border-line bg-tint p-6 sm:p-8">
+      <h1 id="landlord-title" class="font-display text-2xl font-bold tracking-tight">This page is for students</h1>
+      <p class="note mt-2">The landlord view is not built yet. You can log out and sign in with a student account to see the student dashboard.</p>
+      <button type="button" data-logout class="btn mt-5">Log out</button>
+    </section>
+
+    <!-- STUDENT -->
+    <div id="student-view">
+
+      <section aria-labelledby="welcome-title">
+        <h1 id="welcome-title" class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
+          Welcome back, <span id="first-name" class="text-forest"></span>.
+        </h1>
+        <p class="note mt-2 max-w-xl">Here is where your room search at Ariate Dormitory stands.</p>
+      </section>
+
+      <!-- ROW 1: best match (focal point) + profile -->
+      <div class="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+
+        <!-- BEST MATCH: the one decision on this screen -->
+        <section id="card-top" aria-labelledby="top-title" class="relative overflow-hidden rounded-[28px] bg-forest p-6 text-white sm:p-8">
+          <div class="grid items-center gap-6 sm:grid-cols-[minmax(0,1fr)_200px]">
+            <div class="min-w-0">
+              <h2 id="top-title" class="font-display text-lg font-semibold tracking-tight text-white/85">Your best match</h2>
+
+              <!-- loading -->
+              <div data-state="loading" class="mt-4">
+                <p class="text-base text-white/85" role="status">Loading your best match...</p>
+              </div>
+
+              <!-- error -->
+              <div data-state="error" hidden class="mt-4" role="alert">
+                <p class="font-display text-2xl font-bold tracking-tight">We could not read your match</p>
+                <p class="mt-2 max-w-md text-base text-white/85">Your browser may be blocking site data. Allow site data for this page, then reload.</p>
+                <button type="button" data-reload class="btn btn-lime mt-5">Reload this page</button>
+              </div>
+
+              <!-- empty -->
+              <div data-state="empty" hidden class="mt-4">
+                <p class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">No match yet</p>
+                <p class="mt-3 max-w-md text-base text-white/85">Homebase ranks Ariate Dormitory rooms by how well they fit your budget and the amenities you need. Tell it what you need and your best room shows up here.</p>
+                <a href="matches.html" class="btn btn-lime mt-6">Set my budget and needs</a>
+              </div>
+
+              <!-- has a match -->
+              <div data-state="match" hidden class="mt-4">
+                <p id="top-name" class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl"></p>
+                <p class="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  <span id="top-score" class="font-display text-2xl font-bold"></span>
+                  <span id="top-price" class="text-base text-white/85"></span>
+                </p>
+                <a href="matches.html" class="btn btn-lime mt-6">See all my matches</a>
+              </div>
+            </div>
+
+            <!-- identity motif: the dorm, one window lights when a match exists -->
+            <svg viewBox="0 0 200 200" class="mx-auto hidden h-auto w-full max-w-[200px] sm:block" aria-hidden="true" focusable="false">
+              <rect x="14" y="14" width="172" height="176" rx="10" fill="#0E5435"/>
+              <rect x="8" y="10" width="184" height="12" rx="3" fill="#0D5033"/>
+              <rect class="win" x="36" y="40" width="30" height="38" rx="3"/>
+              <rect class="win" x="86" y="40" width="30" height="38" rx="3"/>
+              <rect class="win" x="136" y="40" width="30" height="38" rx="3"/>
+              <rect class="win" x="36" y="92" width="30" height="38" rx="3"/>
+              <rect id="lit-window" class="win" x="86" y="92" width="30" height="38" rx="3"/>
+              <rect class="win" x="136" y="92" width="30" height="38" rx="3"/>
+              <rect class="win" x="36" y="144" width="30" height="38" rx="3"/>
+              <rect class="win" x="136" y="144" width="30" height="38" rx="3"/>
+              <rect class="win" x="86" y="150" width="30" height="40" rx="3"/>
+            </svg>
+          </div>
+        </section>
+
+        <!-- PROFILE -->
+        <section aria-labelledby="profile-title" class="rounded-[20px] border border-line bg-tint p-6">
+          <h2 id="profile-title" class="card-title">Your profile</h2>
+          <div class="mt-4 flex items-center gap-4">
+            <!-- placeholder avatar: initial only, no photos yet -->
+            <span id="profile-initial" class="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-forest font-display text-xl font-semibold text-white" aria-hidden="true"></span>
+            <div class="min-w-0">
+              <p id="profile-name" class="truncate font-display text-lg font-semibold tracking-tight"></p>
+              <p class="text-sm text-muted">Student</p>
+            </div>
+          </div>
+          <dl class="mt-5 space-y-3 text-base">
+            <div>
+              <dt class="text-sm font-medium text-muted">Email</dt>
+              <dd id="profile-email" class="break-words"></dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-muted">Dormitory</dt>
+              <dd>Ariate Dormitory</dd>
+            </div>
+          </dl>
+        </section>
+      </div>
+
+      <!-- ROW 2: saved rooms (wide) + recent comparisons (narrow) -->
+      <div class="mt-6 grid gap-6 lg:grid-cols-5">
+
+        <section id="card-saved" aria-labelledby="saved-title" class="rounded-[20px] border border-line bg-white p-6 lg:col-span-3">
+          <h2 id="saved-title" class="card-title">Saved rooms</h2>
+
+          <div data-state="loading" class="mt-4"><p class="note" role="status">Loading your saved rooms...</p></div>
+
+          <div data-state="error" hidden class="mt-4" role="alert">
+            <p class="text-base font-semibold text-danger">We could not read your saved rooms.</p>
+            <p class="note mt-1">Allow site data for this page in your browser, then reload.</p>
+          </div>
+
+          <div data-state="empty" hidden class="mt-4">
+            <p class="note max-w-md">Nothing saved yet. Save a room from Explore Rooms and it waits for you here.</p>
+            <a href="rooms.html" class="textlink mt-2">Go to Explore Rooms</a>
+          </div>
+
+          <ul data-state="list" hidden id="saved-list" class="mt-4 space-y-2"></ul>
+        </section>
+
+        <section id="card-cmp" aria-labelledby="cmp-title" class="rounded-[20px] border border-line bg-white p-6 lg:col-span-2">
+          <h2 id="cmp-title" class="card-title">Recent comparisons</h2>
+
+          <div data-state="loading" class="mt-4"><p class="note" role="status">Loading your comparisons...</p></div>
+
+          <div data-state="error" hidden class="mt-4" role="alert">
+            <p class="text-base font-semibold text-danger">We could not read your comparisons.</p>
+            <p class="note mt-1">Allow site data for this page in your browser, then reload.</p>
+          </div>
+
+          <div data-state="empty" hidden class="mt-4">
+            <p class="note">You have not compared rooms yet. Rooms you compare show up here.</p>
+          </div>
+
+          <ul data-state="list" hidden id="cmp-list" class="mt-4 space-y-2"></ul>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      /*
+        STORAGE CONTRACT (the pages you build next write these keys, this page only reads them):
+          homebase_currentUser   { id, name, email, role }                   written by index.html at login
+          homebase_topMatch      { name: "Room 204", score: 0-100, price: 4500 }   written by My Matches
+          homebase_savedRooms    [ { id: "204", name: "Room 204", price: 4500 } ]  written by Explore Rooms
+          homebase_comparisons   [ { rooms: ["Room 204", "Room 310"], date: "2026-10-25T08:00:00Z" } ]
+        price and date are optional. If a key is missing, the card shows its empty state.
+      */
+      var KEYS = {
+        user: 'homebase_currentUser',
+        top: 'homebase_topMatch',
+        saved: 'homebase_savedRooms',
+        cmp: 'homebase_comparisons'
+      };
+
+      var $ = function (id) { return document.getElementById(id); };
+
+      // ---- storage (guarded: blocked storage or broken JSON becomes an error state, not a crash) ----
+      function read(key) {
+        try {
+          var raw = localStorage.getItem(key);
+          return { ok: true, value: raw ? JSON.parse(raw) : null };
+        } catch (e) {
+          return { ok: false, value: null };
+        }
+      }
+      function write(key, value) {
+        try { localStorage.setItem(key, JSON.stringify(value)); return true; }
+        catch (e) { return false; }
+      }
+
+      // Show exactly one state ("loading", "error", "empty", "match", "list") inside a card.
+      function setState(cardId, state) {
+        var nodes = $(cardId).querySelectorAll('[data-state]');
+        for (var i = 0; i < nodes.length; i++) {
+          nodes[i].hidden = nodes[i].getAttribute('data-state') !== state;
+        }
+      }
+
+      function peso(n) {
+        return (typeof n === 'number' && isFinite(n)) ? '\u20B1' + n.toLocaleString('en-PH') + ' per month' : '';
+      }
+
+      // ---- user ----
+      var u = read(KEYS.user);
+      var user = u.ok ? u.value : null;
+      if (!user || !user.email) { window.location.replace('index.html'); return; }
+
+      var fullName = String(user.name || user.email);
+      var firstName = fullName.split(/\s+/)[0];
+      var initial = fullName.charAt(0).toUpperCase();
+
+      $('nav-initial').textContent = initial;
+      $('nav-name').textContent = firstName;
+
+      // ---- logout (works from the navbar and the mobile menu) ----
+      document.querySelectorAll('[data-logout]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          try { localStorage.removeItem(KEYS.user); } catch (e) {}
+          window.location.href = 'index.html';
+        });
+      });
+
+      document.querySelectorAll('[data-reload]').forEach(function (b) {
+        b.addEventListener('click', function () { window.location.reload(); });
+      });
+
+      // ---- mobile menu ----
+      var menuBtn = $('menu-btn');
+      var menu = $('menu');
+      function setMenu(open) {
+        menu.hidden = !open;
+        menuBtn.setAttribute('aria-expanded', String(open));
+        $('menu-label').textContent = open ? 'Close' : 'Menu';
+      }
+      menuBtn.addEventListener('click', function () { setMenu(menu.hidden); });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !menu.hidden) { setMenu(false); menuBtn.focus(); }
+      });
+
+      // ---- landlords get a plain notice, not the student page ----
+      if (user.role === 'landlord') {
+        $('student-view').hidden = true;
+        $('landlord-view').hidden = false;
+        $('nav-links').hidden = true;
+        $('menu-links').hidden = true;
+        menuBtn.hidden = true;
+        return;
+      }
+
+      // ---- profile ----
+      $('first-name').textContent = firstName;
+      $('profile-initial').textContent = initial;
+      $('profile-name').textContent = fullName;
+      $('profile-email').textContent = String(user.email);
+
+      // ---- best match ----
+      function renderTop() {
+        var r = read(KEYS.top);
+        if (!r.ok) { setState('card-top', 'error'); return; }
+        var m = r.value;
+        var valid = m && typeof m.name === 'string' && m.name && typeof m.score === 'number' && isFinite(m.score);
+        if (!valid) { setState('card-top', 'empty'); return; }
+        $('top-name').textContent = m.name;
+        $('top-score').textContent = Math.max(0, Math.min(100, Math.round(m.score))) + '% fit';
+        $('top-price').textContent = peso(m.price);
+        $('lit-window').classList.add('lit');
+        setState('card-top', 'match');
+      }
+
+      // ---- saved rooms ----
+      function renderSaved() {
+        var r = read(KEYS.saved);
+        if (!r.ok || (r.value !== null && !Array.isArray(r.value))) { setState('card-saved', 'error'); return; }
+        var rooms = (r.value || []).filter(function (x) { return x && typeof x.name === 'string' && x.name; });
+        if (!rooms.length) { setState('card-saved', 'empty'); return; }
+
+        var list = $('saved-list');
+        list.textContent = '';
+        rooms.forEach(function (room) {
+          var li = document.createElement('li');
+          li.className = 'flex items-center justify-between gap-3 rounded-xl border border-line px-4 py-2';
+
+          var text = document.createElement('div');
+          text.className = 'min-w-0';
+          var name = document.createElement('p');
+          name.className = 'truncate font-semibold';
+          name.textContent = room.name;
+          text.appendChild(name);
+          var price = peso(room.price);
+          if (price) {
+            var p = document.createElement('p');
+            p.className = 'text-sm text-muted';
+            p.textContent = price;
+            text.appendChild(p);
+          }
+
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'inline-flex min-h-[44px] shrink-0 items-center rounded-full px-3 text-sm font-semibold text-forest underline underline-offset-4 outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-forest';
+          btn.textContent = 'Remove';
+          btn.setAttribute('aria-label', 'Remove ' + room.name + ' from saved rooms');
+          btn.addEventListener('click', function () {
+            var next = rooms.filter(function (x) { return x !== room; });
+            if (!write(KEYS.saved, next)) { setState('card-saved', 'error'); return; }
+            renderSaved();
+          });
+
+          li.appendChild(text);
+          li.appendChild(btn);
+          list.appendChild(li);
+        });
+        setState('card-saved', 'list');
+      }
+
+      // ---- recent comparisons ----
+      function renderComparisons() {
+        var r = read(KEYS.cmp);
+        if (!r.ok || (r.value !== null && !Array.isArray(r.value))) { setState('card-cmp', 'error'); return; }
+        var items = (r.value || []).filter(function (x) { return x && Array.isArray(x.rooms) && x.rooms.length > 1; });
+        if (!items.length) { setState('card-cmp', 'empty'); return; }
+
+        var list = $('cmp-list');
+        list.textContent = '';
+        items.slice(0, 5).forEach(function (c) {
+          var li = document.createElement('li');
+          li.className = 'rounded-xl border border-line px-4 py-2';
+          var title = document.createElement('p');
+          title.className = 'font-semibold';
+          title.textContent = c.rooms.join(' vs ');
+          li.appendChild(title);
+          var d = c.date ? new Date(c.date) : null;
+          if (d && !isNaN(d.getTime())) {
+            var when = document.createElement('p');
+            when.className = 'text-sm text-muted';
+            when.textContent = d.toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
+            li.appendChild(when);
+          }
+          list.appendChild(li);
+        });
+        setState('card-cmp', 'list');
+      }
+
+      renderTop();
+      renderSaved();
+      renderComparisons();
+    })();
+  </script>
+</body>
+</html>

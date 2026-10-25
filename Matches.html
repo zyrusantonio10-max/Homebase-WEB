@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Matches | Homebase</title>
+  <meta name="description" content="Tell Homebase your budget and needs. It ranks the available Ariate Dormitory rooms by fit.">
+
+  <!--
+    Design Read: room matching screen for students at Ariate Dormitory, same forest + lime language as home.html,
+    dial ENERGY 2 / RHYTHM 2 / MOTION 1.
+
+    The one decision here: "which available room fits what I need?" So: a form on the left, ranked rooms on the right.
+    Reasons (R-31):
+    - Layout: sticky form (tint card) + results. Result #1 is a big forest card (focal point), the rest are plain white rows,
+      because rank 1 matters more than rank 7 and should not look identical.
+    - Lime: only on the button inside the #1 card and the lit window, same rule as home.html.
+    - Score is explained on the page (details box), not hidden. Rules are in the script, search "SCORING".
+    - Numbers all come from assets/rooms.js, which is SAMPLE data and is labeled as such on the page (R-38).
+    - Commute and safety are not criteria (your decision).
+    - No motion except hover transitions (MOTION 1).
+
+    Storage written by this page: homebase_preferences, homebase_topMatch (Home reads it), homebase_savedRooms (Home reads it).
+  -->
+
+  <script>
+    // Guard: must be logged in. Landlords go to home.html, which shows them a notice.
+    (function () {
+      try {
+        var u = JSON.parse(localStorage.getItem('homebase_currentUser') || 'null');
+        if (!u || !u.email) window.location.replace('index.html');
+        else if (u.role === 'landlord') window.location.replace('home.html');
+      } catch (e) { window.location.replace('index.html'); }
+    })();
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/tw-config.js"></script>
+
+  <style type="text/tailwindcss">
+    @layer components {
+      .btn { @apply inline-flex min-h-[44px] items-center justify-center rounded-full border border-transparent bg-forest px-5 py-2.5 text-base font-semibold text-white no-underline transition-colors hover:bg-forest-deep outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 disabled:opacity-70; }
+      .btn-outline { @apply border-forest bg-white text-forest hover:bg-tint; }
+      .btn-lime { @apply bg-lime text-ink hover:bg-[#B5E03F] focus-visible:ring-lime focus-visible:ring-offset-forest; }
+      .nav-link { @apply inline-flex min-h-[44px] items-center rounded-full px-4 text-base font-medium text-ink no-underline transition-colors outline-none hover:bg-track focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 aria-[current=page]:bg-forest aria-[current=page]:text-white; }
+      .label { @apply mb-1.5 block text-sm font-medium text-ink; }
+      .field { @apply block h-12 w-full rounded-xl border border-line bg-white px-3.5 text-base text-ink outline-none transition-colors hover:border-[#8FA397] focus-visible:border-forest focus-visible:ring-2 focus-visible:ring-forest/30 aria-[invalid=true]:border-danger; }
+      .choice { @apply flex min-h-[44px] items-center justify-center rounded-xl border border-line bg-white px-3 text-center text-base font-medium text-ink transition-colors hover:border-[#8FA397] peer-checked:border-forest peer-checked:bg-forest peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-forest peer-focus-visible:ring-offset-2; }
+      .card-title { @apply font-display text-lg font-semibold tracking-tight text-ink; }
+    }
+  </style>
+  <style>[hidden] { display: none !important; }</style>
+</head>
+
+<body class="min-h-screen bg-white font-body text-ink antialiased">
+
+  <header class="sticky top-0 z-20 bg-white px-4 pb-2 pt-4 sm:px-6">
+    <nav aria-label="Main" class="mx-auto flex max-w-6xl items-center justify-between gap-3 rounded-full border border-line bg-white py-2 pl-4 pr-2">
+      <a href="home.html" aria-label="Homebase home" class="inline-flex min-h-[44px] items-center gap-2.5 rounded-full font-display text-xl font-bold tracking-tight text-ink no-underline outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">
+        <svg viewBox="0 0 32 32" class="h-9 w-9 shrink-0" aria-hidden="true">
+          <rect width="32" height="32" rx="8" fill="#0B4A2F"/><rect x="7" y="8" width="7" height="8" rx="1.5" fill="#083A25"/><rect x="18" y="8" width="7" height="8" rx="1.5" fill="#C6F24E"/><rect x="7" y="19" width="7" height="8" rx="1.5" fill="#083A25"/><rect x="18" y="19" width="7" height="8" rx="1.5" fill="#083A25"/>
+        </svg>
+        <span>Homebase</span>
+      </a>
+      <ul class="hidden items-center gap-1 md:flex">
+        <li><a class="nav-link" href="home.html">Home</a></li>
+        <li><a class="nav-link" href="matches.html" aria-current="page">My Matches</a></li>
+        <li><a class="nav-link" href="rooms.html">Explore Rooms</a></li>
+        <li><a class="nav-link" href="floorplan.html">Floor Plan</a></li>
+      </ul>
+      <div class="flex items-center gap-2">
+        <span class="hidden items-center gap-2 pr-1 md:flex">
+          <span id="nav-initial" class="grid h-9 w-9 place-items-center rounded-full bg-forest font-display text-sm font-semibold text-white" aria-hidden="true"></span>
+          <span id="nav-name" class="max-w-[9rem] truncate text-sm font-medium"></span>
+        </span>
+        <button type="button" data-logout class="btn btn-outline hidden md:inline-flex">Log out</button>
+        <button type="button" id="menu-btn" aria-expanded="false" aria-controls="menu" class="inline-flex min-h-[44px] items-center rounded-full border border-forest bg-white px-4 text-base font-semibold text-forest outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 md:hidden"><span id="menu-label">Menu</span></button>
+      </div>
+    </nav>
+    <div id="menu" hidden class="mx-auto mt-2 max-w-6xl rounded-[20px] border border-line bg-white p-2 md:hidden">
+      <ul class="grid gap-1">
+        <li><a class="nav-link w-full" href="home.html">Home</a></li>
+        <li><a class="nav-link w-full" href="matches.html" aria-current="page">My Matches</a></li>
+        <li><a class="nav-link w-full" href="rooms.html">Explore Rooms</a></li>
+        <li><a class="nav-link w-full" href="floorplan.html">Floor Plan</a></li>
+      </ul>
+      <div class="mt-2 border-t border-line pt-2"><button type="button" data-logout class="btn btn-outline w-full">Log out</button></div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
+    <h1 class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">My Matches</h1>
+    <p class="mt-2 max-w-xl text-base text-muted">Tell Homebase your budget and what you need. It ranks the available rooms by how well they fit.</p>
+
+    <div class="mt-8 grid items-start gap-6 lg:grid-cols-[340px_minmax(0,1fr)]">
+
+      <!-- FORM -->
+      <aside class="rounded-[20px] border border-line bg-tint p-6 lg:sticky lg:top-28">
+        <h2 class="card-title">What you need</h2>
+        <form id="form" novalidate class="mt-4 space-y-5">
+          <div>
+            <label class="label" for="budget">Monthly budget (pesos)</label>
+            <input class="field" id="budget" name="budget" type="number" inputmode="numeric" min="1" step="1" placeholder="Your limit per month" aria-describedby="budget-err" required>
+            <p id="budget-err" class="mt-1.5 hidden text-sm font-medium text-danger"></p>
+          </div>
+
+          <fieldset>
+            <legend class="label">Room type</legend>
+            <div class="grid grid-cols-2 gap-2">
+              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Any" checked><span class="choice">Any</span></label>
+              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Single"><span class="choice">Single</span></label>
+              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Double"><span class="choice">Double</span></label>
+              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Quad"><span class="choice">Quad</span></label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend class="label">Amenities you need</legend>
+            <div id="amenity-list" class="grid gap-2"></div>
+          </fieldset>
+
+          <button class="btn w-full" type="submit">Find my matches</button>
+        </form>
+
+        <details class="mt-5 border-t border-line pt-4">
+          <summary class="inline-flex min-h-[44px] cursor-pointer items-center rounded font-semibold text-forest outline-none focus-visible:ring-2 focus-visible:ring-forest">How the score works</summary>
+          <ul class="mt-2 space-y-2 text-sm text-muted">
+            <li><b class="text-ink">Budget, 40 points.</b> Only rooms at or under your limit are listed. A room at 90% of your limit or less gets all 40. A room closer to your limit gets 25, because there is little cushion.</li>
+            <li><b class="text-ink">Amenities, 40 points.</b> Shared out by how many of your chosen amenities the room has. If you pick none, every room gets 40.</li>
+            <li><b class="text-ink">Room type, 20 points.</b> All 20 if the type matches, or if you chose Any.</li>
+            <li>Rooms that are taken are never listed.</li>
+          </ul>
+        </details>
+      </aside>
+
+      <!-- RESULTS -->
+      <section aria-labelledby="results-title" aria-live="polite" id="results">
+        <h2 id="results-title" class="sr-only">Your ranked rooms</h2>
+        <p id="page-error" role="alert" class="mb-3 hidden text-base font-semibold text-danger"></p>
+
+        <div data-state="loading"><p class="text-base text-muted" role="status">Finding your matches...</p></div>
+
+        <div data-state="error" hidden role="alert" class="rounded-[20px] border border-line p-6">
+          <p class="font-display text-xl font-bold tracking-tight">We could not load the rooms</p>
+          <p class="mt-2 text-base text-muted">The room list did not load. Check that <code>assets/rooms.js</code> sits next to this page, then reload.</p>
+          <button type="button" data-reload class="btn btn-outline mt-4">Reload this page</button>
+        </div>
+
+        <div data-state="empty" hidden class="rounded-[20px] border border-line bg-white p-6 sm:p-8">
+          <p class="font-display text-2xl font-bold tracking-tight">No matches yet</p>
+          <p class="mt-2 max-w-md text-base text-muted">Enter your monthly budget and press Find my matches. Your ranked rooms show up here.</p>
+        </div>
+
+        <div data-state="none" hidden class="rounded-[20px] border border-line bg-white p-6 sm:p-8">
+          <p class="font-display text-2xl font-bold tracking-tight">No available room fits that budget</p>
+          <p id="none-detail" class="mt-2 max-w-md text-base text-muted"></p>
+        </div>
+
+        <div data-state="list" hidden>
+          <p id="summary" class="text-base text-muted"></p>
+          <div id="top" class="mt-4"></div>
+          <ol id="rest" class="mt-4 space-y-3"></ol>
+        </div>
+
+        <p class="mt-6 text-sm text-muted">Sample rooms. Prices and availability are placeholders until the real room list is added.</p>
+      </section>
+    </div>
+  </main>
+
+  <script src="assets/rooms.js"></script>
+  <script>
+    (function () {
+      var K = { user: 'homebase_currentUser', prefs: 'homebase_preferences', top: 'homebase_topMatch', saved: 'homebase_savedRooms' };
+      var $ = function (id) { return document.getElementById(id); };
+
+      function read(key) { try { var r = localStorage.getItem(key); return { ok: true, value: r ? JSON.parse(r) : null }; } catch (e) { return { ok: false, value: null }; } }
+      function write(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); return true; } catch (e) { return false; } }
+      function drop(key) { try { localStorage.removeItem(key); } catch (e) {} }
+      function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+      function peso(n) { return '\u20B1' + n.toLocaleString('en-PH'); }
+      function setState(s) {
+        document.querySelectorAll('#results [data-state]').forEach(function (n) { n.hidden = n.getAttribute('data-state') !== s; });
+      }
+
+      // ---- navbar ----
+      var user = (read(K.user).value) || {};
+      var fullName = String(user.name || user.email || '');
+      $('nav-initial').textContent = fullName.charAt(0).toUpperCase();
+      $('nav-name').textContent = fullName.split(/\s+/)[0];
+      document.querySelectorAll('[data-logout]').forEach(function (b) {
+        b.addEventListener('click', function () { drop(K.user); window.location.href = 'index.html'; });
+      });
+      document.querySelectorAll('[data-reload]').forEach(function (b) { b.addEventListener('click', function () { window.location.reload(); }); });
+      var menuBtn = $('menu-btn'), menu = $('menu');
+      function setMenu(o) { menu.hidden = !o; menuBtn.setAttribute('aria-expanded', String(o)); $('menu-label').textContent = o ? 'Close' : 'Menu'; }
+      menuBtn.addEventListener('click', function () { setMenu(menu.hidden); });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !menu.hidden) { setMenu(false); menuBtn.focus(); } });
+
+      // ---- data ----
+      var ROOMS = window.HOMEBASE_ROOMS, AMENITIES = window.HOMEBASE_AMENITIES;
+      if (!Array.isArray(ROOMS) || !Array.isArray(AMENITIES)) { setState('error'); return; }
+
+      AMENITIES.forEach(function (a, i) {
+        var label = el('label', 'relative block cursor-pointer');
+        var input = el('input', 'peer sr-only'); input.type = 'checkbox'; input.name = 'amenity'; input.value = a; input.id = 'am-' + i;
+        var span = el('span', 'choice justify-start gap-2', a);
+        label.appendChild(input); label.appendChild(span); $('amenity-list').appendChild(label);
+      });
+
+      // ---- SCORING (change the numbers here if your teacher or manager wants different weights) ----
+      function score(room, prefs) {
+        var budgetPts = room.price <= prefs.budget * 0.9 ? 40 : 25;
+        var matched = prefs.amenities.filter(function (a) { return room.amenities.indexOf(a) !== -1; });
+        var missing = prefs.amenities.filter(function (a) { return room.amenities.indexOf(a) === -1; });
+        var amenityPts = prefs.amenities.length ? Math.round(40 * matched.length / prefs.amenities.length) : 40;
+        var typePts = (prefs.type === 'Any' || room.type === prefs.type) ? 20 : 0;
+        return { room: room, total: budgetPts + amenityPts + typePts, budgetPts: budgetPts, amenityPts: amenityPts, typePts: typePts, matched: matched, missing: missing };
+      }
+
+      function rank(prefs) {
+        var taken = 0, over = 0, list = [];
+        ROOMS.forEach(function (r) {
+          if (!r.available) { taken++; return; }
+          if (r.price > prefs.budget) { over++; return; }
+          list.push(score(r, prefs));
+        });
+        list.sort(function (a, b) { return b.total - a.total || a.room.price - b.room.price; });
+        return { list: list, taken: taken, over: over };
+      }
+
+      // ---- saving rooms (Home reads this list) ----
+      function savedIds() { var r = read(K.saved).value; return Array.isArray(r) ? r.map(function (x) { return x.id; }) : []; }
+      function toggleSave(room, btn) {
+        var cur = read(K.saved).value; cur = Array.isArray(cur) ? cur : [];
+        var has = cur.some(function (x) { return x.id === room.id; });
+        var next = has ? cur.filter(function (x) { return x.id !== room.id; }) : cur.concat([{ id: room.id, name: room.name, price: room.price }]);
+        var err = $('page-error');
+        if (!write(K.saved, next)) { err.textContent = 'We could not save that room. Allow site data for this page in your browser and try again.'; err.classList.remove('hidden'); return; }
+        err.classList.add('hidden');
+        paintSave(btn, !has, room.name);
+      }
+      function paintSave(btn, isSaved, name) {
+        btn.textContent = isSaved ? 'Saved' : 'Save room';
+        btn.setAttribute('aria-pressed', String(isSaved));
+        btn.setAttribute('aria-label', (isSaved ? 'Remove ' : 'Save ') + name + (isSaved ? ' from saved rooms' : ''));
+      }
+      function saveButton(room, extra) {
+        var b = el('button', 'btn ' + extra); b.type = 'button';
+        paintSave(b, savedIds().indexOf(room.id) !== -1, room.name);
+        b.addEventListener('click', function () { toggleSave(room, b); });
+        return b;
+      }
+
+      // ---- rendering ----
+      function breakdown(s, cls) {
+        return el('p', cls, 'Budget ' + s.budgetPts + '/40, amenities ' + s.amenityPts + '/40, room type ' + s.typePts + '/20');
+      }
+      function facts(r) { return 'Floor ' + r.floor + ', ' + r.type + ' room, ' + peso(r.price) + ' per month'; }
+
+      function renderTop(s) {
+        var box = $('top'); box.textContent = '';
+        var card = el('article', 'rounded-[28px] bg-forest p-6 text-white sm:p-8');
+        card.appendChild(el('p', 'font-display text-base font-semibold text-white/85', 'Best match'));
+        card.appendChild(el('p', 'mt-2 font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl', s.room.name));
+        var line = el('p', 'mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1');
+        line.appendChild(el('span', 'font-display text-2xl font-bold', s.total + '% fit'));
+        line.appendChild(el('span', 'text-base text-white/85', facts(s.room)));
+        card.appendChild(line);
+        var chips = el('ul', 'mt-4 flex flex-wrap gap-2');
+        s.room.amenities.forEach(function (a) {
+          var on = s.matched.indexOf(a) !== -1;
+          chips.appendChild(el('li', 'rounded-lg border px-2.5 py-1 text-sm ' + (on ? 'border-lime bg-lime text-ink font-semibold' : 'border-white/40 text-white'), a));
+        });
+        card.appendChild(chips);
+        if (s.missing.length) card.appendChild(el('p', 'mt-3 text-sm text-white/85', 'Missing: ' + s.missing.join(', ')));
+        card.appendChild(breakdown(s, 'mt-3 text-sm text-white/85'));
+        var actions = el('div', 'mt-5'); actions.appendChild(saveButton(s.room, 'btn-lime')); card.appendChild(actions);
+        box.appendChild(card);
+      }
+
+      function renderRest(rest) {
+        var ol = $('rest'); ol.textContent = '';
+        rest.forEach(function (s, i) {
+          var li = el('li', 'grid items-center gap-3 rounded-[20px] border border-line bg-white p-5 sm:grid-cols-[1fr_auto]');
+          var left = el('div', 'min-w-0');
+          var head = el('p', 'flex flex-wrap items-baseline gap-x-3');
+          head.appendChild(el('span', 'font-display text-lg font-semibold tracking-tight', (i + 2) + '. ' + s.room.name));
+          head.appendChild(el('span', 'font-semibold text-forest', s.total + '% fit'));
+          left.appendChild(head);
+          left.appendChild(el('p', 'mt-1 text-base text-muted', facts(s.room)));
+          if (s.missing.length) left.appendChild(el('p', 'mt-1 text-sm text-muted', 'Missing: ' + s.missing.join(', ')));
+          left.appendChild(breakdown(s, 'mt-1 text-sm text-muted'));
+          li.appendChild(left);
+          li.appendChild(saveButton(s.room, 'btn-outline'));
+          ol.appendChild(li);
+        });
+      }
+
+      function run(prefs) {
+        var res = rank(prefs);
+        if (!res.list.length) {
+          drop(K.top);
+          $('none-detail').textContent = 'No available room costs ' + peso(prefs.budget) + ' or less per month. ' + res.over + ' available room' + (res.over === 1 ? ' is' : 's are') + ' over your budget. Try a higher budget.';
+          setState('none'); return;
+        }
+        var best = res.list[0];
+        $('summary').textContent = res.list.length + ' available room' + (res.list.length === 1 ? ' fits' : 's fit') + ' your budget. ' + res.over + ' available over budget, ' + res.taken + ' taken.';
+        renderTop(best); renderRest(res.list.slice(1));
+        if (!write(K.top, { name: best.room.name, score: best.total, price: best.room.price })) {
+          var err = $('page-error'); err.textContent = 'Your matches are shown, but your browser blocked saving them, so Home will not show your best match.'; err.classList.remove('hidden');
+        }
+        setState('list');
+      }
+
+      // ---- form ----
+      var form = $('form');
+      function readForm() {
+        var checked = []; form.querySelectorAll('input[name=amenity]:checked').forEach(function (c) { checked.push(c.value); });
+        return { budget: Number($('budget').value), type: form.elements.type.value, amenities: checked };
+      }
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var prefs = readForm(), err = $('budget-err');
+        if (!isFinite(prefs.budget) || prefs.budget < 1) {
+          $('budget').setAttribute('aria-invalid', 'true');
+          err.textContent = 'Enter your monthly budget as a number, like 5000.'; err.classList.remove('hidden');
+          $('budget').focus(); return;
+        }
+        $('budget').removeAttribute('aria-invalid'); err.classList.add('hidden');
+        $('page-error').classList.add('hidden');
+        write(K.prefs, prefs);
+        run(prefs);
+      });
+
+      // ---- restore last preferences ----
+      var p = read(K.prefs).value;
+      if (p && typeof p.budget === 'number' && p.budget > 0 && Array.isArray(p.amenities)) {
+        $('budget').value = p.budget;
+        var radio = form.querySelector('input[name=type][value="' + p.type + '"]'); if (radio) radio.checked = true;
+        form.querySelectorAll('input[name=amenity]').forEach(function (c) { c.checked = p.amenities.indexOf(c.value) !== -1; });
+        run({ budget: p.budget, type: radio ? p.type : 'Any', amenities: p.amenities });
+      } else {
+        setState('empty');
+      }
+    })();
+  </script>
+</body>
+</html>

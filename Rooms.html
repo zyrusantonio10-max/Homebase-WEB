@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Explore Rooms | Homebase</title>
+  <meta name="description" content="Every Ariate Dormitory room, available or taken, with price and amenities.">
+
+  <!--
+    Design Read: room catalog for students at Ariate Dormitory, same forest + lime language as home.html and matches.html,
+    dial ENERGY 2 / RHYTHM 2 / MOTION 1.
+
+    The one decision here: "which rooms exist, and which ones can I still get?" So every room is shown, taken ones included,
+    with availability stated in words, and a filter row on top.
+    Reasons (R-31):
+    - Cards in a grid: this is a catalog of same-kind things, so equal cards are the content, not a template.
+    - Pictures: generated ILLUSTRATIONS in assets/rooms/, labeled as such on the page (R-22, R-38). They show the real bed count,
+      and whether the room has a desk, AC and private bathroom. The window has one lit pane when the room is available
+      (same lit-window motif as the landing page) and is dark when it is taken.
+    - Lime: not used on this page except inside the illustrations. Buttons stay forest.
+    - Numbers all come from assets/rooms.js (SAMPLE data, labeled on the page).
+    - Radius: pill for buttons, 20px cards, 12px chips and fields. No shadows, no glow. No motion beyond hover colors.
+  -->
+
+  <script>
+    // Guard: must be logged in. Landlords go to home.html, which shows them a notice.
+    (function () {
+      try {
+        var u = JSON.parse(localStorage.getItem('homebase_currentUser') || 'null');
+        if (!u || !u.email) window.location.replace('index.html');
+        else if (u.role === 'landlord') window.location.replace('home.html');
+      } catch (e) { window.location.replace('index.html'); }
+    })();
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/tw-config.js"></script>
+
+  <style type="text/tailwindcss">
+    @layer components {
+      .btn { @apply inline-flex min-h-[44px] items-center justify-center rounded-full border border-transparent bg-forest px-5 py-2.5 text-base font-semibold text-white no-underline transition-colors hover:bg-forest-deep outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2; }
+      .btn-outline { @apply border-forest bg-white text-forest hover:bg-tint; }
+      .nav-link { @apply inline-flex min-h-[44px] items-center rounded-full px-4 text-base font-medium text-ink no-underline transition-colors outline-none hover:bg-track focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 aria-[current=page]:bg-forest aria-[current=page]:text-white; }
+      .label { @apply mb-1.5 block text-sm font-medium text-ink; }
+      .field { @apply block h-12 w-full rounded-xl border border-line bg-white px-3.5 text-base text-ink outline-none transition-colors hover:border-[#8FA397] focus-visible:border-forest focus-visible:ring-2 focus-visible:ring-forest/30; }
+      .choice { @apply flex min-h-[44px] items-center justify-center rounded-xl border border-line bg-white px-4 text-center text-base font-medium text-ink transition-colors hover:border-[#8FA397] peer-checked:border-forest peer-checked:bg-forest peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-forest peer-focus-visible:ring-offset-2; }
+    }
+  </style>
+  <style>[hidden] { display: none !important; }</style>
+</head>
+
+<body class="min-h-screen bg-white font-body text-ink antialiased">
+
+  <header class="sticky top-0 z-20 bg-white px-4 pb-2 pt-4 sm:px-6">
+    <nav aria-label="Main" class="mx-auto flex max-w-6xl items-center justify-between gap-3 rounded-full border border-line bg-white py-2 pl-4 pr-2">
+      <a href="home.html" aria-label="Homebase home" class="inline-flex min-h-[44px] items-center gap-2.5 rounded-full font-display text-xl font-bold tracking-tight text-ink no-underline outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">
+        <svg viewBox="0 0 32 32" class="h-9 w-9 shrink-0" aria-hidden="true">
+          <rect width="32" height="32" rx="8" fill="#0B4A2F"/><rect x="7" y="8" width="7" height="8" rx="1.5" fill="#083A25"/><rect x="18" y="8" width="7" height="8" rx="1.5" fill="#C6F24E"/><rect x="7" y="19" width="7" height="8" rx="1.5" fill="#083A25"/><rect x="18" y="19" width="7" height="8" rx="1.5" fill="#083A25"/>
+        </svg>
+        <span>Homebase</span>
+      </a>
+      <ul class="hidden items-center gap-1 md:flex">
+        <li><a class="nav-link" href="home.html">Home</a></li>
+        <li><a class="nav-link" href="matches.html">My Matches</a></li>
+        <li><a class="nav-link" href="rooms.html" aria-current="page">Explore Rooms</a></li>
+        <li><a class="nav-link" href="floorplan.html">Floor Plan</a></li>
+      </ul>
+      <div class="flex items-center gap-2">
+        <span class="hidden items-center gap-2 pr-1 md:flex">
+          <span id="nav-initial" class="grid h-9 w-9 place-items-center rounded-full bg-forest font-display text-sm font-semibold text-white" aria-hidden="true"></span>
+          <span id="nav-name" class="max-w-[9rem] truncate text-sm font-medium"></span>
+        </span>
+        <button type="button" data-logout class="btn btn-outline hidden md:inline-flex">Log out</button>
+        <button type="button" id="menu-btn" aria-expanded="false" aria-controls="menu" class="inline-flex min-h-[44px] items-center rounded-full border border-forest bg-white px-4 text-base font-semibold text-forest outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 md:hidden"><span id="menu-label">Menu</span></button>
+      </div>
+    </nav>
+    <div id="menu" hidden class="mx-auto mt-2 max-w-6xl rounded-[20px] border border-line bg-white p-2 md:hidden">
+      <ul class="grid gap-1">
+        <li><a class="nav-link w-full" href="home.html">Home</a></li>
+        <li><a class="nav-link w-full" href="matches.html">My Matches</a></li>
+        <li><a class="nav-link w-full" href="rooms.html" aria-current="page">Explore Rooms</a></li>
+        <li><a class="nav-link w-full" href="floorplan.html">Floor Plan</a></li>
+      </ul>
+      <div class="mt-2 border-t border-line pt-2"><button type="button" data-logout class="btn btn-outline w-full">Log out</button></div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
+    <h1 class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">Explore Rooms</h1>
+    <p class="mt-2 max-w-xl text-base text-muted">Every room at Ariate Dormitory, available or taken.</p>
+
+    <!-- FILTERS: apply as soon as you change them -->
+    <form id="filters" class="mt-6 grid gap-4 rounded-[20px] border border-line bg-tint p-5 md:grid-cols-[auto_auto_220px] md:items-end md:gap-6" onsubmit="return false">
+      <fieldset>
+        <legend class="label">Availability</legend>
+        <div class="flex flex-wrap gap-2">
+          <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="avail" value="all" checked><span class="choice">All</span></label>
+          <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="avail" value="available"><span class="choice">Available</span></label>
+          <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="avail" value="taken"><span class="choice">Taken</span></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend class="label">Room type</legend>
+        <div class="flex flex-wrap gap-2">
+          <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Any" checked><span class="choice">Any</span></label>
+          <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Single"><span class="choice">Single</span></label>
+          <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Double"><span class="choice">Double</span></label>
+          <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Quad"><span class="choice">Quad</span></label>
+        </div>
+      </fieldset>
+      <div>
+        <label class="label" for="sort">Sort by</label>
+        <select id="sort" class="field">
+          <option value="number">Room number</option>
+          <option value="low">Price, lowest first</option>
+          <option value="high">Price, highest first</option>
+        </select>
+      </div>
+    </form>
+
+    <section id="results" class="mt-6" aria-labelledby="results-title" aria-live="polite">
+      <h2 id="results-title" class="sr-only">Rooms</h2>
+      <p id="page-error" role="alert" class="mb-3 hidden text-base font-semibold text-danger"></p>
+
+      <div data-state="loading"><p class="text-base text-muted" role="status">Loading rooms...</p></div>
+
+      <div data-state="error" hidden role="alert" class="rounded-[20px] border border-line p-6">
+        <p class="font-display text-xl font-bold tracking-tight">We could not load the rooms</p>
+        <p class="mt-2 text-base text-muted">The room list did not load. Check that <code>assets/rooms.js</code> sits next to this page, then reload.</p>
+        <button type="button" data-reload class="btn btn-outline mt-4">Reload this page</button>
+      </div>
+
+      <div data-state="empty" hidden class="rounded-[20px] border border-line p-6 sm:p-8">
+        <p class="font-display text-2xl font-bold tracking-tight">No rooms match these filters</p>
+        <p class="mt-2 max-w-md text-base text-muted">Try Any room type, or switch Availability to All.</p>
+        <button type="button" id="reset" class="btn btn-outline mt-4">Clear filters</button>
+      </div>
+
+      <div data-state="list" hidden>
+        <p id="count" class="text-base text-muted"></p>
+        <ul id="grid" class="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3"></ul>
+      </div>
+
+      <p class="mt-8 text-sm text-muted">Sample rooms. Prices and availability are placeholders until the real room list is added. Pictures are illustrations, not photos of the real rooms.</p>
+    </section>
+  </main>
+
+  <script src="assets/rooms.js"></script>
+  <script>
+    (function () {
+      var K = { user: 'homebase_currentUser', saved: 'homebase_savedRooms' };
+      var $ = function (id) { return document.getElementById(id); };
+
+      function read(key) { try { var r = localStorage.getItem(key); return { ok: true, value: r ? JSON.parse(r) : null }; } catch (e) { return { ok: false, value: null }; } }
+      function write(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); return true; } catch (e) { return false; } }
+      function drop(key) { try { localStorage.removeItem(key); } catch (e) {} }
+      function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+      function peso(n) { return '\u20B1' + n.toLocaleString('en-PH'); }
+      function setState(s) { document.querySelectorAll('#results [data-state]').forEach(function (n) { n.hidden = n.getAttribute('data-state') !== s; }); }
+
+      // ---- navbar ----
+      var user = (read(K.user).value) || {};
+      var fullName = String(user.name || user.email || '');
+      $('nav-initial').textContent = fullName.charAt(0).toUpperCase();
+      $('nav-name').textContent = fullName.split(/\s+/)[0];
+      document.querySelectorAll('[data-logout]').forEach(function (b) { b.addEventListener('click', function () { drop(K.user); window.location.href = 'index.html'; }); });
+      document.querySelectorAll('[data-reload]').forEach(function (b) { b.addEventListener('click', function () { window.location.reload(); }); });
+      var menuBtn = $('menu-btn'), menu = $('menu');
+      function setMenu(o) { menu.hidden = !o; menuBtn.setAttribute('aria-expanded', String(o)); $('menu-label').textContent = o ? 'Close' : 'Menu'; }
+      menuBtn.addEventListener('click', function () { setMenu(menu.hidden); });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !menu.hidden) { setMenu(false); menuBtn.focus(); } });
+
+      // ---- data ----
+      var ROOMS = window.HOMEBASE_ROOMS;
+      if (!Array.isArray(ROOMS)) { setState('error'); return; }
+
+      // ---- saved rooms (same list Home and My Matches use) ----
+      function savedIds() { var r = read(K.saved).value; return Array.isArray(r) ? r.map(function (x) { return x.id; }) : []; }
+      function paintSave(btn, on, name) {
+        btn.textContent = on ? 'Saved' : 'Save room';
+        btn.setAttribute('aria-pressed', String(on));
+        btn.setAttribute('aria-label', (on ? 'Remove ' : 'Save ') + name + (on ? ' from saved rooms' : ''));
+      }
+      function toggleSave(room, btn) {
+        var cur = read(K.saved).value; cur = Array.isArray(cur) ? cur : [];
+        var has = cur.some(function (x) { return x.id === room.id; });
+        var next = has ? cur.filter(function (x) { return x.id !== room.id; }) : cur.concat([{ id: room.id, name: room.name, price: room.price }]);
+        var err = $('page-error');
+        if (!write(K.saved, next)) { err.textContent = 'We could not save that room. Allow site data for this page in your browser and try again.'; err.classList.remove('hidden'); return; }
+        err.classList.add('hidden');
+        paintSave(btn, !has, room.name);
+      }
+
+      // ---- one room card ----
+      function card(r, saved) {
+        var li = el('li', 'flex flex-col overflow-hidden rounded-[20px] border border-line bg-white');
+
+        var frame = el('div', 'aspect-[8/5] bg-track');
+        var img = el('img', 'h-full w-full object-cover');
+        img.src = r.image || ('assets/rooms/room-' + r.id + '.svg');
+        img.alt = r.name + ', ' + r.type.toLowerCase() + ' room on floor ' + r.floor + ' (illustration)';
+        img.width = 640; img.height = 400; img.loading = 'lazy'; img.decoding = 'async';
+        img.addEventListener('error', function () {
+          frame.textContent = '';
+          frame.appendChild(el('p', 'grid h-full place-items-center px-4 text-center text-sm text-muted', 'No picture for this room yet'));
+        });
+        frame.appendChild(img);
+        li.appendChild(frame);
+
+        var body = el('div', 'flex flex-1 flex-col p-5');
+        var head = el('div', 'flex items-baseline justify-between gap-3');
+        head.appendChild(el('h3', 'font-display text-lg font-semibold tracking-tight', r.name));
+        head.appendChild(el('span', 'shrink-0 text-sm font-semibold ' + (r.available ? 'text-forest' : 'text-muted'), r.available ? 'Available' : 'Taken'));
+        body.appendChild(head);
+        body.appendChild(el('p', 'mt-1 text-base text-muted', 'Floor ' + r.floor + ', ' + r.type + ' room'));
+        body.appendChild(el('p', 'mt-2 font-display text-xl font-bold tracking-tight', peso(r.price) + ' per month'));
+
+        var chips = el('ul', 'mt-3 flex flex-wrap gap-1.5');
+        r.amenities.forEach(function (a) { chips.appendChild(el('li', 'rounded-lg border border-line bg-tint px-2.5 py-1 text-sm', a)); });
+        body.appendChild(chips);
+
+        var foot = el('div', 'mt-auto pt-4');
+        if (r.available) {
+          var b = el('button', 'btn btn-outline w-full'); b.type = 'button';
+          paintSave(b, saved.indexOf(r.id) !== -1, r.name);
+          b.addEventListener('click', function () { toggleSave(r, b); });
+          foot.appendChild(b);
+        } else {
+          foot.appendChild(el('p', 'text-sm text-muted', 'This room is taken, so it cannot be saved.'));
+        }
+        body.appendChild(foot);
+        li.appendChild(body);
+        return li;
+      }
+
+      // ---- filters ----
+      var form = $('filters');
+      function render() {
+        var avail = form.elements.avail.value, type = form.elements.type.value, sort = $('sort').value;
+        var list = ROOMS.filter(function (r) {
+          if (avail === 'available' && !r.available) return false;
+          if (avail === 'taken' && r.available) return false;
+          if (type !== 'Any' && r.type !== type) return false;
+          return true;
+        });
+        list.sort(function (a, b) {
+          if (sort === 'low') return a.price - b.price || a.id.localeCompare(b.id);
+          if (sort === 'high') return b.price - a.price || a.id.localeCompare(b.id);
+          return a.id.localeCompare(b.id);
+        });
+        if (!list.length) { setState('empty'); return; }
+        var saved = savedIds(), grid = $('grid'); grid.textContent = '';
+        list.forEach(function (r) { grid.appendChild(card(r, saved)); });
+        $('count').textContent = 'Showing ' + list.length + ' of ' + ROOMS.length + ' rooms.';
+        setState('list');
+      }
+      form.addEventListener('change', render);
+      $('reset').addEventListener('click', function () {
+        form.elements.avail.value = 'all'; form.elements.type.value = 'Any'; $('sort').value = 'number'; render();
+      });
+      render();
+    })();
+  </script>
+</body>
+</html>

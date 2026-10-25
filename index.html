@@ -264,21 +264,6 @@
           </p>
         </div>
 
-        <!-- Signed-in view -->
-        <div id="session-view" hidden>
-          <h2 class="font-display text-2xl font-bold tracking-tight text-ink" id="session-heading" tabindex="-1">You are logged in</h2>
-          <p class="mt-1.5 text-base text-muted" id="session-detail"></p>
-          <div class="mt-6 rounded-xl border border-line bg-[#F4F8F5] p-5 text-base text-ink">
-            <p class="font-semibold text-forest-deep">Ready to find a room?</p>
-            <p class="mt-1 text-sm text-muted">Explore Ariante Dormitory options, set your budget and preferences, and see your suitability score.</p>
-            <a href="dashboard.html" class="btn mt-4 inline-flex items-center justify-center gap-2 text-white no-underline">
-              <span>Go to Student Dashboard</span>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </a>
-          </div>
-          <button type="button" id="logout" class="btn btn-outline mt-4">Log out</button>
-        </div>
-
       </div>
     </section>
   </main>
@@ -458,17 +443,8 @@
         btn.textContent = busy ? busyText : idleText;
       }
 
-      // ---- session view ----
-      function renderSession() {
-        var user = read(CURRENT_KEY, null);
-        var signedIn = !!(user && user.email);
-        $('auth-view').hidden = signedIn;
-        $('session-view').hidden = !signedIn;
-        if (signedIn) {
-          $('session-detail').textContent = user.name + ' (' + (user.role === 'landlord' ? 'landlord' : 'student') + '), ' + user.email;
-        }
-        return signedIn;
-      }
+      // Ensure session is cleared on this page so the user is never automatically logged in
+      clear(CURRENT_KEY);
 
       // ---- open / close register ----
       document.querySelectorAll('[data-open-register]').forEach(function (b) {
@@ -509,8 +485,7 @@
             return;
           }
           $('form-login').reset();
-          renderSession();
-          window.location.href = 'dashboard.html';
+          window.location.href = 'Home.html';
         }).then(function () { setBusy(btn, false, 'Log in', 'Logging in...'); });
       });
 
@@ -547,17 +522,8 @@
           }
           write(CURRENT_KEY, { id: user.id, name: user.name, email: user.email, role: user.role });
           closeDialog(regDialog);
-          renderSession();
-          window.location.href = 'dashboard.html';
+          window.location.href = 'Home.html';
         }).then(function () { setBusy(btn, false, 'Create my account', 'Creating account...'); });
-      });
-
-      // ---- logout ----
-      $('logout').addEventListener('click', function () {
-        clear(CURRENT_KEY);
-        renderSession();
-        clearLoginErrors();
-        $('login-email').focus();
       });
 
       // ---- how matching works ----
@@ -570,8 +536,6 @@
       function revealPhoto() { if (heroImg.naturalWidth > 0) heroImg.hidden = false; }
       if (heroImg.complete) revealPhoto(); else heroImg.addEventListener('load', revealPhoto);
       heroImg.addEventListener('error', function () { heroImg.remove(); });
-
-      renderSession();
     })();
   </script>
 </body>
