@@ -518,7 +518,7 @@
         hashPassword(pw).then(function (hash) {
           var users = read(USERS_KEY, []);
           var match = users.filter(function (u) { return u.email === email && u.password === hash; })[0];
-          if (!match) {
+          if (!match) { 
             setFormError('login-error', 'That email and password do not match. Check both and try again, or create an account.');
             $('login-password').focus();
             return;
