@@ -1,690 +1,790 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Homebase • Ariante Dormitory – Find Your Room</title>
-  <meta name="description"
-    content="Student dashboard for Ariante Dormitory. Set your preferences and find the room that fits your budget and lifestyle." />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Homebase | Dashboard</title>
+  <meta name="robots" content="noindex">
 
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
-    rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+  <!--
+    Design Read: signed-in dashboard for students choosing a room and landlords answering requests, in the landing page's
+    white + forest language, dial ENERGY 2 / RHYTHM 2 / MOTION 1.
 
-  <style>
-    /* ================================================================
-       DASHBOARD-SPECIFIC STYLES
-       Layered on top of style.css design system
-       ================================================================ */
+    The screen's job (not a sidebar + stat row + chart + table shell):
+    - Student: decide which room to request. The ranked match list IS the page; the top match gets the weight.
+    - Landlord: answer waiting requests and keep bed availability true. Requests and beds are the page.
 
-    /* --- Layout shell --- */
-    .dash-layout {
-      display: grid;
-      grid-template-columns: 280px 1fr;
-      min-height: 100vh;
-    }
+    Reasons (R-31):
+    - Navigation: the landing page's floating pill, reused, so landing and dashboard feel like one product. Below md the links move to a bottom tab bar (thumb reach), and the pill keeps logo + log out.
+    - Palette: same as landing. Forest + white + one lime accent. Lime only marks "open / lit": open beds, the top score, the pending-request count. That is the same meaning the lit window has on the landing page.
+    - Identity motif: windows. One square per bed, lit lime when open. Every room and property shows its beds this way, always with the text count next to it so color is never the only signal.
+    - Hierarchy: the best match is a large card with the score block and four factor bars. The rest are compact rows (details element) because their job is comparison, not reading. Reason written in R-14.
+    - Numbers: every number on screen is computed from what users entered. No seeded stats, deltas, feeds or people. The optional sample listings are labeled "Sample" and can be removed in one click (R-38).
+    - Radius: 8px controls, 12px cards, the nav pill is the only pill (it floats over content, so it must read as its own layer).
+    - Shadow: nav only (elevation). Glass/blur: nav only. No glow, no grid, no gradients.
+    - Type: Sora for headings and numbers, Public Sans for everything else, same as landing.
+    - Motion: hover color transitions only. Nothing animates on load or loops.
+    - Out of scope, said on screen where relevant: payments, contracts, maintenance, move logistics.
+    - Data is LocalStorage for phase 1 (no backend). Every read/write is guarded; a bad read shows the error state.
+  -->
 
-    @media (max-width: 991.98px) {
-      .dash-layout {
-        grid-template-columns: 1fr;
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/tw-config.js"></script>
+  <script>
+    // Style check: if Tailwind or assets/tw-config.js did not load, colors and fonts are missing and the page looks unstyled.
+    // Inline styles on purpose, because this message has to show even when Tailwind is the thing that failed.
+    window.addEventListener('DOMContentLoaded', function () {
+      var ok = window.tailwind && tailwind.config && tailwind.config.theme && tailwind.config.theme.extend;
+      if (ok) return;
+      var d = document.createElement('div');
+      d.setAttribute('role', 'alert');
+      d.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99;background:#FEF3F2;color:#B42318;padding:12px 16px;font:600 14px/1.4 system-ui,sans-serif';
+      d.textContent = 'The styles did not load. Keep dashboard.html in the same folder as index.html and the assets folder (assets/tw-config.js), and check your internet connection, because Tailwind loads from a CDN.';
+      document.body.insertBefore(d, document.body.firstChild);
+    });
+  </script>
+
+  <style type="text/tailwindcss">
+    @layer components {
+      .label { @apply mb-1.5 block text-sm font-medium text-ink; }
+      .hint { @apply mt-1.5 text-sm text-muted; }
+      .field {
+        @apply block w-full rounded-lg border border-line bg-white px-3.5 py-3 text-base text-ink
+               placeholder:text-[#667369] outline-none transition-colors
+               hover:border-[#8FA397] focus-visible:border-forest focus-visible:ring-2 focus-visible:ring-forest/30
+               aria-[invalid=true]:border-danger aria-[invalid=true]:ring-danger/20;
       }
-    }
-
-    /* --- Sidebar --- */
-    .dash-sidebar {
-      background: var(--hb-bg-surface);
-      border-right: 1px solid var(--hb-border);
-      padding: 2rem 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 2rem;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow-y: auto;
-    }
-
-    @media (max-width: 991.98px) {
-      .dash-sidebar {
-        position: relative;
-        height: auto;
-        border-right: none;
-        border-bottom: 1px solid var(--hb-border);
+      .err { @apply mt-1.5 text-sm font-medium text-danger; }
+      .btn {
+        @apply inline-flex min-h-[48px] items-center justify-center rounded-lg bg-forest px-5 py-2 text-base font-semibold text-white
+               transition-colors hover:bg-forest-deep outline-none
+               focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-70;
       }
-    }
-
-    .dash-sidebar__brand {
-      font-family: var(--hb-font-display);
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: var(--hb-text-primary);
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .dash-sidebar__brand-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--hb-accent-1), var(--hb-accent-2));
-      animation: pulse-dot 2s var(--hb-ease-soft) infinite;
-    }
-
-    @keyframes pulse-dot {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(1.3); }
-    }
-
-    .dash-sidebar__nav {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-    }
-
-    .dash-sidebar__nav a {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.65rem 0.85rem;
-      border-radius: 10px;
-      color: var(--hb-text-secondary);
-      text-decoration: none;
-      font-size: 0.9rem;
-      font-weight: 500;
-      transition: all var(--hb-dur-fast) var(--hb-ease);
-    }
-
-    .dash-sidebar__nav a:hover,
-    .dash-sidebar__nav a.active {
-      background: rgba(99, 102, 241, 0.1);
-      color: var(--hb-text-primary);
-    }
-
-    .dash-sidebar__nav a.active {
-      background: rgba(99, 102, 241, 0.15);
-      color: var(--hb-accent-1);
-    }
-
-    .dash-sidebar__nav svg {
-      flex-shrink: 0;
-      opacity: 0.7;
-    }
-
-    .dash-sidebar__nav a.active svg,
-    .dash-sidebar__nav a:hover svg {
-      opacity: 1;
-    }
-
-    /* --- Profile card in sidebar --- */
-    .dash-profile {
-      background: var(--hb-bg-elevated);
-      border: 1px solid var(--hb-border);
-      border-radius: var(--hb-radius);
-      padding: 1.25rem;
-      margin-top: auto;
-    }
-
-    .dash-profile__avatar {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--hb-accent-1), var(--hb-accent-2));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 1rem;
-      color: #fff;
-      flex-shrink: 0;
-    }
-
-    .dash-profile__name {
-      font-weight: 600;
-      font-size: 0.95rem;
-      color: var(--hb-text-primary);
-      margin: 0;
-    }
-
-    .dash-profile__uni {
-      font-size: 0.8rem;
-      color: var(--hb-text-secondary);
-      margin: 0;
-    }
-
-    /* --- Main content area --- */
-    .dash-main {
-      padding: 2.5rem 2rem;
-      overflow-y: auto;
-    }
-
-    @media (max-width: 767.98px) {
-      .dash-main { padding: 1.5rem 1rem; }
-    }
-
-    /* --- Welcome banner --- */
-    .dash-welcome {
-      background: var(--hb-bg-elevated);
-      border: 1px solid var(--hb-border);
-      border-radius: var(--hb-radius-lg);
-      padding: 2rem 2.5rem;
-      position: relative;
-      overflow: hidden;
-      margin-bottom: 2rem;
-    }
-
-    .dash-welcome::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      right: -10%;
-      width: 320px;
-      height: 320px;
-      border-radius: 50%;
-      background: radial-gradient(circle, var(--hb-glow-primary) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    .dash-welcome__greeting {
-      font-family: var(--hb-font-display);
-      font-size: 1.75rem;
-      font-weight: 700;
-      margin-bottom: 0.25rem;
-    }
-
-    .dash-welcome__sub {
-      color: var(--hb-text-secondary);
-      font-size: 1rem;
-      margin: 0;
-    }
-
-    .dash-welcome__dorm-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      background: rgba(99, 102, 241, 0.12);
-      border: 1px solid rgba(99, 102, 241, 0.2);
-      border-radius: var(--hb-radius-pill);
-      padding: 0.3rem 0.85rem;
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--hb-accent-1);
-      margin-top: 0.75rem;
-    }
-
-    .dash-welcome__dorm-badge svg {
-      opacity: 0.8;
-    }
-
-    /* --- Section headers --- */
-    .dash-section-header {
-      font-family: var(--hb-font-display);
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: var(--hb-text-primary);
-      margin-bottom: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .dash-section-header svg {
-      color: var(--hb-accent-1);
-    }
-
-    /* --- Preference form card --- */
-    .dash-prefs {
-      background: var(--hb-bg-elevated);
-      border: 1px solid var(--hb-border);
-      border-radius: var(--hb-radius-lg);
-      padding: 2rem;
-      margin-bottom: 2.5rem;
-    }
-
-    .dash-prefs .form-label {
-      font-weight: 600;
-      font-size: 0.85rem;
-      color: var(--hb-text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      margin-bottom: 0.4rem;
-    }
-
-    .dash-prefs .form-control,
-    .dash-prefs .form-select {
-      background: var(--hb-bg-surface);
-      border: 1px solid var(--hb-border);
-      color: var(--hb-text-primary);
-      border-radius: 10px;
-      padding: 0.6rem 0.9rem;
-      transition: border-color var(--hb-dur-fast) var(--hb-ease);
-    }
-
-    .dash-prefs .form-control:focus,
-    .dash-prefs .form-select:focus {
-      border-color: var(--hb-accent-1);
-      box-shadow: 0 0 0 3px var(--hb-glow-primary);
-      background: var(--hb-bg-surface);
-      color: var(--hb-text-primary);
-    }
-
-    .dash-prefs .form-control::placeholder {
-      color: var(--hb-text-muted);
-    }
-
-    /* Amenity toggle pills */
-    .amen-toggle {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      padding: 0.4rem 0.85rem;
-      border-radius: var(--hb-radius-pill);
-      border: 1px solid var(--hb-border);
-      background: var(--hb-bg-surface);
-      color: var(--hb-text-secondary);
-      font-size: 0.85rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all var(--hb-dur-fast) var(--hb-ease);
-      user-select: none;
-    }
-
-    .amen-toggle:hover {
-      border-color: var(--hb-border-hover);
-      color: var(--hb-text-primary);
-    }
-
-    .amen-toggle input[type="checkbox"] {
-      display: none;
-    }
-
-    .amen-toggle.checked {
-      background: rgba(99, 102, 241, 0.15);
-      border-color: var(--hb-accent-1);
-      color: var(--hb-accent-1);
-    }
-
-    .amen-toggle__icon {
-      width: 16px;
-      height: 16px;
-    }
-
-    /* --- Room result cards --- */
-    .dash-room-card {
-      background: var(--hb-bg-elevated);
-      border: 1px solid var(--hb-border);
-      border-radius: var(--hb-radius);
-      padding: 1.5rem;
-      transition: all var(--hb-dur-base) var(--hb-ease);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .dash-room-card:hover {
-      border-color: var(--hb-border-hover);
-      transform: translateY(-3px);
-      box-shadow: 0 8px 32px rgba(99, 102, 241, 0.08);
-    }
-
-    .dash-room-card__badge {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      padding: 0.2rem 0.6rem;
-      border-radius: var(--hb-radius-pill);
-    }
-
-    .dash-room-card__badge--available {
-      background: rgba(16, 185, 129, 0.15);
-      color: #10b981;
-    }
-
-    .dash-room-card__badge--occupied {
-      background: rgba(239, 68, 68, 0.15);
-      color: #ef4444;
-    }
-
-    /* Score ring */
-    .score-ring {
-      position: relative;
-      width: 64px;
-      height: 64px;
-      flex-shrink: 0;
-    }
-
-    .score-ring__text {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: var(--hb-font-display);
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--hb-text-primary);
-    }
-
-    .dash-room-card__name {
-      font-family: var(--hb-font-display);
-      font-size: 1.1rem;
-      font-weight: 700;
-      margin-bottom: 0.15rem;
-    }
-
-    .dash-room-card__type {
-      font-size: 0.82rem;
-      color: var(--hb-text-secondary);
-    }
-
-    /* Cost breakdown */
-    .cost-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.85rem;
-      padding: 0.35rem 0;
-      border-bottom: 1px solid var(--hb-border);
-    }
-
-    .cost-row:last-child {
-      border-bottom: none;
-    }
-
-    .cost-row__label {
-      color: var(--hb-text-secondary);
-    }
-
-    .cost-row__value {
-      font-weight: 600;
-      color: var(--hb-text-primary);
-    }
-
-    .cost-total {
-      font-size: 1rem;
-      font-weight: 700;
-      border-top: 2px solid var(--hb-accent-1);
-      padding-top: 0.5rem;
-      margin-top: 0.25rem;
-    }
-
-    .cost-total .cost-row__value {
-      background: linear-gradient(90deg, var(--hb-accent-1), var(--hb-accent-2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    /* Amenity tags in room card */
-    .room-amen-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.25rem;
-      font-size: 0.78rem;
-      padding: 0.2rem 0.55rem;
-      border-radius: var(--hb-radius-pill);
-      background: rgba(99, 102, 241, 0.08);
-      color: var(--hb-text-secondary);
-      border: 1px solid var(--hb-border);
-    }
-
-    .room-amen-tag--match {
-      background: rgba(99, 102, 241, 0.15);
-      color: var(--hb-accent-1);
-      border-color: rgba(99, 102, 241, 0.25);
-    }
-
-    /* Inquire button */
-    .btn-inquire {
-      background: linear-gradient(135deg, var(--hb-accent-1), var(--hb-accent-2));
-      border: none;
-      color: #fff;
-      font-weight: 600;
-      border-radius: 10px;
-      padding: 0.55rem 1.25rem;
-      font-size: 0.88rem;
-      transition: all var(--hb-dur-fast) var(--hb-ease);
-    }
-
-    .btn-inquire:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 16px var(--hb-glow-primary);
-      color: #fff;
-    }
-
-    /* Empty state */
-    .dash-empty {
-      text-align: center;
-      padding: 3rem 1rem;
-      color: var(--hb-text-muted);
-    }
-
-    .dash-empty svg {
-      margin-bottom: 1rem;
-      opacity: 0.4;
-    }
-
-    /* Subtle entrance animations */
-    .dash-animate-in {
-      opacity: 0;
-      transform: translateY(16px);
-      animation: dashFadeIn 0.5s var(--hb-ease) forwards;
-    }
-
-    .dash-animate-in:nth-child(2) { animation-delay: 0.08s; }
-    .dash-animate-in:nth-child(3) { animation-delay: 0.16s; }
-    .dash-animate-in:nth-child(4) { animation-delay: 0.24s; }
-    .dash-animate-in:nth-child(5) { animation-delay: 0.32s; }
-    .dash-animate-in:nth-child(6) { animation-delay: 0.40s; }
-
-    @keyframes dashFadeIn {
-      to { opacity: 1; transform: translateY(0); }
+      .btn2 {
+        @apply inline-flex min-h-[44px] items-center justify-center rounded-lg border border-forest bg-white px-4 py-2 text-sm font-semibold text-forest
+               transition-colors hover:bg-tint outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2;
+      }
+      .btn-danger {
+        @apply inline-flex min-h-[44px] items-center justify-center rounded-lg border border-danger bg-white px-4 py-2 text-sm font-semibold text-danger
+               transition-colors hover:bg-[#FEF3F2] outline-none focus-visible:ring-2 focus-visible:ring-danger focus-visible:ring-offset-2;
+      }
+      .btn-sm { @apply min-h-[44px] px-4 text-sm; }
+      .linkbtn { @apply inline-flex min-h-[44px] items-center rounded font-semibold text-forest underline underline-offset-4 outline-none hover:text-forest-deep focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2; }
+      .card { @apply rounded-xl border border-line bg-white; }
+      .h2 { @apply font-display text-lg font-bold tracking-tight text-ink; }
+      .navlink {
+        @apply flex min-h-[44px] items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold text-ink outline-none transition-colors
+               hover:bg-ink/5 focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-1
+               aria-[current=page]:bg-forest aria-[current=page]:text-white;
+      }
     }
   </style>
 </head>
 
-<body>
+<body class="min-h-dvh bg-white font-body text-ink antialiased">
 
-  <div class="dash-layout">
-
-    <!-- ======================= SIDEBAR ======================= -->
-    <aside class="dash-sidebar" id="dashSidebar">
-      <a href="index.html" class="dash-sidebar__brand">
-        <span class="dash-sidebar__brand-dot"></span>
-        Homebase
-      </a>
-
-      <ul class="dash-sidebar__nav">
-        <li>
-          <a href="#" class="active" id="navFind">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
-            Find a Room
-          </a>
-        </li>
-        <li>
-          <a href="#" id="navSaved">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
-            Saved Rooms
-          </a>
-        </li>
-        <li>
-          <a href="#" id="navCost">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23" /><path
-                d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
-            Cost Calculator
-          </a>
-        </li>
-        <li>
-          <a href="index.html">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline
-                points="9 22 9 12 15 12 15 22" /></svg>
-            Back to Home
-          </a>
-        </li>
-      </ul>
-
-      <!-- Profile card -->
-      <div class="dash-profile">
-        <div class="d-flex align-items-center gap-3">
-          <div class="dash-profile__avatar" id="profileAvatar">JD</div>
-          <div class="overflow-hidden">
-            <p class="dash-profile__name text-truncate mb-0" id="profileName">Juana Dela Cruz</p>
-            <p class="dash-profile__uni text-truncate mb-0" id="profileUni">BS IT • UNC</p>
-          </div>
-        </div>
-        <button type="button" id="dashLogoutBtn" class="btn btn-sm btn-outline-secondary w-100 mt-3 rounded-pill" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">
-          Log out
-        </button>
-      </div>
-    </aside>
-
-    <!-- ======================= MAIN CONTENT ======================= -->
-    <main class="dash-main">
-
-      <!-- Welcome Banner -->
-      <div class="dash-welcome dash-animate-in">
-        <h1 class="dash-welcome__greeting">Welcome back, <span id="welcomeName">Juana</span> 👋</h1>
-        <p class="dash-welcome__sub">Tell us what you're looking for and we'll match you with the best available rooms.</p>
-        <div class="dash-welcome__dorm-badge">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round"><path d="M3 21h18" /><path d="M5 21V9l7-5 7 5v12" /><path d="M9 21v-6h6v6" /></svg>
-          Ariante Dormitory
-        </div>
-      </div>
-
-      <!-- ======================= PREFERENCE FORM ======================= -->
-      <h2 class="dash-section-header dash-animate-in">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round"><path
-            d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle
-            cx="12" cy="12" r="3" /></svg>
-        Your Preferences
-      </h2>
-
-      <div class="dash-prefs dash-animate-in">
-        <form id="prefForm">
-          <div class="row g-3 mb-3">
-
-            <!-- Budget -->
-            <div class="col-md-4">
-              <label for="budgetInput" class="form-label">Monthly Budget (₱)</label>
-              <input type="number" class="form-control" id="budgetInput" placeholder="e.g. 5000" min="500" step="100" />
-            </div>
-
-            <!-- Room type -->
-            <div class="col-md-4">
-              <label for="roomTypeSelect" class="form-label">Room Type</label>
-              <select class="form-select" id="roomTypeSelect">
-                <option value="any" selected>Any type</option>
-                <option value="solo">Solo — Private room</option>
-                <option value="duo">Duo — 2-person shared</option>
-                <option value="quad">Bedspace — 4-person shared</option>
-              </select>
-            </div>
-
-            <!-- Floor preference -->
-            <div class="col-md-4">
-              <label for="floorSelect" class="form-label">Floor Preference</label>
-              <select class="form-select" id="floorSelect">
-                <option value="any" selected>Any floor</option>
-                <option value="1">1st Floor — Easy access</option>
-                <option value="2">2nd Floor</option>
-                <option value="3">3rd Floor — Quieter</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Amenity toggles -->
-          <label class="form-label mb-2">Must-Have Amenities</label>
-          <div class="d-flex flex-wrap gap-2 mb-4" id="amenityToggles">
-            <label class="amen-toggle" data-amen="aircon">
-              <input type="checkbox" value="aircon" />
-              <svg class="amen-toggle__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round"><path d="M4 10a7.31 7.31 0 0 0 8 8h0a7.31 7.31 0 0 0 8-8" /><path
-                  d="M12 2v8" /><path d="m4.93 10.93 2.83-2.83" /><path d="m16.24 8.1 2.83 2.83" /></svg>
-              Air-con
-            </label>
-            <label class="amen-toggle" data-amen="ownCR">
-              <input type="checkbox" value="ownCR" />
-              <svg class="amen-toggle__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round"><path
-                  d="M9 6l3-3 3 3" /><path d="M12 3v10" /><path d="M5 12h14" /><rect x="4" y="14" width="16" height="6" rx="1" /></svg>
-              Own CR
-            </label>
-            <label class="amen-toggle" data-amen="wifi">
-              <input type="checkbox" value="wifi" />
-              <svg class="amen-toggle__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round"><path d="M5 12.55a11 11 0 0 1 14.08 0" /><path
-                  d="M1.42 9a16 16 0 0 1 21.16 0" /><path d="M8.53 16.11a6 6 0 0 1 6.95 0" /><circle cx="12" cy="20"
-                  r="1" /></svg>
-              Wi-Fi Included
-            </label>
-            <label class="amen-toggle" data-amen="desk">
-              <input type="checkbox" value="desk" />
-              <svg class="amen-toggle__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round"><rect x="2" y="7" width="20" height="4" rx="1" /><path
-                  d="M4 11v8" /><path d="M20 11v8" /><path d="M12 11v8" /></svg>
-              Study Desk
-            </label>
-            <label class="amen-toggle" data-amen="nearGate">
-              <input type="checkbox" value="nearGate" />
-              <svg class="amen-toggle__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round"><path d="M18 6 7 17l-5-5" /><path d="m22 10-7.5 7.5L13 16" /></svg>
-              Near Gate
-            </label>
-          </div>
-
-          <div class="d-flex justify-content-end">
-            <button type="submit" class="btn-inquire px-4 py-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" class="me-1"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
-              Find My Best Room
-            </button>
-          </div>
-        </form>
-      </div>
-
-      <!-- ======================= MATCHING RESULTS ======================= -->
-      <h2 class="dash-section-header" id="resultsHeader" style="display:none;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round"><polygon
-            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
-        <span id="resultsTitle">Your Top Matches</span>
-      </h2>
-
-      <div id="roomResults" class="row g-4 mb-5">
-        <!-- Room cards rendered by JS -->
-      </div>
-
-      <!-- Empty state (shown before first search) -->
-      <div class="dash-empty" id="emptyState">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-          stroke-linecap="round">
-          <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+  <!-- FLOATING NAV (same pill as the landing page) -->
+  <header class="pointer-events-none fixed inset-x-0 top-3 z-40 flex justify-center px-3">
+    <nav aria-label="Dashboard" class="pointer-events-auto flex w-max max-w-full items-center gap-1 rounded-full border border-ink/10 bg-white/85 p-1.5 shadow-lg shadow-ink/10 backdrop-blur-md">
+      <a id="logo" href="#" class="flex min-h-[44px] items-center gap-2.5 rounded-full pl-1.5 pr-3 font-display text-base font-bold tracking-tight text-ink outline-none focus-visible:ring-2 focus-visible:ring-forest" aria-label="Homebase dashboard home">
+        <svg class="h-8 w-8 shrink-0" viewBox="0 0 32 32" aria-hidden="true">
+          <rect width="32" height="32" rx="8" fill="#0B4A2F"/>
+          <rect x="7" y="8" width="7" height="8" rx="1.5" fill="#083A25"/>
+          <rect x="18" y="8" width="7" height="8" rx="1.5" fill="#C6F24E"/>
+          <rect x="7" y="19" width="7" height="8" rx="1.5" fill="#083A25"/>
+          <rect x="18" y="19" width="7" height="8" rx="1.5" fill="#083A25"/>
         </svg>
-        <p>Set your preferences above and hit <strong>Find My Best Room</strong><br />to see rooms ranked by
-          suitability.</p>
+        <span class="hidden sm:inline">Homebase</span>
+      </a>
+      <span class="mx-1 hidden h-6 w-px bg-ink/15 md:block" aria-hidden="true"></span>
+      <div id="top-links" class="hidden items-center gap-1 md:flex"></div>
+      <span class="mx-1 hidden h-6 w-px bg-ink/15 lg:block" aria-hidden="true"></span>
+      <p id="who" class="hidden max-w-[11rem] truncate px-2 text-sm text-muted lg:block"></p>
+      <button type="button" id="logout" data-action="logout"
+        class="ml-1 min-h-[44px] rounded-full bg-ink px-5 text-sm font-semibold text-white outline-none transition-colors hover:bg-black focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2">Log out</button>
+    </nav>
+  </header>
+
+  <!-- BOTTOM TABS (below md) -->
+  <nav aria-label="Dashboard sections" class="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white md:hidden">
+    <div id="bottom-links" class="mx-auto grid max-w-md grid-cols-3 gap-1 p-1.5"></div>
+  </nav>
+
+  <main id="main" class="mx-auto w-full max-w-5xl px-4 pb-28 pt-24 sm:px-8 md:pb-16 md:pt-28" tabindex="-1">
+    <header>
+      <h1 id="page-title" tabindex="-1" class="font-display text-2xl font-bold tracking-tight text-ink outline-none sm:text-3xl">Loading</h1>
+      <p id="page-sub" class="mt-1.5 max-w-2xl text-base text-muted"></p>
+    </header>
+    <div id="view" class="mt-8" aria-busy="true">
+      <p class="text-base text-muted">Loading your dashboard from this browser...</p>
+    </div>
+  </main>
+
+  <!-- status messages -->
+  <div id="toast" role="status" aria-live="polite" class="pointer-events-none fixed inset-x-0 bottom-24 z-50 flex justify-center px-4 md:bottom-6"></div>
+
+  <!-- PROPERTY FORM -->
+  <dialog id="prop-dialog" aria-labelledby="prop-title" class="w-[calc(100vw-2rem)] max-w-2xl rounded-xl border border-line bg-white p-0 text-ink shadow-xl backdrop:bg-ink/50">
+    <form id="prop-form" novalidate class="max-h-[calc(100dvh-2rem)] overflow-y-auto p-5 sm:p-6"></form>
+  </dialog>
+
+  <!-- CONFIRM -->
+  <dialog id="confirm-dialog" aria-labelledby="confirm-title" class="w-[calc(100vw-2rem)] max-w-sm rounded-xl border border-line bg-white p-0 text-ink shadow-xl backdrop:bg-ink/50">
+    <div class="p-6">
+      <h2 id="confirm-title" class="h2"></h2>
+      <p id="confirm-body" class="mt-2 text-base text-muted"></p>
+      <div class="mt-6 grid grid-cols-2 gap-3">
+        <button type="button" id="confirm-no" class="btn2">Cancel</button>
+        <button type="button" id="confirm-yes" class="btn-danger btn-sm">Confirm</button>
       </div>
+    </div>
+  </dialog>
 
-    </main>
-  </div>
+  <script>
+  (function () {
+    'use strict';
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="dashboard.js"></script>
+    // ---------------------------------------------------------------- constants
+    var K = { users: 'homebase_users', current: 'homebase_currentUser', props: 'homebase_properties', reqs: 'homebase_requests', prefs: 'homebase_prefs' };
+    var AMENITIES = ['Wi-Fi', 'Own bathroom', 'Kitchen', 'Laundry area', 'Study area', 'Air conditioning', 'Parking'];
+    var SAFETY = ['Security guard', 'CCTV', 'Curfew', 'Fenced gate', 'Fire extinguisher', 'Lockable room'];
+    var FACTORS = [['budget', 'Budget'], ['commute', 'Commute'], ['amenities', 'Amenities'], ['safety', 'Safety']];
+    var WEIGHT = { low: 1, medium: 2, high: 3 };
+
+    // ---------------------------------------------------------------- helpers
+    function $(s, r) { return (r || document).querySelector(s); }
+    function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+    function peso(n) { return '₱' + Math.round(n).toLocaleString('en-PH'); }
+    function num(v) { var n = Number(String(v == null ? '' : v).replace(/,/g, '').trim()); return isFinite(n) && String(v).trim() !== '' ? n : NaN; }
+    function norm(s) { return String(s || '').trim().toLowerCase().replace(/\s+/g, ' '); }
+    function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+    function fmtDate(iso) { try { return new Date(iso).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' }); } catch (e) { return ''; } }
+    function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
+
+    var toastTimer = null;
+    function toast(msg, kind) {
+      var box = $('#toast');
+      box.innerHTML = '<p class="pointer-events-auto max-w-md rounded-lg px-4 py-3 text-sm font-semibold shadow-lg ' +
+        (kind === 'error' ? 'border border-danger bg-[#FEF3F2] text-danger' : 'bg-ink text-white') + '">' + esc(msg) + '</p>';
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { box.innerHTML = ''; }, kind === 'error' ? 7000 : 4000);
+    }
+
+    // ---------------------------------------------------------------- storage (guarded)
+    function read(key, fb) {
+      var raw;
+      try { raw = localStorage.getItem(key); } catch (e) { throw new Error('This browser is blocking site storage.'); }
+      if (!raw) return fb;
+      try { return JSON.parse(raw); } catch (e) { throw new Error('Saved data for "' + key + '" is damaged.'); }
+    }
+    function write(key, val) {
+      try { localStorage.setItem(key, JSON.stringify(val)); return true; }
+      catch (e) { toast('Could not save. Your browser may be blocking site storage or it is full.', 'error'); return false; }
+    }
+
+    // ---------------------------------------------------------------- session
+    var user = null, users = [];
+    try { user = read(K.current, null); users = read(K.users, []); } catch (e) { user = null; }
+    if (!user || !user.email || !users.some(function (u) { return u.email === user.email; })) { location.replace('index.html'); return; }
+    var role = user.role === 'landlord' ? 'landlord' : 'student';
+
+    var ROUTES = {
+      student: [['matches', 'Matches'], ['requests', 'My requests'], ['prefs', 'Preferences']],
+      landlord: [['overview', 'Overview'], ['properties', 'Properties'], ['requests', 'Requests']]
+    };
+    var state = { showFull: false, openId: null };
+
+    function currentRoute() {
+      var h = location.hash.replace('#', '');
+      var list = ROUTES[role];
+      for (var i = 0; i < list.length; i++) if (list[i][0] === h) return h;
+      return list[0][0];
+    }
+
+    // ---------------------------------------------------------------- data access
+    function getProps() { return read(K.props, []); }
+    function getReqs() { return read(K.reqs, []); }
+    function getPrefs() { var all = read(K.prefs, {}); return all[user.id] || null; }
+    function myProps() { return getProps().filter(function (p) { return p.landlordId === user.id; }); }
+    function pendingForMe() {
+      var mine = {}; myProps().forEach(function (p) { mine[p.id] = true; });
+      return getReqs().filter(function (r) { return mine[r.propertyId] && r.status === 'pending'; });
+    }
+
+    // ---------------------------------------------------------------- shared pieces
+    // Bed windows: one square per bed, lit = open. The count is always printed next to it.
+    function windows(open, total) {
+      var shown = Math.min(total, 12), h = '<span class="inline-flex flex-wrap items-center gap-1 rounded-md bg-forest p-1.5" aria-hidden="true">';
+      for (var i = 0; i < shown; i++) h += '<span class="h-3.5 w-3.5 rounded-[3px] ' + (i < open ? 'bg-lime' : 'bg-forest-deep') + '"></span>';
+      if (total > shown) h += '<span class="px-1 text-xs font-semibold text-white">+' + (total - shown) + '</span>';
+      return h + '</span>';
+    }
+    function bedsText(open, total) { return open + ' of ' + plural(total, 'bed', 'beds') + ' open'; }
+
+    function emptyCard(title, body, actionsHtml) {
+      return '<div class="card max-w-xl p-6 sm:p-8"><h2 class="h2">' + esc(title) + '</h2><p class="mt-2 text-base text-muted">' + body + '</p>' +
+        (actionsHtml ? '<div class="mt-6 flex flex-wrap gap-3">' + actionsHtml + '</div>' : '') + '</div>';
+    }
+
+    function statusLabel(s) {
+      var map = {
+        pending: ['Waiting for landlord', 'border border-line bg-tint text-ink'],
+        approved: ['Approved', 'bg-forest text-white'],
+        declined: ['Declined', 'border border-danger bg-[#FEF3F2] text-danger'],
+        cancelled: ['Cancelled by you', 'border border-line bg-white text-muted']
+      };
+      var m = map[s] || map.pending;
+      return '<span class="inline-flex min-h-[28px] items-center rounded-md px-2.5 text-sm font-semibold ' + m[1] + '">' + m[0] + '</span>';
+    }
+
+    function checkGroup(name, items, selected) {
+      return '<div class="grid gap-2 sm:grid-cols-2">' + items.map(function (it, i) {
+        return '<label class="flex min-h-[44px] cursor-pointer items-center gap-3 rounded-lg border border-line px-3 text-base transition-colors hover:border-[#8FA397] has-[:checked]:border-forest has-[:checked]:bg-tint has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-forest">' +
+          '<input type="checkbox" name="' + name + '" value="' + esc(it) + '"' + (selected.indexOf(it) > -1 ? ' checked' : '') + ' class="h-5 w-5 shrink-0 accent-forest"><span>' + esc(it) + '</span></label>';
+      }).join('') + '</div>';
+    }
+
+    // ---------------------------------------------------------------- scoring (student)
+    function computeMatches(props, prefs) {
+      var w = { budget: WEIGHT[prefs.pri.budget] || 2, commute: WEIGHT[prefs.pri.commute] || 2, amenities: WEIGHT[prefs.pri.amenities] || 2, safety: WEIGHT[prefs.pri.safety] || 2 };
+      var wsum = w.budget + w.commute + w.amenities + w.safety, out = [];
+      props.forEach(function (p) {
+        var c = (p.commutes || []).filter(function (x) { return norm(x.school) === norm(prefs.school); })[0];
+        (p.rooms || []).forEach(function (room) {
+          var rent = room.price, util = p.utilitiesIncluded ? 0 : (p.utilities || 0), trip = c ? c.fare * 2 * prefs.days : 0, total = rent + util + trip;
+          var s = {};
+          s.budget = total <= prefs.budget ? 100 : Math.max(0, Math.round(100 - ((total - prefs.budget) / prefs.budget) * 200));
+          s.commute = !c ? 0 : (c.km <= prefs.maxKm ? 100 : Math.max(0, Math.round(100 - ((c.km - prefs.maxKm) / prefs.maxKm) * 100)));
+          var missA = prefs.amenities.filter(function (a) { return (p.amenities || []).indexOf(a) < 0; });
+          var missS = prefs.safety.filter(function (a) { return (p.safety || []).indexOf(a) < 0; });
+          s.amenities = prefs.amenities.length ? Math.round((prefs.amenities.length - missA.length) / prefs.amenities.length * 100) : 100;
+          s.safety = prefs.safety.length ? Math.round((prefs.safety.length - missS.length) / prefs.safety.length * 100) : 100;
+          var score = Math.round((s.budget * w.budget + s.commute * w.commute + s.amenities * w.amenities + s.safety * w.safety) / wsum);
+          var notes = [];
+          if (total > prefs.budget) notes.push(peso(total - prefs.budget) + ' over your monthly budget');
+          if (!c) notes.push('The landlord has not listed a distance to ' + prefs.school);
+          else if (c.km > prefs.maxKm) notes.push((Math.round((c.km - prefs.maxKm) * 10) / 10) + ' km farther than your limit');
+          if (missA.length) notes.push('Missing amenities: ' + missA.join(', '));
+          if (missS.length) notes.push('Missing safety features: ' + missS.join(', '));
+          out.push({ prop: p, room: room, cost: { rent: rent, util: util, trip: trip, total: total, known: !!c, fare: c ? c.fare : 0 }, s: s, score: score, notes: notes, km: c ? c.km : null });
+        });
+      });
+      out.sort(function (a, b) { return b.score - a.score || a.cost.total - b.cost.total; });
+      return out;
+    }
+    function fitLabel(score) { return score >= 80 ? 'Strong fit' : (score >= 60 ? 'Fair fit' : 'Weak fit'); }
+
+    function bars(m) {
+      return '<div class="space-y-2.5">' + FACTORS.map(function (f) {
+        var v = m.s[f[0]];
+        return '<div class="grid grid-cols-[5.5rem_minmax(0,1fr)_2rem] items-center gap-3 text-sm"><span class="text-muted">' + f[1] + '</span>' +
+          '<span class="h-2 rounded-full bg-track"><span class="block h-2 rounded-full bg-forest" style="width:' + v + '%"></span></span>' +
+          '<span class="text-right font-semibold tabular-nums">' + v + '</span></div>';
+      }).join('') + '</div>';
+    }
+    function costLine(m) {
+      var c = m.cost, parts = ['Rent ' + peso(c.rent)];
+      parts.push(m.prop.utilitiesIncluded ? 'utilities included' : 'utilities ' + peso(c.util));
+      parts.push(c.known ? 'commute ' + peso(c.trip) : 'commute cost unknown');
+      return parts.join(' + ');
+    }
+    function requestState(roomId) {
+      var list = getReqs().filter(function (r) { return r.roomId === roomId && r.studentId === user.id && (r.status === 'pending' || r.status === 'approved'); });
+      return list[0] || null;
+    }
+    function requestBlock(m) {
+      var r = requestState(m.room.id), id = esc(m.room.id);
+      if (r) return '<p data-fk="status-' + id + '" tabindex="-1" class="mt-4 rounded-lg bg-tint px-3.5 py-3 text-base font-semibold outline-none">' +
+        (r.status === 'approved' ? 'Approved. A bed is held for you in this room.' : 'Request sent. Waiting for the landlord to answer.') + '</p>';
+      if (m.room.bedsOpen < 1) return '<p class="mt-4 text-base font-semibold text-muted">No open beds right now.</p>';
+      return '<button type="button" class="btn mt-4 w-full sm:w-auto" data-action="request" data-prop="' + esc(m.prop.id) + '" data-room="' + id + '" data-fk="req-' + id + '">Request this room</button>';
+    }
+    function whyList(m) {
+      return m.notes.length
+        ? '<ul class="mt-4 space-y-1 text-sm text-muted">' + m.notes.map(function (n) { return '<li>' + esc(n) + '</li>'; }).join('') + '</ul>'
+        : '<p class="mt-4 text-sm font-semibold text-forest">Meets everything you asked for.</p>';
+    }
+    function sampleTag(p) { return p.sample ? '<span class="ml-2 inline-flex rounded border border-line bg-tint px-1.5 text-xs font-semibold text-muted">Sample</span>' : ''; }
+    function roomMeta(m) {
+      return esc(m.room.label) + ' · ' + esc(m.room.type) + (m.km != null ? ' · ' + m.km + ' km to ' : '') + (m.km != null ? '' : '');
+    }
+
+    function bigCard(m, prefs) {
+      return '<article class="card border-forest p-5 sm:p-6" aria-labelledby="best-title">' +
+        '<p class="text-sm font-semibold text-forest">Best match for you</p>' +
+        '<div class="mt-3 grid gap-5 sm:grid-cols-[auto_minmax(0,1fr)]">' +
+          '<div class="flex h-28 w-28 flex-col items-center justify-center rounded-xl bg-forest text-lime" aria-label="Match score ' + m.score + ' out of 100"><span class="font-display text-5xl font-bold leading-none">' + m.score + '</span><span class="mt-1.5 text-xs font-semibold text-white">of 100 · ' + fitLabel(m.score) + '</span></div>' +
+          '<div class="min-w-0"><h2 id="best-title" class="font-display text-xl font-bold tracking-tight">' + esc(m.prop.name) + sampleTag(m.prop) + '</h2>' +
+          '<p class="mt-1 text-base text-muted">' + esc(m.prop.area) + '</p>' +
+          '<p class="mt-2 text-base font-semibold">' + esc(m.room.label) + ' · ' + esc(m.room.type) + '</p>' +
+          '<p class="mt-3 font-display text-3xl font-bold tracking-tight">' + peso(m.cost.total) + '<span class="ml-1.5 text-base font-semibold text-muted">per month, all in</span></p>' +
+          '<p class="mt-1 text-sm text-muted">' + esc(costLine(m)) + '</p>' +
+          '<p class="mt-3 flex flex-wrap items-center gap-2.5 text-sm font-semibold">' + windows(m.room.bedsOpen, m.room.bedsTotal) + '<span>' + bedsText(m.room.bedsOpen, m.room.bedsTotal) + '</span></p></div>' +
+        '</div>' +
+        '<div class="mt-5 border-t border-line pt-5">' + bars(m) + whyList(m) + requestBlock(m) + '</div></article>';
+    }
+
+    function rowCard(m) {
+      var full = m.room.bedsOpen < 1, open = state.openId === m.room.id ? ' open' : '';
+      return '<details class="card group"' + open + '>' +
+        '<summary class="flex min-h-[64px] cursor-pointer list-none items-center gap-3 rounded-xl p-3 outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-forest [&::-webkit-details-marker]:hidden" data-fk="sum-' + esc(m.room.id) + '">' +
+          '<span class="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-lg bg-forest text-lime" aria-label="Score ' + m.score + '"><span class="font-display text-lg font-bold leading-none">' + m.score + '</span></span>' +
+          '<span class="min-w-0 flex-1"><span class="block truncate text-base font-semibold">' + esc(m.prop.name) + sampleTag(m.prop) + '</span>' +
+          '<span class="block truncate text-sm text-muted">' + esc(m.room.label) + ' · ' + esc(m.room.type) + (full ? ' · Full' : ' · ' + bedsText(m.room.bedsOpen, m.room.bedsTotal)) + '</span></span>' +
+          '<span class="shrink-0 text-right"><span class="block font-display text-base font-bold">' + peso(m.cost.total) + '</span><span class="block text-xs text-muted">per month</span></span>' +
+        '</summary>' +
+        '<div class="border-t border-line p-4 sm:p-5">' +
+          '<p class="text-sm text-muted">' + esc(m.prop.area) + ' · ' + esc(fitLabel(m.score)) + '</p>' +
+          '<p class="mt-1 text-sm text-muted">' + esc(costLine(m)) + '</p>' +
+          '<p class="mt-3 flex flex-wrap items-center gap-2.5 text-sm font-semibold">' + windows(m.room.bedsOpen, m.room.bedsTotal) + '<span>' + bedsText(m.room.bedsOpen, m.room.bedsTotal) + '</span></p>' +
+          '<div class="mt-4">' + bars(m) + '</div>' + whyList(m) + requestBlock(m) +
+        '</div></details>';
+    }
+
+    // ---------------------------------------------------------------- sample listings (clearly labeled)
+    function sampleProps(school) {
+      return [
+        { id: 'sample-a', sample: true, landlordId: 'sample', name: 'Sample Dorm A', area: 'Sample area, near the school', utilities: 500, utilitiesIncluded: false,
+          amenities: ['Wi-Fi', 'Own bathroom', 'Study area'], safety: ['Security guard', 'CCTV', 'Curfew'], commutes: [{ school: school, km: 0.6, fare: 0 }],
+          rooms: [{ id: 'sample-a1', label: 'Room 1', type: 'Shared', price: 2200, bedsTotal: 4, bedsOpen: 2 }, { id: 'sample-a2', label: 'Room 2', type: 'Single', price: 3800, bedsTotal: 1, bedsOpen: 1 }] },
+        { id: 'sample-b', sample: true, landlordId: 'sample', name: 'Sample Dorm B', area: 'Sample area, farther out', utilities: 0, utilitiesIncluded: true,
+          amenities: ['Wi-Fi', 'Kitchen', 'Laundry area'], safety: ['Fenced gate', 'Lockable room'], commutes: [{ school: school, km: 2.8, fare: 15 }],
+          rooms: [{ id: 'sample-b1', label: 'Room A', type: 'Shared', price: 1500, bedsTotal: 6, bedsOpen: 3 }] },
+        { id: 'sample-c', sample: true, landlordId: 'sample', name: 'Sample Apartment C', area: 'Sample area, city side', utilities: 800, utilitiesIncluded: false,
+          amenities: ['Wi-Fi', 'Own bathroom', 'Kitchen', 'Air conditioning', 'Laundry area'], safety: ['Security guard', 'CCTV', 'Fire extinguisher', 'Lockable room'], commutes: [{ school: school, km: 1.2, fare: 12 }],
+          rooms: [{ id: 'sample-c1', label: 'Unit 1', type: 'Single', price: 5200, bedsTotal: 1, bedsOpen: 0 }, { id: 'sample-c2', label: 'Unit 2', type: 'Shared', price: 3400, bedsTotal: 2, bedsOpen: 1 }] }
+      ];
+    }
+
+    // ---------------------------------------------------------------- VIEWS: student
+    function vMatches() {
+      var sub = 'Every room scored against what you told us, with the real monthly cost.';
+      var prefs = getPrefs();
+      if (!prefs) return { title: 'Matches', sub: sub, html: emptyCard('Tell Homebase what you need first', 'Matches are scored against your budget, school, amenities and safety needs. Until you set them there is nothing to score against.', '<a class="btn" href="#prefs">Set my preferences</a>') };
+      var props = getProps();
+      if (!props.length) return { title: 'Matches', sub: sub, html: emptyCard('No listings yet', 'Rooms appear here as soon as a landlord adds a property. To see how the scoring works in the meantime, you can load a few listings that are clearly marked as samples.', '<button type="button" class="btn" data-action="load-sample" data-fk="load-sample">Load sample listings</button>') };
+
+      var all = computeMatches(props, prefs);
+      var open = all.filter(function (m) { return m.room.bedsOpen > 0; });
+      var full = all.filter(function (m) { return m.room.bedsOpen < 1; });
+      var list = open.concat(state.showFull ? full : []);
+      var hasSchool = props.some(function (p) { return (p.commutes || []).some(function (c) { return norm(c.school) === norm(prefs.school); }); });
+      var hasSample = props.some(function (p) { return p.sample; });
+
+      var h = '<div class="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 rounded-lg bg-tint px-4 py-3 text-sm">' +
+        '<p class="text-ink"><span class="font-semibold">Your limits:</span> ' + peso(prefs.budget) + ' a month all in · within ' + prefs.maxKm + ' km of ' + esc(prefs.school) + ' · ' + prefs.days + ' school days a month</p>' +
+        '<a class="linkbtn" href="#prefs">Change</a></div>';
+      if (!hasSchool) h += '<p class="mt-4 rounded-lg border border-danger bg-[#FEF3F2] px-4 py-3 text-sm font-semibold text-danger" role="note">No listing has a distance to "' + esc(prefs.school) + '" yet, so commute scores are 0. Check the spelling of your school in Preferences, or wait for landlords to add it.</p>';
+
+      if (!list.length) {
+        h += '<div class="mt-6">' + emptyCard('Every room is full right now', 'All ' + plural(all.length, 'room', 'rooms') + ' listed have no open beds. Landlords update this as beds free up, so check back later.',
+          '<button type="button" class="btn2" data-action="toggle-full" data-fk="toggle-full">Show full rooms anyway</button>') + '</div>';
+      } else {
+        h += '<div class="mt-6 space-y-6">' + bigCard(list[0], prefs);
+        if (list.length > 1) {
+          h += '<section aria-labelledby="others-h"><h2 id="others-h" class="h2">Other rooms</h2><p class="hint">Open a row to see the full score breakdown.</p><div class="mt-4 space-y-3">' + list.slice(1).map(rowCard).join('') + '</div></section>';
+        }
+        h += '</div>';
+      }
+      h += '<div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2">';
+      if (full.length) h += '<label class="flex min-h-[44px] cursor-pointer items-center gap-3 text-base"><input type="checkbox" id="toggle-full-box" ' + (state.showFull ? 'checked' : '') + ' class="h-5 w-5 accent-forest" data-fk="toggle-full-box"> Show ' + plural(full.length, 'full room', 'full rooms') + '</label>';
+      if (hasSample) h += '<button type="button" class="linkbtn" data-action="remove-sample" data-fk="remove-sample">Remove sample listings</button>';
+      h += '</div><p class="mt-6 max-w-2xl text-sm text-muted">Listing details are typed in by landlords and are not verified by Homebase yet. Commute cost assumes two trips a day on the days you set in Preferences.</p>';
+      return { title: 'Matches', sub: sub, html: h };
+    }
+
+    function vStudentRequests() {
+      var sub = 'Rooms you asked for and what the landlord answered.';
+      var mine = getReqs().filter(function (r) { return r.studentId === user.id; }).sort(function (a, b) { return a.createdAt < b.createdAt ? 1 : -1; });
+      if (!mine.length) return { title: 'My requests', sub: sub, html: emptyCard('You have not requested a room yet', 'When you request a room from your matches, it shows up here with the landlord\'s answer.', '<a class="btn" href="#matches">See my matches</a>') };
+      var h = '<ul class="space-y-3">' + mine.map(function (r) {
+        return '<li class="card flex flex-wrap items-center justify-between gap-4 p-4 sm:p-5"><div class="min-w-0"><p class="text-base font-semibold">' + esc(r.propertyName) + ' · ' + esc(r.roomLabel) + '</p>' +
+          '<p class="mt-1 text-sm text-muted">Asked on ' + esc(fmtDate(r.createdAt)) + '</p></div><div class="flex flex-wrap items-center gap-3">' + statusLabel(r.status) +
+          (r.status === 'pending' ? '<button type="button" class="btn2" data-action="cancel-request" data-id="' + esc(r.id) + '" data-fk="cancel-' + esc(r.id) + '">Cancel request</button>' : '') + '</div></li>';
+      }).join('') + '</ul>' +
+        '<p class="mt-6 max-w-2xl text-sm text-muted">Homebase does not handle payments, contracts or moving. Once a landlord approves, settle those with them directly.</p>';
+      return { title: 'My requests', sub: sub, html: h };
+    }
+
+    function vPrefs() {
+      var p = getPrefs(), first = !p;
+      p = p || { school: '', budget: '', maxKm: '', days: 20, amenities: [], safety: [], pri: { budget: 'medium', commute: 'medium', amenities: 'medium', safety: 'medium' } };
+      var schools = {}; getProps().forEach(function (x) { (x.commutes || []).forEach(function (c) { if (c.school) schools[c.school] = true; }); });
+      var dl = Object.keys(schools).map(function (s) { return '<option value="' + esc(s) + '"></option>'; }).join('');
+      function sel(name, label) {
+        var cur = p.pri[name];
+        return '<div><label class="label" for="pri-' + name + '">' + label + '</label><select class="field" id="pri-' + name + '" name="pri-' + name + '">' +
+          [['low', 'Not so important'], ['medium', 'Important'], ['high', 'Very important']].map(function (o) { return '<option value="' + o[0] + '"' + (cur === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div>';
+      }
+      var h = '<form id="prefs-form" novalidate class="max-w-2xl space-y-8">' +
+        '<div id="prefs-error" role="alert" class="err hidden !mt-0 rounded-lg border border-danger/30 bg-[#FEF3F2] px-3.5 py-3"></div>' +
+        '<section aria-labelledby="p1" class="space-y-4"><h2 id="p1" class="h2">The basics</h2>' +
+          '<div><label class="label" for="pf-school">Your school</label><input class="field" id="pf-school" name="school" list="school-list" autocomplete="off" value="' + esc(p.school) + '" aria-describedby="pf-school-hint"><datalist id="school-list">' + dl + '</datalist>' +
+            '<p class="hint" id="pf-school-hint">Type it the way landlords list it. Distances are matched by this name.</p></div>' +
+          '<div class="grid gap-4 sm:grid-cols-3">' +
+            '<div><label class="label" for="pf-budget">Monthly budget (₱)</label><input class="field" id="pf-budget" name="budget" type="number" inputmode="numeric" min="1" step="50" value="' + esc(p.budget) + '" aria-describedby="pf-budget-hint"><p class="hint" id="pf-budget-hint">Rent, utilities and commute together.</p></div>' +
+            '<div><label class="label" for="pf-km">Farthest from school (km)</label><input class="field" id="pf-km" name="maxKm" type="number" inputmode="decimal" min="0.1" step="0.1" value="' + esc(p.maxKm) + '"></div>' +
+            '<div><label class="label" for="pf-days">School days a month</label><input class="field" id="pf-days" name="days" type="number" inputmode="numeric" min="1" max="31" step="1" value="' + esc(p.days) + '" aria-describedby="pf-days-hint"><p class="hint" id="pf-days-hint">Used for commute cost. Change it if yours differs.</p></div>' +
+          '</div></section>' +
+        '<fieldset class="space-y-3"><legend class="h2">Amenities you need</legend><p class="hint !mt-0">Pick only the ones you would not do without.</p>' + checkGroup('amenity', AMENITIES, p.amenities) + '</fieldset>' +
+        '<fieldset class="space-y-3"><legend class="h2">Safety you need</legend>' + checkGroup('safety', SAFETY, p.safety) + '</fieldset>' +
+        '<section aria-labelledby="p4" class="space-y-4"><h2 id="p4" class="h2">What matters most</h2><p class="hint !mt-0">This sets how much each part counts toward the score.</p>' +
+          '<div class="grid gap-4 sm:grid-cols-2">' + sel('budget', 'Budget') + sel('commute', 'Commute') + sel('amenities', 'Amenities') + sel('safety', 'Safety') + '</div></section>' +
+        '<button type="submit" class="btn w-full sm:w-auto" id="prefs-submit">' + (first ? 'Save and see my matches' : 'Save preferences') + '</button></form>';
+      return { title: first ? 'Set your preferences' : 'Preferences', sub: 'Homebase scores every room against these. You can change them any time.', html: h };
+    }
+
+    // ---------------------------------------------------------------- VIEWS: landlord
+    function reqCard(r, withActions) {
+      return '<li class="card p-4 sm:p-5"><div class="flex flex-wrap items-start justify-between gap-3"><div class="min-w-0"><p class="text-base font-semibold">' + esc(r.studentName) + '</p>' +
+        '<p class="mt-0.5 text-sm"><a class="font-medium text-forest underline underline-offset-4" href="mailto:' + esc(r.studentEmail) + '">' + esc(r.studentEmail) + '</a></p>' +
+        '<p class="mt-2 text-sm text-muted">Wants ' + esc(r.roomLabel) + ' at ' + esc(r.propertyName) + ' · asked ' + esc(fmtDate(r.createdAt)) + '</p></div>' +
+        (withActions ? '' : '<div>' + statusLabel(r.status === 'cancelled' ? 'cancelled' : r.status).replace('Cancelled by you', 'Cancelled by student') + '</div>') + '</div>' +
+        (withActions ? '<div class="mt-4 flex flex-wrap gap-3"><button type="button" class="btn btn-sm" data-action="approve" data-id="' + esc(r.id) + '">Approve and hold a bed</button><button type="button" class="btn-danger" data-action="decline" data-id="' + esc(r.id) + '">Decline</button></div>' : '') + '</li>';
+    }
+
+    function vOverview() {
+      var sub = 'Who is waiting on you, and which beds are open.';
+      var props = myProps();
+      if (!props.length) return { title: 'Overview', sub: sub, html: emptyCard('You have not added a property yet', 'Add your dorm or apartment with its rooms, beds and the schools it is near. Students whose budget and commute fit will then see it in their matches.', '<button type="button" class="btn" data-action="add-property" data-fk="add-property">Add my first property</button>') };
+      var open = 0, total = 0, rooms = 0;
+      props.forEach(function (p) { p.rooms.forEach(function (r) { open += r.bedsOpen; total += r.bedsTotal; rooms++; }); });
+      var pend = pendingForMe();
+      var h = '<p class="font-display text-2xl font-bold tracking-tight sm:text-3xl">' + plural(open, 'bed', 'beds') + ' open across ' + plural(props.length, 'property', 'properties') + '.</p>' +
+        '<div class="mt-8 grid gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">' +
+        '<section aria-labelledby="ov-beds"><h2 id="ov-beds" class="h2">Your beds</h2><ul class="mt-4 space-y-3">' + props.map(function (p) {
+          var o = 0, t = 0; p.rooms.forEach(function (r) { o += r.bedsOpen; t += r.bedsTotal; });
+          return '<li class="card p-4"><div class="flex flex-wrap items-center justify-between gap-2"><p class="text-base font-semibold">' + esc(p.name) + '</p><p class="text-sm font-semibold text-muted">' + bedsText(o, t) + '</p></div><div class="mt-3">' + windows(o, t) + '</div></li>';
+        }).join('') + '</ul><a class="linkbtn mt-3" href="#properties">Edit beds and rooms</a></section>' +
+        '<section aria-labelledby="ov-req"><h2 id="ov-req" data-fk="pending-heading" tabindex="-1" class="h2 outline-none">Waiting for your answer</h2>' +
+        (pend.length ? '<ul class="mt-4 space-y-3">' + pend.slice(0, 5).map(function (r) { return reqCard(r, true); }).join('') + '</ul>' + (pend.length > 5 ? '<a class="linkbtn mt-3" href="#requests">See all ' + pend.length + ' requests</a>' : '')
+          : '<p class="mt-4 rounded-lg bg-tint px-4 py-3 text-base text-muted">No requests are waiting. New ones from students appear here.</p>') +
+        '</section></div>';
+      return { title: 'Overview', sub: sub, html: h };
+    }
+
+    function vProperties() {
+      var sub = 'Keep rooms and open beds true. Students see changes right away.';
+      var props = myProps();
+      var head = '<div class="mb-6"><button type="button" class="btn" data-action="add-property" data-fk="add-property">Add a property</button></div>';
+      if (!props.length) return { title: 'Properties', sub: sub, html: emptyCard('You have not added a property yet', 'Add your dorm or apartment with its rooms, beds and the schools it is near.', '<button type="button" class="btn" data-action="add-property" data-fk="add-property">Add my first property</button>') };
+      return { title: 'Properties', sub: sub, html: head + '<ul class="space-y-6">' + props.map(function (p) {
+        return '<li class="card p-5 sm:p-6"><div class="flex flex-wrap items-start justify-between gap-3"><div class="min-w-0"><h2 class="font-display text-xl font-bold tracking-tight">' + esc(p.name) + '</h2><p class="mt-1 text-base text-muted">' + esc(p.area) + '</p></div>' +
+          '<div class="flex flex-wrap gap-3"><button type="button" class="btn2" data-action="edit-property" data-id="' + esc(p.id) + '" data-fk="edit-' + esc(p.id) + '">Edit</button><button type="button" class="btn-danger" data-action="delete-property" data-id="' + esc(p.id) + '">Delete</button></div></div>' +
+          '<dl class="mt-4 grid gap-x-8 gap-y-2 text-sm sm:grid-cols-2">' +
+            '<div><dt class="font-semibold">Near</dt><dd class="text-muted">' + p.commutes.map(function (c) { return esc(c.school) + ', ' + c.km + ' km' + (c.fare ? ', ' + peso(c.fare) + ' one way' : ', no fare'); }).join('<br>') + '</dd></div>' +
+            '<div><dt class="font-semibold">Utilities</dt><dd class="text-muted">' + (p.utilitiesIncluded ? 'Included in rent' : peso(p.utilities || 0) + ' a month on top of rent') + '</dd></div>' +
+            '<div><dt class="font-semibold">Amenities</dt><dd class="text-muted">' + (p.amenities.length ? esc(p.amenities.join(', ')) : 'None listed') + '</dd></div>' +
+            '<div><dt class="font-semibold">Safety</dt><dd class="text-muted">' + (p.safety.length ? esc(p.safety.join(', ')) : 'None listed') + '</dd></div></dl>' +
+          '<div class="mt-5 border-t border-line pt-4"><h3 class="text-base font-semibold">Rooms</h3><ul class="mt-3 divide-y divide-line">' + p.rooms.map(function (r) {
+            var pid = esc(p.id), rid = esc(r.id);
+            return '<li class="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 py-3"><div class="min-w-[9rem]"><p class="text-base font-semibold">' + esc(r.label) + '</p><p class="text-sm text-muted">' + esc(r.type) + ' · ' + peso(r.price) + ' per bed</p></div>' +
+              '<div class="flex flex-wrap items-center gap-3">' + windows(r.bedsOpen, r.bedsTotal) + '<span class="text-sm font-semibold" aria-live="polite">' + bedsText(r.bedsOpen, r.bedsTotal) + '</span>' +
+              '<span class="flex items-center gap-2"><button type="button" class="btn2 !min-w-[44px] !px-0" data-action="bed" data-prop="' + pid + '" data-room="' + rid + '" data-delta="-1" data-fk="bed-' + rid + '--1" aria-label="One less open bed in ' + esc(r.label) + '">−</button>' +
+              '<button type="button" class="btn2 !min-w-[44px] !px-0" data-action="bed" data-prop="' + pid + '" data-room="' + rid + '" data-delta="1" data-fk="bed-' + rid + '-1" aria-label="One more open bed in ' + esc(r.label) + '">+</button></span></div></li>';
+          }).join('') + '</ul></div></li>';
+      }).join('') + '</ul>' };
+    }
+
+    function vLandlordRequests() {
+      var sub = 'Approving a request holds one bed in that room.';
+      var mine = {}; myProps().forEach(function (p) { mine[p.id] = true; });
+      var all = getReqs().filter(function (r) { return mine[r.propertyId]; }).sort(function (a, b) { return a.createdAt < b.createdAt ? 1 : -1; });
+      if (!all.length) return { title: 'Requests', sub: sub, html: emptyCard('No requests yet', myProps().length ? 'When a student requests one of your rooms, it appears here for you to approve or decline.' : 'Requests come from students who find your rooms in their matches. Add a property first so there is something to request.', myProps().length ? '' : '<button type="button" class="btn" data-action="add-property" data-fk="add-property">Add a property</button>') };
+      var pend = all.filter(function (r) { return r.status === 'pending'; }), done = all.filter(function (r) { return r.status !== 'pending'; });
+      var h = '<section aria-labelledby="rq1"><h2 id="rq1" data-fk="pending-heading" tabindex="-1" class="h2 outline-none">Waiting for your answer</h2>' +
+        (pend.length ? '<ul class="mt-4 space-y-3">' + pend.map(function (r) { return reqCard(r, true); }).join('') + '</ul>' : '<p class="mt-4 rounded-lg bg-tint px-4 py-3 text-base text-muted">Nothing is waiting. You have answered every request.</p>') + '</section>';
+      if (done.length) h += '<section aria-labelledby="rq2" class="mt-10"><h2 id="rq2" class="h2">Answered</h2><ul class="mt-4 space-y-3">' + done.map(function (r) { return reqCard(r, false); }).join('') + '</ul></section>';
+      h += '<p class="mt-8 max-w-2xl text-sm text-muted">Homebase does not handle payments, contracts or moving. After you approve, agree on those with the student directly.</p>';
+      return { title: 'Requests', sub: sub, html: h };
+    }
+
+    var VIEWS = {
+      student: { matches: vMatches, requests: vStudentRequests, prefs: vPrefs },
+      landlord: { overview: vOverview, properties: vProperties, requests: vLandlordRequests }
+    };
+
+    // ---------------------------------------------------------------- render
+    function renderNav() {
+      var r = currentRoute(), pend = 0;
+      try { if (role === 'landlord') pend = pendingForMe().length; } catch (e) {}
+      var links = ROUTES[role].map(function (x) {
+        var count = (role === 'landlord' && x[0] === 'requests' && pend > 0) ? '<span class="inline-flex h-6 min-w-[24px] items-center justify-center rounded-[4px] bg-lime px-1.5 text-xs font-bold text-forest" aria-label="' + plural(pend, 'request', 'requests') + ' waiting">' + pend + '</span>' : '';
+        return '<a class="navlink" href="#' + x[0] + '"' + (x[0] === r ? ' aria-current="page"' : '') + '>' + esc(x[1]) + count + '</a>';
+      }).join('');
+      $('#top-links').innerHTML = links;
+      $('#bottom-links').innerHTML = links;
+      $('#logo').setAttribute('href', '#' + ROUTES[role][0][0]);
+      $('#who').textContent = user.name;
+      $('#who').title = user.name + ' (' + role + ')';
+    }
+
+    function errorView(e) {
+      return emptyCard('Your saved data could not be read', esc(e && e.message ? e.message : 'Something went wrong reading this browser\'s storage.') + ' Try again first. If it keeps failing, you can clear the listings, requests and preferences saved here (your account stays).',
+        '<button type="button" class="btn" data-action="retry" data-fk="retry">Try again</button><button type="button" class="btn-danger" data-action="reset-data">Clear dashboard data</button>');
+    }
+
+    function render(focusKey) {
+      var view = $('#view');
+      try {
+        renderNav();
+        var out = VIEWS[role][currentRoute()]();
+        $('#page-title').textContent = out.title;
+        $('#page-sub').textContent = out.sub || '';
+        view.innerHTML = out.html;
+        document.title = 'Homebase | ' + out.title;
+      } catch (e) {
+        $('#page-title').textContent = 'Something went wrong';
+        $('#page-sub').textContent = '';
+        view.innerHTML = errorView(e);
+        document.title = 'Homebase | Error';
+      }
+      view.setAttribute('aria-busy', 'false');
+      if (focusKey) { var el = document.querySelector('[data-fk="' + focusKey + '"]'); if (el) el.focus(); }
+    }
+
+    // ---------------------------------------------------------------- dialogs
+    function confirmDialog(title, body, yes) {
+      return new Promise(function (resolve) {
+        var d = $('#confirm-dialog');
+        $('#confirm-title').textContent = title; $('#confirm-body').textContent = body; $('#confirm-yes').textContent = yes || 'Confirm';
+        function done(v) { d.removeEventListener('close', onClose); $('#confirm-yes').onclick = null; $('#confirm-no').onclick = null; if (d.open) d.close(); resolve(v); }
+        function onClose() { done(false); }
+        d.addEventListener('close', onClose);
+        $('#confirm-yes').onclick = function () { done(true); };
+        $('#confirm-no').onclick = function () { done(false); };
+        d.showModal();
+      });
+    }
+
+    // property form ------------------------------------------------------
+    function roomRow(r) {
+      r = r || { id: uid(), label: '', type: 'Shared', price: '', bedsTotal: '', bedsOpen: '' };
+      var i = esc(r.id);
+      return '<fieldset class="rounded-lg border border-line p-3 sm:p-4" data-row="room" data-id="' + i + '"><legend class="px-1 text-sm font-semibold">Room</legend>' +
+        '<div class="grid gap-3 sm:grid-cols-2"><div><label class="label" for="rl-' + i + '">Room name</label><input class="field js-label" id="rl-' + i + '" value="' + esc(r.label) + '" placeholder="Room 1"></div>' +
+        '<div><label class="label" for="rt-' + i + '">Type</label><select class="field js-type" id="rt-' + i + '"><option' + (r.type === 'Shared' ? ' selected' : '') + '>Shared</option><option' + (r.type === 'Single' ? ' selected' : '') + '>Single</option></select></div>' +
+        '<div><label class="label" for="rp-' + i + '">Rent per bed (₱ a month)</label><input class="field js-price" id="rp-' + i + '" type="number" inputmode="numeric" min="1" value="' + esc(r.price) + '"></div>' +
+        '<div class="grid grid-cols-2 gap-3"><div><label class="label" for="rb-' + i + '">Total beds</label><input class="field js-total" id="rb-' + i + '" type="number" inputmode="numeric" min="1" value="' + esc(r.bedsTotal) + '"></div>' +
+        '<div><label class="label" for="ro-' + i + '">Beds open</label><input class="field js-open" id="ro-' + i + '" type="number" inputmode="numeric" min="0" value="' + esc(r.bedsOpen) + '"></div></div></div>' +
+        '<button type="button" class="btn-danger mt-3" data-action="remove-row">Remove this room</button></fieldset>';
+    }
+    function commuteRow(c) {
+      c = c || { school: '', km: '', fare: '' };
+      var i = uid();
+      return '<fieldset class="rounded-lg border border-line p-3 sm:p-4" data-row="commute"><legend class="px-1 text-sm font-semibold">School</legend>' +
+        '<div class="grid gap-3 sm:grid-cols-3"><div class="sm:col-span-3"><label class="label" for="cs-' + i + '">School name</label><input class="field js-school" id="cs-' + i + '" value="' + esc(c.school) + '"></div>' +
+        '<div><label class="label" for="ck-' + i + '">Distance (km)</label><input class="field js-km" id="ck-' + i + '" type="number" inputmode="decimal" min="0" step="0.1" value="' + esc(c.km) + '"></div>' +
+        '<div><label class="label" for="cf-' + i + '">One-way fare (₱)</label><input class="field js-fare" id="cf-' + i + '" type="number" inputmode="numeric" min="0" value="' + esc(c.fare) + '" aria-describedby="cf-h-' + i + '"><p class="hint" id="cf-h-' + i + '">Use 0 if students walk.</p></div></div>' +
+        '<button type="button" class="btn-danger mt-3" data-action="remove-row">Remove this school</button></fieldset>';
+    }
+    function openPropForm(id) {
+      var p = id ? myProps().filter(function (x) { return x.id === id; })[0] : null;
+      p = p || { id: null, name: '', area: '', utilities: '', utilitiesIncluded: false, amenities: [], safety: [], commutes: [{ school: '', km: '', fare: '' }], rooms: [null] };
+      $('#prop-form').dataset.id = p.id || '';
+      $('#prop-form').innerHTML =
+        '<h2 id="prop-title" class="h2">' + (p.id ? 'Edit property' : 'Add a property') + '</h2>' +
+        '<div id="prop-error" role="alert" tabindex="-1" class="err hidden rounded-lg border border-danger/30 bg-[#FEF3F2] px-3.5 py-3 outline-none"></div>' +
+        '<div class="mt-5 space-y-6">' +
+        '<div class="grid gap-4 sm:grid-cols-2"><div><label class="label" for="pr-name">Property name</label><input class="field" id="pr-name" value="' + esc(p.name) + '" autocomplete="off"></div>' +
+          '<div><label class="label" for="pr-area">Area or address</label><input class="field" id="pr-area" value="' + esc(p.area) + '" autocomplete="off"></div></div>' +
+        '<fieldset class="space-y-3"><legend class="text-base font-semibold">Utilities</legend><label class="flex min-h-[44px] cursor-pointer items-center gap-3 text-base"><input type="checkbox" id="pr-util-inc" class="h-5 w-5 accent-forest"' + (p.utilitiesIncluded ? ' checked' : '') + '> Utilities are included in the rent</label>' +
+          '<div><label class="label" for="pr-util">Utilities on top of rent (₱ a month, per student)</label><input class="field max-w-xs" id="pr-util" type="number" inputmode="numeric" min="0" value="' + esc(p.utilities) + '"></div></fieldset>' +
+        '<fieldset class="space-y-3"><legend class="text-base font-semibold">Schools nearby</legend><p class="hint !mt-0">Students are matched by school name, so spell it the way students do.</p><div id="commutes-list" class="space-y-3">' + p.commutes.map(commuteRow).join('') + '</div><button type="button" class="btn2" data-action="add-commute">Add another school</button></fieldset>' +
+        '<fieldset class="space-y-3"><legend class="text-base font-semibold">Amenities</legend>' + checkGroup('pr-amenity', AMENITIES, p.amenities) + '</fieldset>' +
+        '<fieldset class="space-y-3"><legend class="text-base font-semibold">Safety</legend>' + checkGroup('pr-safety', SAFETY, p.safety) + '</fieldset>' +
+        '<fieldset class="space-y-3"><legend class="text-base font-semibold">Rooms</legend><div id="rooms-list" class="space-y-3">' + p.rooms.map(roomRow).join('') + '</div><button type="button" class="btn2" data-action="add-room">Add another room</button></fieldset>' +
+        '</div><div class="mt-6 grid grid-cols-2 gap-3 border-t border-line pt-5"><button type="button" class="btn2 btn-sm" data-action="close-prop">Cancel</button><button type="submit" class="btn btn-sm">' + (p.id ? 'Save changes' : 'Add property') + '</button></div>';
+      var d = $('#prop-dialog'); d.showModal(); $('#prop-form').scrollTop = 0;
+    }
+
+    function submitProp(e) {
+      e.preventDefault();
+      var form = $('#prop-form'), errs = [], bad = [];
+      $$('[aria-invalid]', form).forEach(function (x) { x.removeAttribute('aria-invalid'); });
+      function flag(el, msg) { if (el) { el.setAttribute('aria-invalid', 'true'); bad.push(el); } errs.push(msg); }
+      var name = $('#pr-name').value.trim(), area = $('#pr-area').value.trim();
+      if (!name) flag($('#pr-name'), 'Enter the property name.');
+      if (!area) flag($('#pr-area'), 'Enter the area or address.');
+      var incl = $('#pr-util-inc').checked, utilRaw = $('#pr-util').value, util = utilRaw === '' ? 0 : num(utilRaw);
+      if (!incl && (isNaN(util) || util < 0)) flag($('#pr-util'), 'Utilities must be 0 or more. Tick "included" if there is no extra charge.');
+      var commutes = [];
+      $$('[data-row=commute]', form).forEach(function (row) {
+        var s = $('.js-school', row), k = $('.js-km', row), f = $('.js-fare', row);
+        var sv = s.value.trim(), kv = num(k.value), fv = f.value === '' ? NaN : num(f.value);
+        if (!sv) flag(s, 'Every school row needs a school name.');
+        if (isNaN(kv) || kv < 0) flag(k, 'Enter the distance in km for ' + (sv || 'each school') + '.');
+        if (isNaN(fv) || fv < 0) flag(f, 'Enter the one-way fare for ' + (sv || 'each school') + ' (0 if students walk).');
+        if (sv && !isNaN(kv) && !isNaN(fv) && kv >= 0 && fv >= 0) commutes.push({ school: sv, km: kv, fare: fv });
+      });
+      if (!$$('[data-row=commute]', form).length) flag($('[data-action=add-commute]', form), 'Add at least one school. Matching needs a distance to a school.');
+      var rooms = [];
+      $$('[data-row=room]', form).forEach(function (row) {
+        var l = $('.js-label', row), pr = $('.js-price', row), t = $('.js-total', row), o = $('.js-open', row);
+        var lv = l.value.trim(), pv = num(pr.value), tv = num(t.value), ov = num(o.value);
+        if (!lv) flag(l, 'Every room needs a name.');
+        if (isNaN(pv) || pv <= 0) flag(pr, 'Enter the rent per bed for ' + (lv || 'each room') + '.');
+        if (isNaN(tv) || tv < 1 || Math.floor(tv) !== tv) flag(t, 'Total beds in ' + (lv || 'each room') + ' must be a whole number, at least 1.');
+        else if (isNaN(ov) || ov < 0 || ov > tv || Math.floor(ov) !== ov) flag(o, 'Beds open in ' + (lv || 'each room') + ' must be a whole number from 0 to ' + tv + '.');
+        if (lv && pv > 0 && tv >= 1 && ov >= 0 && ov <= tv) rooms.push({ id: row.dataset.id, label: lv, type: $('.js-type', row).value, price: pv, bedsTotal: tv, bedsOpen: ov });
+      });
+      if (!$$('[data-row=room]', form).length) flag($('[data-action=add-room]', form), 'Add at least one room.');
+      if (errs.length) {
+        var box = $('#prop-error');
+        box.innerHTML = '<p class="font-semibold">Fix these and try again:</p><ul class="mt-1 list-disc space-y-0.5 pl-5 font-normal">' + errs.map(function (m) { return '<li>' + esc(m) + '</li>'; }).join('') + '</ul>';
+        box.classList.remove('hidden'); box.focus(); box.scrollIntoView({ block: 'nearest' });
+        return;
+      }
+      var id = form.dataset.id, props;
+      try { props = getProps(); } catch (er) { toast(er.message, 'error'); return; }
+      var rec = {
+        id: id || uid(), landlordId: user.id, name: name, area: area, utilitiesIncluded: incl, utilities: incl ? 0 : util,
+        amenities: $$('input[name=pr-amenity]:checked', form).map(function (x) { return x.value; }),
+        safety: $$('input[name=pr-safety]:checked', form).map(function (x) { return x.value; }),
+        commutes: commutes, rooms: rooms
+      };
+      var idx = -1; props.forEach(function (p, i) { if (p.id === rec.id && p.landlordId === user.id) idx = i; });
+      if (idx > -1) { rec.createdAt = props[idx].createdAt; props[idx] = rec; } else { rec.createdAt = new Date().toISOString(); props.push(rec); }
+      if (!write(K.props, props)) return;
+      $('#prop-dialog').close();
+      toast(idx > -1 ? 'Property saved.' : 'Property added. Students can now find it.');
+      location.hash = '#properties'; render();
+    }
+
+    // prefs form ---------------------------------------------------------
+    function submitPrefs(e) {
+      e.preventDefault();
+      var f = e.target, errs = [], bad = [];
+      function flag(el, m) { el.setAttribute('aria-invalid', 'true'); bad.push(el); errs.push(m); }
+      $$('[aria-invalid]', f).forEach(function (x) { x.removeAttribute('aria-invalid'); });
+      var school = $('#pf-school').value.trim(), budget = num($('#pf-budget').value), km = num($('#pf-km').value), days = num($('#pf-days').value);
+      if (!school) flag($('#pf-school'), 'Enter your school.');
+      if (isNaN(budget) || budget <= 0) flag($('#pf-budget'), 'Enter a monthly budget above 0.');
+      if (isNaN(km) || km <= 0) flag($('#pf-km'), 'Enter how far from school you can live, in km.');
+      if (isNaN(days) || days < 1 || days > 31 || Math.floor(days) !== days) flag($('#pf-days'), 'School days a month must be a whole number from 1 to 31.');
+      var box = $('#prefs-error');
+      if (errs.length) { box.innerHTML = errs.map(function (m) { return esc(m); }).join('<br>'); box.classList.remove('hidden'); bad[0].focus(); return; }
+      box.classList.add('hidden');
+      var all; try { all = read(K.prefs, {}); } catch (er) { toast(er.message, 'error'); return; }
+      all[user.id] = {
+        school: school, budget: budget, maxKm: km, days: days,
+        amenities: $$('input[name=amenity]:checked', f).map(function (x) { return x.value; }),
+        safety: $$('input[name=safety]:checked', f).map(function (x) { return x.value; }),
+        pri: { budget: $('#pri-budget').value, commute: $('#pri-commute').value, amenities: $('#pri-amenities').value, safety: $('#pri-safety').value }
+      };
+      if (!write(K.prefs, all)) return;
+      toast('Preferences saved.');
+      if (location.hash === '#matches') render(); else location.hash = '#matches';
+    }
+
+    // ---------------------------------------------------------------- actions
+    var actions = {
+      logout: function () { try { localStorage.removeItem(K.current); } catch (e) {} location.href = 'index.html'; },
+      retry: function () { render('retry'); },
+      'reset-data': function () {
+        confirmDialog('Clear dashboard data?', 'This removes all listings, requests and preferences saved in this browser. Your account stays.', 'Clear data').then(function (ok) {
+          if (!ok) return;
+          try { localStorage.removeItem(K.props); localStorage.removeItem(K.reqs); localStorage.removeItem(K.prefs); } catch (e) { toast('Could not clear data.', 'error'); return; }
+          toast('Dashboard data cleared.'); render();
+        });
+      },
+      'load-sample': function () {
+        var prefs; try { prefs = getPrefs(); } catch (e) { return render(); }
+        var props = getProps().filter(function (p) { return !p.sample; });
+        if (!write(K.props, props.concat(sampleProps(prefs ? prefs.school : 'Sample University')))) return;
+        toast('Sample listings loaded. They are marked "Sample".'); render('toggle-full-box');
+      },
+      'remove-sample': function () {
+        confirmDialog('Remove sample listings?', 'The sample rooms and any requests you made on them will be removed. Real listings stay.', 'Remove').then(function (ok) {
+          if (!ok) return;
+          var props = getProps().filter(function (p) { return !p.sample; });
+          var reqs = getReqs().filter(function (r) { return String(r.propertyId).indexOf('sample-') !== 0; });
+          if (write(K.props, props) && write(K.reqs, reqs)) { toast('Sample listings removed.'); render(); }
+        });
+      },
+      'toggle-full': function () { state.showFull = true; render('toggle-full-box'); },
+      request: function (t) {
+        var reqs = getReqs(), prop = getProps().filter(function (p) { return p.id === t.dataset.prop; })[0];
+        var room = prop && prop.rooms.filter(function (r) { return r.id === t.dataset.room; })[0];
+        if (!room) { toast('That room is no longer listed.', 'error'); return render(); }
+        if (room.bedsOpen < 1) { toast('That room just filled up.', 'error'); return render(); }
+        if (reqs.some(function (r) { return r.roomId === room.id && r.studentId === user.id && (r.status === 'pending' || r.status === 'approved'); })) { toast('You already asked for this room.', 'error'); return render(); }
+        reqs.push({ id: uid(), propertyId: prop.id, propertyName: prop.name, roomId: room.id, roomLabel: room.label, studentId: user.id, studentName: user.name, studentEmail: user.email, status: 'pending', createdAt: new Date().toISOString() });
+        if (!write(K.reqs, reqs)) return;
+        state.openId = room.id; toast('Request sent to the landlord.'); render('status-' + room.id);
+      },
+      'cancel-request': function (t) {
+        var reqs = getReqs(), r = reqs.filter(function (x) { return x.id === t.dataset.id && x.studentId === user.id; })[0];
+        if (!r || r.status !== 'pending') return render();
+        r.status = 'cancelled'; r.updatedAt = new Date().toISOString();
+        if (write(K.reqs, reqs)) { toast('Request cancelled.'); render(); $('#page-title').focus(); }
+      },
+      'add-property': function () { openPropForm(null); },
+      'edit-property': function (t) { openPropForm(t.dataset.id); },
+      'delete-property': function (t) {
+        var p = myProps().filter(function (x) { return x.id === t.dataset.id; })[0]; if (!p) return;
+        confirmDialog('Delete ' + p.name + '?', 'The property, its rooms and any requests for it will be removed. This cannot be undone.', 'Delete').then(function (ok) {
+          if (!ok) return;
+          var props = getProps().filter(function (x) { return x.id !== p.id; }), reqs = getReqs().filter(function (r) { return r.propertyId !== p.id; });
+          if (write(K.props, props) && write(K.reqs, reqs)) { toast('Property deleted.'); render(); $('#page-title').focus(); }
+        });
+      },
+      bed: function (t) {
+        var props = getProps(), p = props.filter(function (x) { return x.id === t.dataset.prop && x.landlordId === user.id; })[0];
+        var r = p && p.rooms.filter(function (x) { return x.id === t.dataset.room; })[0]; if (!r) return render();
+        var next = r.bedsOpen + Number(t.dataset.delta);
+        if (next < 0) { toast('No open beds to remove in ' + r.label + '.', 'error'); return; }
+        if (next > r.bedsTotal) { toast(r.label + ' only has ' + plural(r.bedsTotal, 'bed', 'beds') + '. Edit the room to add beds.', 'error'); return; }
+        r.bedsOpen = next;
+        if (write(K.props, props)) render(t.dataset.fk);
+      },
+      approve: function (t) {
+        var reqs = getReqs(), props = getProps(), r = reqs.filter(function (x) { return x.id === t.dataset.id; })[0]; if (!r || r.status !== 'pending') return render();
+        var p = props.filter(function (x) { return x.id === r.propertyId && x.landlordId === user.id; })[0];
+        var room = p && p.rooms.filter(function (x) { return x.id === r.roomId; })[0];
+        if (!room) { toast('That room no longer exists. Decline this request.', 'error'); return; }
+        if (room.bedsOpen < 1) { toast('No open beds left in ' + room.label + '. Add a bed on the Properties page, or decline.', 'error'); return; }
+        room.bedsOpen -= 1; r.status = 'approved'; r.updatedAt = new Date().toISOString();
+        if (write(K.props, props) && write(K.reqs, reqs)) { toast('Approved. One bed is now held for ' + r.studentName + '.'); render('pending-heading'); }
+      },
+      decline: function (t) {
+        var reqs = getReqs(), r = reqs.filter(function (x) { return x.id === t.dataset.id; })[0]; if (!r || r.status !== 'pending') return render();
+        r.status = 'declined'; r.updatedAt = new Date().toISOString();
+        if (write(K.reqs, reqs)) { toast('Request declined.'); render('pending-heading'); }
+      },
+      'add-room': function () { var l = $('#rooms-list'); l.insertAdjacentHTML('beforeend', roomRow()); $('.js-label', l.lastElementChild).focus(); },
+      'add-commute': function () { var l = $('#commutes-list'); l.insertAdjacentHTML('beforeend', commuteRow()); $('.js-school', l.lastElementChild).focus(); },
+      'remove-row': function (t) { var row = t.closest('[data-row]'), list = row.parentElement; row.remove(); var f = $('input', list); if (f) f.focus(); else $('[data-action^=add-]', list.parentElement).focus(); },
+      'close-prop': function () { $('#prop-dialog').close(); }
+    };
+
+    document.addEventListener('click', function (e) {
+      var t = e.target.closest('[data-action]');
+      if (!t || !actions[t.dataset.action]) return;
+      try { actions[t.dataset.action](t, e); } catch (err) { toast(err && err.message ? err.message : 'Something went wrong.', 'error'); render(); }
+    });
+    document.addEventListener('change', function (e) {
+      if (e.target.id === 'toggle-full-box') { state.showFull = e.target.checked; render('toggle-full-box'); }
+    });
+    document.addEventListener('submit', function (e) {
+      if (e.target.id === 'prop-form') submitProp(e);
+      else if (e.target.id === 'prefs-form') submitPrefs(e);
+    });
+    $('#prop-dialog').addEventListener('click', function (e) { if (e.target === this) this.close(); });
+    $('#confirm-dialog').addEventListener('click', function (e) { if (e.target === this) this.close(); });
+    window.addEventListener('hashchange', function () { render(); $('#page-title').focus(); window.scrollTo(0, 0); });
+    window.addEventListener('storage', function (e) {
+      if (e.key === K.current && !e.newValue) location.replace('index.html');
+    });
+
+    // First paint shows the loading state. TODO phase 2: replace with a real fetch to the PHP/MySQL backend.
+    requestAnimationFrame(function () { render(); });
+  })();
+  </script>
 </body>
-
 </html>
