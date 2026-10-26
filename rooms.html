@@ -38,7 +38,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
 
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="assets/tw-config.js"></script>
+  <script src="assets/js/tw-config.js"></script>
 
   <style type="text/tailwindcss">
     @layer components {
@@ -130,7 +130,7 @@
 
       <div data-state="error" hidden role="alert" class="rounded-[20px] border border-line p-6">
         <p class="font-display text-xl font-bold tracking-tight">We could not load the rooms</p>
-        <p class="mt-2 text-base text-muted">The room list did not load. Check that <code>assets/rooms.js</code> sits next to this page, then reload.</p>
+        <p class="mt-2 text-base text-muted">The room list did not load. Check that <code>assets/js/rooms.js</code> sits next to this page, then reload.</p>
         <button type="button" data-reload class="btn btn-outline mt-4">Reload this page</button>
       </div>
 
@@ -149,7 +149,7 @@
     </section>
   </main>
 
-  <script src="assets/rooms.js"></script>
+  <script src="assets/js/rooms.js"></script>
   <script>
     (function () {
       var K = { user: 'homebase_currentUser', saved: 'homebase_savedRooms' };

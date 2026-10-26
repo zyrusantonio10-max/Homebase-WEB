@@ -38,7 +38,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
 
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="assets/tw-config.js"></script>
+  <script src="assets/js/tw-config.js"></script>
 
   <style type="text/tailwindcss">
     @layer components {
@@ -100,13 +100,13 @@
 
     <div id="error" hidden role="alert" class="mt-8 rounded-[20px] border border-line p-6">
       <p class="font-display text-xl font-bold tracking-tight">We could not load the rooms</p>
-      <p class="mt-2 text-base text-muted">The room list did not load. Check that <code>assets/rooms.js</code> sits next to this page, then reload.</p>
+      <p class="mt-2 text-base text-muted">The room list did not load. Check that <code>assets/js/rooms.js</code> sits next to this page, then reload.</p>
       <button type="button" data-reload class="btn btn-outline mt-4">Reload this page</button>
     </div>
 
     <div id="empty" hidden class="mt-8 rounded-[20px] border border-line p-6">
       <p class="font-display text-xl font-bold tracking-tight">There are no rooms to show yet</p>
-      <p class="mt-2 text-base text-muted">Add rooms to <code>assets/rooms.js</code> and they appear here by floor.</p>
+      <p class="mt-2 text-base text-muted">Add rooms to <code>assets/js/rooms.js</code> and they appear here by floor.</p>
     </div>
 
     <div id="plan" hidden class="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
@@ -140,7 +140,7 @@
     </div>
   </main>
 
-  <script src="assets/rooms.js"></script>
+  <script src="assets/js/rooms.js"></script>
   <script>
     (function () {
       var K = { user: 'homebase_currentUser', saved: 'homebase_savedRooms' };
