@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Floor Plan | Homebase</title>
+  <meta name="description" content="See which Ariate Dormitory rooms are available on each floor.">
+
+  <!--
+    Design Read: floor-by-floor room picker for students at Ariate Dormitory, same forest + lime language as the other pages,
+    dial ENERGY 2 / RHYTHM 2 / MOTION 1.
+
+    The one decision here: "which room on which floor is still free, and what is it like?" Built like a seat map: pick a floor,
+    pick a room tile, read its details on the side.
+    Reasons (R-31):
+    - Seat-map layout: a corridor in the middle with rooms on both sides. It reads as "where" at a glance.
+      The layout is a SCHEMATIC (labeled on the page): the real room positions are not known yet.
+    - State is never color alone: available tiles say their room type and have a lit window square (the landing page motif),
+      taken tiles say "Taken" and have a dark square, the selected tile is solid forest with a check word in its label for screen readers.
+    - Taken rooms can still be opened to see their details, because students compare against them. They just cannot be saved.
+    - There is no booking system, so there is no Reserve button. The action is Save room (same list as Home and My Matches).
+    - Numbers come from assets/rooms.js (SAMPLE data, labeled). Radius: 12px tiles, 20px cards, pill buttons. No shadows, no glow, no motion.
+  -->
+
+  <script>
+    // Guard: must be logged in. Landlords go to home.html, which shows them a notice.
+    (function () {
+      try {
+        var u = JSON.parse(localStorage.getItem('homebase_currentUser') || 'null');
+        if (!u || !u.email) window.location.replace('index.html');
+        else if (u.role === 'landlord') window.location.replace('home.html');
+      } catch (e) { window.location.replace('index.html'); }
+    })();
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/tw-config.js"></script>
+
+  <style type="text/tailwindcss">
+    @layer components {
+      .btn { @apply inline-flex min-h-[44px] items-center justify-center rounded-full border border-transparent bg-forest px-5 py-2.5 text-base font-semibold text-white no-underline transition-colors hover:bg-forest-deep outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2; }
+      .btn-outline { @apply border-forest bg-white text-forest hover:bg-tint; }
+      .nav-link { @apply inline-flex min-h-[44px] items-center rounded-full px-4 text-base font-medium text-ink no-underline transition-colors outline-none hover:bg-track focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 aria-[current=page]:bg-forest aria-[current=page]:text-white; }
+      .floor-btn { @apply inline-flex min-h-[44px] items-center justify-center rounded-full border border-line bg-white px-5 text-base font-medium text-ink transition-colors outline-none hover:border-[#8FA397] focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 aria-pressed:border-forest aria-pressed:bg-forest aria-pressed:text-white; }
+      .tile { @apply relative flex h-[92px] w-[96px] flex-col items-start justify-end rounded-xl border-2 border-forest bg-white p-2.5 text-left text-ink transition-colors outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 aria-pressed:bg-forest aria-pressed:text-white; }
+      .tile-taken { @apply border-line bg-track text-muted hover:bg-track aria-pressed:border-forest aria-pressed:bg-forest aria-pressed:text-white; }
+      .card-title { @apply font-display text-lg font-semibold tracking-tight text-ink; }
+    }
+  </style>
+  <style>[hidden] { display: none !important; }</style>
+</head>
+
+<body class="min-h-screen bg-white font-body text-ink antialiased">
+
+  <header class="sticky top-0 z-20 bg-white px-4 pb-2 pt-4 sm:px-6">
+    <nav aria-label="Main" class="mx-auto flex max-w-6xl items-center justify-between gap-3 rounded-full border border-line bg-white py-2 pl-4 pr-2">
+      <a href="home.html" aria-label="Homebase home" class="inline-flex min-h-[44px] items-center gap-2.5 rounded-full font-display text-xl font-bold tracking-tight text-ink no-underline outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">
+        <svg viewBox="0 0 32 32" class="h-9 w-9 shrink-0" aria-hidden="true">
+          <rect width="32" height="32" rx="8" fill="#0B4A2F"/><rect x="7" y="8" width="7" height="8" rx="1.5" fill="#083A25"/><rect x="18" y="8" width="7" height="8" rx="1.5" fill="#C6F24E"/><rect x="7" y="19" width="7" height="8" rx="1.5" fill="#083A25"/><rect x="18" y="19" width="7" height="8" rx="1.5" fill="#083A25"/>
+        </svg>
+        <span>Homebase</span>
+      </a>
+      <ul class="hidden items-center gap-1 md:flex">
+        <li><a class="nav-link" href="home.html">Home</a></li>
+        <li><a class="nav-link" href="matches.html">My Matches</a></li>
+        <li><a class="nav-link" href="rooms.html">Explore Rooms</a></li>
+        <li><a class="nav-link" href="floorplan.html" aria-current="page">Floor Plan</a></li>
+      </ul>
+      <div class="flex items-center gap-2">
+        <span class="hidden items-center gap-2 pr-1 md:flex">
+          <span id="nav-initial" class="grid h-9 w-9 place-items-center rounded-full bg-forest font-display text-sm font-semibold text-white" aria-hidden="true"></span>
+          <span id="nav-name" class="max-w-[9rem] truncate text-sm font-medium"></span>
+        </span>
+        <button type="button" data-logout class="btn btn-outline hidden md:inline-flex">Log out</button>
+        <button type="button" id="menu-btn" aria-expanded="false" aria-controls="menu" class="inline-flex min-h-[44px] items-center rounded-full border border-forest bg-white px-4 text-base font-semibold text-forest outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 md:hidden"><span id="menu-label">Menu</span></button>
+      </div>
+    </nav>
+    <div id="menu" hidden class="mx-auto mt-2 max-w-6xl rounded-[20px] border border-line bg-white p-2 md:hidden">
+      <ul class="grid gap-1">
+        <li><a class="nav-link w-full" href="home.html">Home</a></li>
+        <li><a class="nav-link w-full" href="matches.html">My Matches</a></li>
+        <li><a class="nav-link w-full" href="rooms.html">Explore Rooms</a></li>
+        <li><a class="nav-link w-full" href="floorplan.html" aria-current="page">Floor Plan</a></li>
+      </ul>
+      <div class="mt-2 border-t border-line pt-2"><button type="button" data-logout class="btn btn-outline w-full">Log out</button></div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
+    <h1 class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">Floor Plan</h1>
+    <p class="mt-2 max-w-xl text-base text-muted">Pick a floor, then pick a room to see if it is free and what it is like.</p>
+
+    <p id="page-error" role="alert" class="mt-4 hidden text-base font-semibold text-danger"></p>
+
+    <div id="loading" class="mt-8"><p class="text-base text-muted" role="status">Loading the floor plan...</p></div>
+
+    <div id="error" hidden role="alert" class="mt-8 rounded-[20px] border border-line p-6">
+      <p class="font-display text-xl font-bold tracking-tight">We could not load the rooms</p>
+      <p class="mt-2 text-base text-muted">The room list did not load. Check that <code>assets/rooms.js</code> sits next to this page, then reload.</p>
+      <button type="button" data-reload class="btn btn-outline mt-4">Reload this page</button>
+    </div>
+
+    <div id="empty" hidden class="mt-8 rounded-[20px] border border-line p-6">
+      <p class="font-display text-xl font-bold tracking-tight">There are no rooms to show yet</p>
+      <p class="mt-2 text-base text-muted">Add rooms to <code>assets/rooms.js</code> and they appear here by floor.</p>
+    </div>
+
+    <div id="plan" hidden class="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+
+      <!-- THE PLAN -->
+      <section aria-labelledby="plan-title">
+        <h2 id="plan-title" class="sr-only">Rooms by floor</h2>
+        <div role="group" aria-label="Floor" id="floors" class="flex flex-wrap gap-2"></div>
+        <p id="floor-summary" class="mt-4 text-base text-muted" aria-live="polite"></p>
+
+        <div class="mt-4 rounded-[20px] border border-line bg-white p-4 sm:p-6">
+          <ul id="row-top" class="flex flex-wrap gap-3"></ul>
+          <div class="my-4 flex min-h-[44px] items-center justify-center rounded-xl bg-tint px-3 text-sm font-medium text-muted">Corridor</div>
+          <ul id="row-bottom" class="flex flex-wrap gap-3"></ul>
+        </div>
+
+        <ul class="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted" aria-label="Legend">
+          <li class="flex items-center gap-2"><span class="grid h-6 w-6 place-items-start rounded-md border-2 border-forest bg-white p-0.5" aria-hidden="true"><i class="block h-2 w-2 rounded-sm bg-lime ring-1 ring-forest"></i></span>Available</li>
+          <li class="flex items-center gap-2"><span class="grid h-6 w-6 place-items-start rounded-md border-2 border-line bg-track p-0.5" aria-hidden="true"><i class="block h-2 w-2 rounded-sm bg-forest-deep"></i></span>Taken</li>
+          <li class="flex items-center gap-2"><span class="h-6 w-6 rounded-md border-2 border-forest bg-forest" aria-hidden="true"></span>Selected</li>
+        </ul>
+        <p class="mt-4 text-sm text-muted">Sample rooms. Prices and availability are placeholders until the real room list is added. The plan is a schematic: room positions and the corridor are not the real building layout.</p>
+      </section>
+
+      <!-- DETAILS -->
+      <aside aria-labelledby="detail-title" aria-live="polite" class="rounded-[20px] border border-line bg-tint p-6 lg:sticky lg:top-28">
+        <h2 id="detail-title" class="card-title">Room details</h2>
+        <p id="detail-empty" class="mt-3 text-base text-muted">Pick a room on the plan to see its details here.</p>
+        <div id="detail" hidden class="mt-4"></div>
+      </aside>
+    </div>
+  </main>
+
+  <script src="assets/rooms.js"></script>
+  <script>
+    (function () {
+      var K = { user: 'homebase_currentUser', saved: 'homebase_savedRooms' };
+      var $ = function (id) { return document.getElementById(id); };
+
+      function read(key) { try { var r = localStorage.getItem(key); return { ok: true, value: r ? JSON.parse(r) : null }; } catch (e) { return { ok: false, value: null }; } }
+      function write(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); return true; } catch (e) { return false; } }
+      function drop(key) { try { localStorage.removeItem(key); } catch (e) {} }
+      function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+      function peso(n) { return '\u20B1' + n.toLocaleString('en-PH'); }
+
+      // ---- navbar ----
+      var user = (read(K.user).value) || {};
+      var fullName = String(user.name || user.email || '');
+      $('nav-initial').textContent = fullName.charAt(0).toUpperCase();
+      $('nav-name').textContent = fullName.split(/\s+/)[0];
+      document.querySelectorAll('[data-logout]').forEach(function (b) { b.addEventListener('click', function () { drop(K.user); window.location.href = 'index.html'; }); });
+      document.querySelectorAll('[data-reload]').forEach(function (b) { b.addEventListener('click', function () { window.location.reload(); }); });
+      var menuBtn = $('menu-btn'), menu = $('menu');
+      function setMenu(o) { menu.hidden = !o; menuBtn.setAttribute('aria-expanded', String(o)); $('menu-label').textContent = o ? 'Close' : 'Menu'; }
+      menuBtn.addEventListener('click', function () { setMenu(menu.hidden); });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !menu.hidden) { setMenu(false); menuBtn.focus(); } });
+
+      // ---- data ----
+      var ROOMS = window.HOMEBASE_ROOMS;
+      $('loading').hidden = true;
+      if (!Array.isArray(ROOMS)) { $('error').hidden = false; return; }
+      if (!ROOMS.length) { $('empty').hidden = false; return; }
+      $('plan').hidden = false;
+
+      var floors = [];
+      ROOMS.forEach(function (r) { if (floors.indexOf(r.floor) === -1) floors.push(r.floor); });
+      floors.sort(function (a, b) { return a - b; });
+
+      var state = { floor: floors[0], selected: null };
+
+      // ---- saved rooms (same list Home, My Matches and Explore Rooms use) ----
+      function isSaved(id) { var r = read(K.saved).value; return Array.isArray(r) && r.some(function (x) { return x.id === id; }); }
+      function paintSave(btn, on, name) {
+        btn.textContent = on ? 'Saved' : 'Save room';
+        btn.setAttribute('aria-pressed', String(on));
+        btn.setAttribute('aria-label', (on ? 'Remove ' : 'Save ') + name + (on ? ' from saved rooms' : ''));
+      }
+      function toggleSave(room, btn) {
+        var cur = read(K.saved).value; cur = Array.isArray(cur) ? cur : [];
+        var has = cur.some(function (x) { return x.id === room.id; });
+        var next = has ? cur.filter(function (x) { return x.id !== room.id; }) : cur.concat([{ id: room.id, name: room.name, price: room.price }]);
+        var err = $('page-error');
+        if (!write(K.saved, next)) { err.textContent = 'We could not save that room. Allow site data for this page in your browser and try again.'; err.classList.remove('hidden'); return; }
+        err.classList.add('hidden');
+        paintSave(btn, !has, room.name);
+      }
+
+      // ---- details panel ----
+      function showDetail(r) {
+        var box = $('detail'); box.textContent = '';
+        $('detail-empty').hidden = true; box.hidden = false;
+
+        var frame = el('div', 'aspect-[8/5] overflow-hidden rounded-xl bg-track');
+        var img = el('img', 'h-full w-full object-cover');
+        img.src = r.image || ('assets/rooms/room-' + r.id + '.svg');
+        img.alt = r.name + ', ' + r.type.toLowerCase() + ' room on floor ' + r.floor + ' (illustration)';
+        img.width = 640; img.height = 400; img.decoding = 'async';
+        img.addEventListener('error', function () { frame.textContent = ''; frame.appendChild(el('p', 'grid h-full place-items-center px-4 text-center text-sm text-muted', 'No picture for this room yet')); });
+        frame.appendChild(img); box.appendChild(frame);
+
+        var head = el('div', 'mt-4 flex items-baseline justify-between gap-3');
+        head.appendChild(el('p', 'font-display text-2xl font-bold tracking-tight', r.name));
+        head.appendChild(el('span', 'text-sm font-semibold ' + (r.available ? 'text-forest' : 'text-muted'), r.available ? 'Available' : 'Taken'));
+        box.appendChild(head);
+        box.appendChild(el('p', 'mt-1 text-base text-muted', 'Floor ' + r.floor + ', ' + r.type + ' room'));
+        box.appendChild(el('p', 'mt-2 font-display text-xl font-bold tracking-tight', peso(r.price) + ' per month'));
+
+        var chips = el('ul', 'mt-3 flex flex-wrap gap-1.5');
+        r.amenities.forEach(function (a) { chips.appendChild(el('li', 'rounded-lg border border-line bg-white px-2.5 py-1 text-sm', a)); });
+        box.appendChild(chips);
+
+        var foot = el('div', 'mt-5');
+        if (r.available) {
+          var b = el('button', 'btn w-full'); b.type = 'button';
+          paintSave(b, isSaved(r.id), r.name);
+          b.addEventListener('click', function () { toggleSave(r, b); });
+          foot.appendChild(b);
+        } else {
+          foot.appendChild(el('p', 'text-sm text-muted', 'This room is taken, so it cannot be saved.'));
+        }
+        box.appendChild(foot);
+      }
+
+      // ---- plan ----
+      function tile(r) {
+        var li = el('li');
+        var b = el('button', 'tile' + (r.available ? '' : ' tile-taken')); b.type = 'button';
+        b.setAttribute('aria-pressed', String(state.selected === r.id));
+        b.setAttribute('aria-label', r.name + ', ' + r.type + ', ' + (r.available ? 'available' : 'taken'));
+        var win = el('span', 'absolute right-2 top-2 block h-3 w-3 rounded-sm ' + (r.available ? 'bg-lime ring-1 ring-forest' : 'bg-forest-deep'));
+        win.setAttribute('aria-hidden', 'true');
+        b.appendChild(win);
+        b.appendChild(el('span', 'font-display text-lg font-bold leading-none', r.id));
+        b.appendChild(el('span', 'mt-1 text-sm', r.available ? r.type : 'Taken'));
+        b.addEventListener('click', function () { state.selected = r.id; renderPlan(); showDetail(r); });
+        li.appendChild(b);
+        return li;
+      }
+
+      function renderFloors() {
+        var box = $('floors'); box.textContent = '';
+        floors.forEach(function (f) {
+          var b = el('button', 'floor-btn', 'Floor ' + f); b.type = 'button';
+          b.setAttribute('aria-pressed', String(f === state.floor));
+          b.addEventListener('click', function () {
+            state.floor = f; state.selected = null;
+            $('detail').hidden = true; $('detail-empty').hidden = false;
+            renderFloors(); renderPlan();
+          });
+          box.appendChild(b);
+        });
+      }
+
+      function renderPlan() {
+        var list = ROOMS.filter(function (r) { return r.floor === state.floor; }).sort(function (a, b) { return a.id.localeCompare(b.id); });
+        var free = list.filter(function (r) { return r.available; }).length;
+        $('floor-summary').textContent = 'Floor ' + state.floor + ': ' + free + ' of ' + list.length + ' rooms available.';
+        var half = Math.ceil(list.length / 2), top = $('row-top'), bottom = $('row-bottom');
+        top.textContent = ''; bottom.textContent = '';
+        list.forEach(function (r, i) { (i < half ? top : bottom).appendChild(tile(r)); });
+        $('row-bottom').hidden = list.length <= half;
+      }
+
+      renderFloors();
+      renderPlan();
+    })();
+  </script>
+</body>
+</html>
