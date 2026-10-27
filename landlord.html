@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reservation requests | Homebase</title>
+  <meta name="description" content="Review and answer student room requests for Ariate Dormitory.">
+
+  <!--
+    Design Read: one working screen for the landlord at Ariate Dormitory: "which requests need my answer?"
+    Same forest + lime language as the student pages, dial ENERGY 2 / RHYTHM 2 / MOTION 1.
+    - One list, filtered by status. Pending is the default because that is the job. Rows, not cards in a grid, because each request
+      is read top to bottom (who, which room, when, message) and answered with one of two buttons.
+    - Approve is immediate. Decline asks first, because a student is waiting on it and it cannot be undone from this page.
+    - No invented requests: the list only holds what students really sent (assets/reservations.js).
+    - Lime is not used here. Radius: pill buttons, 20px rows, 12px filter chips. No shadows, no motion.
+    - Not built on purpose: reversing an approval or editing a request. Payment is handled by the dormitory office.
+  -->
+
+  <script>
+    // Guard: landlords only. Students go to home.html.
+    (function () {
+      try {
+        var u = JSON.parse(localStorage.getItem('homebase_currentUser') || 'null');
+        if (!u || !u.email) window.location.replace('index.html');
+        else if (u.role !== 'landlord') window.location.replace('home.html');
+      } catch (e) { window.location.replace('index.html'); }
+    })();
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/js/tw-config.js"></script>
+
+  <style type="text/tailwindcss">
+    @layer components {
+      .btn { @apply inline-flex min-h-[44px] items-center justify-center rounded-full border border-transparent bg-forest px-5 py-2.5 text-base font-semibold text-white no-underline transition-colors hover:bg-forest-deep outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2; }
+      .btn-outline { @apply border-forest bg-white text-forest hover:bg-tint; }
+      .btn-danger { @apply border-danger bg-white text-danger hover:bg-[#FEF3F2] focus-visible:ring-danger; }
+      .choice { @apply flex min-h-[44px] items-center justify-center rounded-xl border border-line bg-white px-4 text-center text-base font-medium text-ink transition-colors hover:border-[#8FA397] peer-checked:border-forest peer-checked:bg-forest peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-forest peer-focus-visible:ring-offset-2; }
+    }
+  </style>
+  <style>[hidden] { display: none !important; }</style>
+</head>
+
+<body class="min-h-screen bg-white font-body text-ink antialiased">
+
+  <header class="px-4 pb-2 pt-4 sm:px-6">
+    <nav aria-label="Main" class="mx-auto flex max-w-6xl items-center justify-between gap-3 rounded-full border border-line bg-white py-2 pl-4 pr-2">
+      <span class="inline-flex min-h-[44px] items-center gap-2.5 font-display text-xl font-bold tracking-tight">
+        <svg viewBox="0 0 32 32" class="h-9 w-9 shrink-0" aria-hidden="true">
+          <rect width="32" height="32" rx="8" fill="#0B4A2F"/><rect x="7" y="8" width="7" height="8" rx="1.5" fill="#083A25"/><rect x="18" y="8" width="7" height="8" rx="1.5" fill="#C6F24E"/><rect x="7" y="19" width="7" height="8" rx="1.5" fill="#083A25"/><rect x="18" y="19" width="7" height="8" rx="1.5" fill="#083A25"/>
+        </svg>
+        <span>Homebase</span>
+      </span>
+      <div class="flex items-center gap-3">
+        <span id="nav-name" class="hidden max-w-[12rem] truncate text-sm font-medium sm:block"></span>
+        <button type="button" id="logout" class="btn btn-outline">Log out</button>
+      </div>
+    </nav>
+  </header>
+
+  <main class="mx-auto max-w-4xl px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
+    <h1 class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">Reservation requests</h1>
+    <p class="mt-2 max-w-xl text-base text-muted">Students ask for a room here. Approve or decline each request. A pending request keeps the room held.</p>
+
+    <p id="page-error" role="alert" class="mt-4 hidden text-base font-semibold text-danger"></p>
+
+    <div id="loading" class="mt-8"><p class="text-base text-muted" role="status">Loading requests...</p></div>
+
+    <div id="error" hidden role="alert" class="mt-8 rounded-[20px] border border-line p-6">
+      <p class="font-display text-xl font-bold tracking-tight">We could not read the requests</p>
+      <p class="mt-2 text-base text-muted">Your browser may be blocking site data. Allow site data for this page, then reload.</p>
+      <button type="button" id="reload" class="btn btn-outline mt-4">Reload this page</button>
+    </div>
+
+    <div id="empty" hidden class="mt-8 rounded-[20px] border border-line p-6 sm:p-8">
+      <p class="font-display text-2xl font-bold tracking-tight">No requests yet</p>
+      <p class="mt-2 max-w-md text-base text-muted">When a student requests a room, it shows up here for you to answer.</p>
+    </div>
+
+    <div id="board" hidden>
+      <form id="filters" class="mt-6" onsubmit="return false">
+        <fieldset>
+          <legend class="sr-only">Show requests</legend>
+          <div id="chips" class="flex flex-wrap gap-2"></div>
+        </fieldset>
+      </form>
+      <p id="none" hidden class="mt-6 rounded-[20px] border border-line p-6 text-base text-muted"></p>
+      <ul id="list" class="mt-6 space-y-4" aria-live="polite"></ul>
+    </div>
+  </main>
+
+  <script src="assets/js/reservation.js"></script>
+  <script>
+    (function () {
+      var $ = function (id) { return document.getElementById(id); };
+      function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+      function peso(n) { return '\u20B1' + Number(n).toLocaleString('en-PH'); }
+      function fmt(s, withYear) {
+        var d = new Date(s && s.length === 10 ? s + 'T00:00:00' : s);
+        return isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
+      }
+
+      var user = {};
+      try { user = JSON.parse(localStorage.getItem('homebase_currentUser') || '{}') || {}; } catch (e) {}
+      $('nav-name').textContent = String(user.name || user.email || '');
+      $('logout').addEventListener('click', function () { try { localStorage.removeItem('homebase_currentUser'); } catch (e) {} window.location.href = 'index.html'; });
+      $('reload').addEventListener('click', function () { window.location.reload(); });
+
+      $('loading').hidden = true;
+      if (!window.HB || !HB.load().ok) { $('error').hidden = false; return; }
+
+      var STATUSES = [['pending', 'Pending'], ['approved', 'Approved'], ['declined', 'Declined'], ['cancelled', 'Cancelled'], ['all', 'All']];
+      var filter = 'pending';
+      var confirming = null; // id of the request whose Decline is awaiting confirmation
+
+      function all() { return HB.load().list.slice().sort(function (a, b) { return String(b.createdAt).localeCompare(String(a.createdAt)); }); }
+
+      function answer(id, status) {
+        if (!HB.setStatus(id, status)) {
+          var err = $('page-error'); err.textContent = 'We could not save your answer. Allow site data for this page in your browser and try again.'; err.classList.remove('hidden'); return;
+        }
+        $('page-error').classList.add('hidden'); confirming = null; render();
+      }
+
+      function row(r) {
+        var li = el('li', 'rounded-[20px] border border-line bg-white p-5 sm:p-6');
+        var top = el('div', 'flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1');
+        top.appendChild(el('p', 'font-display text-xl font-bold tracking-tight', r.roomName));
+        var label = { pending: 'Pending', approved: 'Approved', declined: 'Declined', cancelled: 'Cancelled by student' }[r.status] || r.status;
+        top.appendChild(el('p', 'text-sm font-semibold ' + (r.status === 'pending' ? 'text-ink' : r.status === 'approved' ? 'text-forest' : 'text-muted'), label));
+        li.appendChild(top);
+        li.appendChild(el('p', 'mt-1 text-base text-muted', 'Floor ' + r.floor + ', ' + r.type + ' room, ' + peso(r.price) + ' per month'));
+
+        var dl = el('dl', 'mt-4 grid gap-3 text-base sm:grid-cols-3');
+        [['Student', r.studentName + ' (' + r.studentEmail + ')'], ['Move-in date', fmt(r.moveIn)], ['Requested on', fmt(r.createdAt)]].forEach(function (p) {
+          var d = el('div'); d.appendChild(el('dt', 'text-sm font-medium text-muted', p[0])); d.appendChild(el('dd', 'break-words', p[1])); dl.appendChild(d);
+        });
+        li.appendChild(dl);
+        if (r.message) {
+          var m = el('div', 'mt-3'); m.appendChild(el('p', 'text-sm font-medium text-muted', 'Message'));
+          m.appendChild(el('p', 'break-words text-base', r.message)); li.appendChild(m);
+        }
+
+        if (r.status === 'pending') {
+          var acts = el('div', 'mt-5 flex flex-wrap items-center gap-2');
+          if (confirming === r.id) {
+            acts.appendChild(el('p', 'mr-2 text-base font-medium', 'Decline this request? The room becomes free again.'));
+            var yes = el('button', 'btn btn-danger', 'Yes, decline'); yes.type = 'button';
+            yes.addEventListener('click', function () { answer(r.id, 'declined'); });
+            var no = el('button', 'btn btn-outline', 'Keep it pending'); no.type = 'button';
+            no.addEventListener('click', function () { confirming = null; render(); });
+            acts.appendChild(yes); acts.appendChild(no);
+          } else {
+            var ok = el('button', 'btn', 'Approve'); ok.type = 'button';
+            ok.setAttribute('aria-label', 'Approve ' + r.studentName + ' for ' + r.roomName);
+            ok.addEventListener('click', function () { answer(r.id, 'approved'); });
+            var dec = el('button', 'btn btn-danger', 'Decline'); dec.type = 'button';
+            dec.setAttribute('aria-label', 'Decline ' + r.studentName + ' for ' + r.roomName);
+            dec.addEventListener('click', function () { confirming = r.id; render(); });
+            acts.appendChild(ok); acts.appendChild(dec);
+          }
+          li.appendChild(acts);
+        }
+        return li;
+      }
+
+      function renderChips(list) {
+        var box = $('chips'); box.textContent = '';
+        STATUSES.forEach(function (s) {
+          var n = s[0] === 'all' ? list.length : list.filter(function (r) { return r.status === s[0]; }).length;
+          var label = el('label', 'relative block cursor-pointer');
+          var input = el('input', 'peer sr-only'); input.type = 'radio'; input.name = 'status'; input.value = s[0]; input.checked = filter === s[0];
+          input.addEventListener('change', function () { filter = s[0]; confirming = null; render(); });
+          label.appendChild(input); label.appendChild(el('span', 'choice', s[1] + ' (' + n + ')'));
+          box.appendChild(label);
+        });
+      }
+
+      function render() {
+        var list = all();
+        if (!list.length) { $('empty').hidden = false; $('board').hidden = true; return; }
+        $('empty').hidden = true; $('board').hidden = false;
+        renderChips(list);
+        var shown = filter === 'all' ? list : list.filter(function (r) { return r.status === filter; });
+        $('none').hidden = shown.length > 0;
+        $('none').textContent = 'No ' + (filter === 'all' ? '' : filter + ' ') + 'requests right now.';
+        var ul = $('list'); ul.textContent = '';
+        shown.forEach(function (r) { ul.appendChild(row(r)); });
+      }
+
+      render();
+    })();
+  </script>
+</body>
+</html>

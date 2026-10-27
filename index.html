@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Homebase | Find a room that fits you</title>
-  <meta name="description" content="Homebase scores student housing against your budget, commute, amenities and safety needs.">
+  <meta name="description" content="Homebase scores Ariate Dormitory rooms against your budget, amenities and room type.">
 
   <!--
     Design Read: student housing login page for students studying far from home (and the landlords who house them),
@@ -15,18 +15,17 @@
       Register moved into a dialog so the page has one job: get a returning user in.
     - Palette: white page, deep green, a mint tint for the quiet cards, one lime accent. Lime is used ONLY on the lit window
       and the focus ring, so it stays the single accent.
-    - Collage (replaces the old flat illustration): four product cards that show what Homebase does, not decoration (R-22):
-      the dorm with one lit window (identity motif, focal point), a budget bar card, a commute chip, a fit summary card,
-      plus two round badges for amenities and safety. They overlap the way a stack of screens would.
+    - Collage: product cards that show what Homebase does, not decoration (R-22): the dorm with one lit window (identity motif,
+      focal point), a budget bar card, a room type chip, a fit summary card (budget, amenities, room type: the same three things
+      My Matches scores), plus two round badges for amenities and availability. They overlap the way a stack of screens would.
     - Collage values are SAMPLE placeholders and the page says so ("Sample preview", R-38). No real statistics, no people.
     - Photo slot: drop your own photo at assets/hero.jpg and it fills the big dorm card. If the file is missing, the SVG dorm shows.
-    - Radius: 12px inputs, 20 to 28px cards, full pill on the two actions only (Log in, Create new account). Each radius
-      matches one kind of element, so the shapes read as a system, not a default.
-    - Shadow: only the elements that sit on top of others (fit card, commute chip, safety badge) lift. Everything behind stays flat.
+    - Radius: 12px inputs, 20 to 28px cards, full pill on the two actions only (Log in, Create new account).
+    - Shadow: only the elements that sit on top of others (fit card, room chip, availability badge) lift.
     - Type: Sora for headlines (the wordmark voice), Public Sans for body and forms.
     - Motion: the lit window switches on once at load; disabled under prefers-reduced-motion.
     - Logo: text wordmark plus a placeholder mark built from the motif. Replace with the real logo when there is one (R-23).
-    - Removed on purpose: the floating nav and the For students / For landlords toggle. Role is now picked inside Register.
+    - After login: students go to home.html, landlords go to landlord.html.
     - Not built: "Forgot password?". There is no backend to send a reset yet, so a link would do nothing (R-26).
       Add it in the PHP + MySQL phase.
   -->
@@ -118,17 +117,17 @@
     .cl-wifi { left: 14px; top: 24px; width: 72px; height: 72px; background: var(--mint-deep); color: var(--forest); z-index: 3; }
     .cl-wifi svg { width: 34px; height: 34px; }
     .cl-wifi circle { fill: currentColor; stroke: none; }
-    .cl-safe { left: 392px; top: 510px; width: 104px; height: 104px; background: var(--forest); color: #fff; border: 6px solid #fff; box-shadow: 0 10px 24px rgba(20,33,26,.18); z-index: 6; }
-    .cl-safe svg { width: 44px; height: 44px; }
+    .cl-ok { left: 392px; top: 510px; width: 104px; height: 104px; background: var(--forest); color: #fff; border: 6px solid #fff; box-shadow: 0 10px 24px rgba(20,33,26,.18); z-index: 6; }
+    .cl-ok svg { width: 44px; height: 44px; }
 
-    /* commute chip */
-    .cl-commute { left: 372px; top: 60px; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 14px; background: #fff; box-shadow: 0 8px 22px rgba(20,33,26,.16); z-index: 4; }
-    .cl-commute svg { width: 28px; height: 28px; flex: none; fill: none; stroke: var(--forest); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-    .cl-commute b { display: block; font: 600 15px/1.2 Sora, system-ui, sans-serif; }
-    .cl-commute small { display: block; font-size: 13px; line-height: 1.2; color: var(--muted); }
+    /* room type chip */
+    .cl-room { left: 372px; top: 60px; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 14px; background: #fff; box-shadow: 0 8px 22px rgba(20,33,26,.16); z-index: 4; }
+    .cl-room svg { width: 28px; height: 28px; flex: none; fill: none; stroke: var(--forest); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .cl-room b { display: block; font: 600 15px/1.2 Sora, system-ui, sans-serif; }
+    .cl-room small { display: block; font-size: 13px; line-height: 1.2; color: var(--muted); }
 
     /* front card: fit summary */
-    .cl-fit { left: 56px; top: 404px; width: 340px; height: 180px; border-radius: 20px; background: #fff; padding: 18px 20px; box-shadow: 0 14px 34px rgba(20,33,26,.18); z-index: 5; }
+    .cl-fit { left: 56px; top: 420px; width: 340px; height: 156px; border-radius: 20px; background: #fff; padding: 18px 20px; box-shadow: 0 14px 34px rgba(20,33,26,.18); z-index: 5; }
     .cl-fit header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
     .cl-fit h3 { margin: 0; font: 600 15px/1.2 Sora, system-ui, sans-serif; }
     .cl-fit header span { padding: 5px 10px; border-radius: 8px; background: var(--forest); color: #fff; font-size: 13px; font-weight: 600; }
@@ -162,7 +161,7 @@
       </a>
 
       <div class="lp-stage">
-        <div class="cl" role="img" aria-label="Sample preview of a Homebase match: a dorm with one lit window, a budget comparison, a short commute to school, an amenities badge, a safety badge, and a summary showing how well the room fits on budget, commute, amenities and safety.">
+        <div class="cl" role="img" aria-label="Sample preview of a Homebase match: a dorm with one lit window, a budget comparison, a room type chip, an amenities badge, an availability badge, and a summary showing how well the room fits on budget, amenities and room type.">
 
           <div class="cl-budget">
             <h3>Monthly budget</h3>
@@ -197,21 +196,20 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10a11 11 0 0 1 16 0"/><path d="M7 13.5a7 7 0 0 1 10 0"/><path d="M10 17a3 3 0 0 1 4 0"/><circle cx="12" cy="20" r="1.6"/></svg>
           </div>
 
-          <div class="cl-commute">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="18" r="2.2"/><circle cx="19" cy="5.5" r="2.2"/><path d="M7.2 17.5H13a3.5 3.5 0 0 0 0-7h-2a3.5 3.5 0 0 1 0-7h5.8"/></svg>
-            <div><b>8 min walk</b><small>to school</small></div>
+          <div class="cl-room">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19V6"/><path d="M3 15h18v4"/><path d="M21 15v-2a3 3 0 0 0-3-3h-7v5"/><circle cx="7" cy="11.5" r="1.6"/></svg>
+            <div><b>Double room</b><small>Floor 2</small></div>
           </div>
 
           <div class="cl-fit">
             <header><h3>How well it fits you</h3><span>Good fit</span></header>
             <div class="cl-row"><span>Budget</span><div class="cl-track"><i style="width:90%"></i></div></div>
-            <div class="cl-row"><span>Commute</span><div class="cl-track"><i style="width:80%"></i></div></div>
             <div class="cl-row"><span>Amenities</span><div class="cl-track"><i style="width:65%"></i></div></div>
-            <div class="cl-row"><span>Safety</span><div class="cl-track"><i style="width:85%"></i></div></div>
+            <div class="cl-row"><span>Room type</span><div class="cl-track"><i style="width:100%"></i></div></div>
           </div>
 
-          <div class="cl-round cl-safe">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5.5c0 4.2-2.9 7.6-7 9.5-4.1-1.9-7-5.3-7-9.5V6z"/><path d="M8.8 12.2l2.4 2.4 4-4.6"/></svg>
+          <div class="cl-round cl-ok">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
           </div>
         </div>
       </div>
@@ -220,7 +218,7 @@
         <span>Find a room</span>
         <span>that fits</span>
         <span class="g">your budget</span>
-        <span class="g">and commute.</span>
+        <span class="g">and needs.</span>
       </h1>
 
       <p class="lp-note">Sample preview. Values shown are placeholders.</p>
@@ -262,6 +260,21 @@
           <p class="mt-5 text-center">
             <button type="button" id="open-how" aria-haspopup="dialog" class="linkbtn font-medium">How matching works</button>
           </p>
+        </div>
+
+        <!-- Signed-in view -->
+        <div id="session-view" hidden>
+          <h2 class="font-display text-2xl font-bold tracking-tight text-ink" id="session-heading" tabindex="-1">You are logged in</h2>
+          <p class="mt-1.5 text-base text-muted" id="session-detail"></p>
+          <div class="mt-6 rounded-xl border border-line bg-[#F4F8F5] p-5 text-base text-ink">
+            <p class="font-semibold text-forest-deep" id="session-lead">Ready to find a room?</p>
+            <p class="mt-1 text-sm text-muted" id="session-text">Explore Ariate Dormitory rooms, set your budget and needs, and see how well each room fits you.</p>
+            <a href="home.html" id="session-link" class="btn mt-4 inline-flex items-center justify-center gap-2 text-white no-underline">
+              <span id="session-link-text">Go to Student Dashboard</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+          </div>
+          <button type="button" id="logout" class="btn btn-outline mt-4">Log out</button>
         </div>
 
       </div>
@@ -332,12 +345,12 @@
   <dialog id="how-dialog" aria-labelledby="how-title" class="w-[calc(100vw-2rem)] max-w-md rounded-2xl border border-line bg-white p-0 text-ink shadow-xl backdrop:bg-ink/50">
     <div class="p-6">
       <h2 id="how-title" class="font-display text-xl font-bold tracking-tight">How matching works</h2>
-      <p class="mt-2 text-base text-muted">You tell Homebase what you need. It compares each room to that and ranks rooms by how well they fit you.</p>
+      <p class="mt-2 text-base text-muted">You tell Homebase what you need. It compares each available room to that and ranks rooms by how well they fit you.</p>
       <dl class="mt-5 space-y-3 text-base">
-        <div><dt class="font-semibold">Budget</dt><dd class="text-muted">Your monthly limit, compared with what the room really costs each month.</dd></div>
-        <div><dt class="font-semibold">Commute</dt><dd class="text-muted">How you get to school and how far the room is from it.</dd></div>
+        <div><dt class="font-semibold">Budget</dt><dd class="text-muted">Your monthly limit, compared with what the room costs each month.</dd></div>
         <div><dt class="font-semibold">Amenities</dt><dd class="text-muted">The things you say you need in a room.</dd></div>
-        <div><dt class="font-semibold">Safety</dt><dd class="text-muted">The safety needs you set for the area around the room.</dd></div>
+        <div><dt class="font-semibold">Room type</dt><dd class="text-muted">Single, double or quad, whichever you prefer.</dd></div>
+        <div><dt class="font-semibold">Then request it</dt><dd class="text-muted">Found a room you like? Send a request. The dormitory office approves or declines it.</dd></div>
       </dl>
       <button type="button" id="close-how" class="btn mt-6">Close</button>
     </div>
@@ -349,6 +362,9 @@
       var CURRENT_KEY = 'homebase_currentUser';
 
       var $ = function (id) { return document.getElementById(id); };
+
+      // Where each role lands after logging in.
+      function homeFor(role) { return role === 'landlord' ? 'landlord.html' : 'home.html'; }
 
       // ---- storage (guarded: private mode or blocked storage must not crash the page) ----
       function read(key, fallback) {
@@ -373,7 +389,7 @@
           },
           {
             id: 'demo-manager',
-            name: 'Ariante Dorm Manager',
+            name: 'Ariate Dorm Manager',
             email: 'manager@ariatedorm.com',
             role: 'landlord',
             password: 'sha256:324edabe4fea58d0f91f5f8fc20af8ef9df416b2f14ff262216ae5a6a5617fbc'
@@ -443,8 +459,24 @@
         btn.textContent = busy ? busyText : idleText;
       }
 
-      // Ensure session is cleared on this page so the user is never automatically logged in
-      clear(CURRENT_KEY);
+      // ---- session view ----
+      function renderSession() {
+        var user = read(CURRENT_KEY, null);
+        var signedIn = !!(user && user.email);
+        $('auth-view').hidden = signedIn;
+        $('session-view').hidden = !signedIn;
+        if (signedIn) {
+          var isLandlord = user.role === 'landlord';
+          $('session-detail').textContent = user.name + ' (' + (isLandlord ? 'landlord' : 'student') + '), ' + user.email;
+          $('session-lead').textContent = isLandlord ? 'Students are waiting for an answer' : 'Ready to find a room?';
+          $('session-text').textContent = isLandlord
+            ? 'Review the room requests students sent to Ariate Dormitory and approve or decline each one.'
+            : 'Explore Ariate Dormitory rooms, set your budget and needs, and see how well each room fits you.';
+          $('session-link').setAttribute('href', homeFor(user.role));
+          $('session-link-text').textContent = isLandlord ? 'Go to Reservation Requests' : 'Go to Student Dashboard';
+        }
+        return signedIn;
+      }
 
       // ---- open / close register ----
       document.querySelectorAll('[data-open-register]').forEach(function (b) {
@@ -475,7 +507,7 @@
         hashPassword(pw).then(function (hash) {
           var users = read(USERS_KEY, []);
           var match = users.filter(function (u) { return u.email === email && u.password === hash; })[0];
-          if (!match) { 
+          if (!match) {
             setFormError('login-error', 'That email and password do not match. Check both and try again, or create an account.');
             $('login-password').focus();
             return;
@@ -485,7 +517,8 @@
             return;
           }
           $('form-login').reset();
-          window.location.href = 'home.html';
+          renderSession();
+          window.location.href = homeFor(match.role);
         }).then(function () { setBusy(btn, false, 'Log in', 'Logging in...'); });
       });
 
@@ -522,8 +555,17 @@
           }
           write(CURRENT_KEY, { id: user.id, name: user.name, email: user.email, role: user.role });
           closeDialog(regDialog);
-          window.location.href = 'home.html';
+          renderSession();
+          window.location.href = homeFor(user.role);
         }).then(function () { setBusy(btn, false, 'Create my account', 'Creating account...'); });
+      });
+
+      // ---- logout ----
+      $('logout').addEventListener('click', function () {
+        clear(CURRENT_KEY);
+        renderSession();
+        clearLoginErrors();
+        $('login-email').focus();
       });
 
       // ---- how matching works ----
@@ -536,6 +578,8 @@
       function revealPhoto() { if (heroImg.naturalWidth > 0) heroImg.hidden = false; }
       if (heroImg.complete) revealPhoto(); else heroImg.addEventListener('load', revealPhoto);
       heroImg.addEventListener('error', function () { heroImg.remove(); });
+
+      renderSession();
     })();
   </script>
 </body>

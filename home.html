@@ -135,13 +135,6 @@
 
   <main class="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
 
-    <!-- LANDLORD: this page is for students. The landing page sends every role here, so say so plainly. -->
-    <section id="landlord-view" hidden aria-labelledby="landlord-title" class="mx-auto max-w-xl rounded-[20px] border border-line bg-tint p-6 sm:p-8">
-      <h1 id="landlord-title" class="font-display text-2xl font-bold tracking-tight">This page is for students</h1>
-      <p class="note mt-2">The landlord view is not built yet. You can log out and sign in with a student account to see the student dashboard.</p>
-      <button type="button" data-logout class="btn mt-5">Log out</button>
-    </section>
-
     <!-- STUDENT -->
     <div id="student-view">
 
@@ -232,6 +225,25 @@
         </section>
       </div>
 
+      <!-- YOUR ROOM REQUEST: status of the reservation lives here (no separate page) -->
+      <section id="reservation" tabindex="-1" aria-labelledby="res-title" class="mt-6 scroll-mt-28 rounded-[20px] border border-line bg-white p-6 outline-none sm:p-8">
+        <h2 id="res-title" class="card-title">Your room request</h2>
+
+        <div data-state="loading" class="mt-4"><p class="note" role="status">Loading your request...</p></div>
+
+        <div data-state="error" hidden class="mt-4" role="alert">
+          <p class="text-base font-semibold text-danger">We could not read your request.</p>
+          <p class="note mt-1">Allow site data for this page in your browser, then reload.</p>
+        </div>
+
+        <div data-state="empty" hidden class="mt-4">
+          <p class="note max-w-lg">You have not requested a room yet. Find a room and press Request this room. The dormitory office answers your request, and the room is held for you while you wait.</p>
+          <a href="rooms.html" class="btn mt-4">Explore rooms</a>
+        </div>
+
+        <div data-state="view" hidden id="res-view" class="mt-4"></div>
+      </section>
+
       <!-- ROW 2: saved rooms (wide) + recent comparisons (narrow) -->
       <div class="mt-6 grid gap-6 lg:grid-cols-5">
 
@@ -273,6 +285,7 @@
     </div>
   </main>
 
+  <script src="assets/js/reservation.js"></script>
   <script>
     (function () {
       /*
@@ -280,6 +293,7 @@
           homebase_currentUser   { id, name, email, role }                   written by index.html at login
           homebase_topMatch      { name: "Room 204", score: 0-100, price: 4500 }   written by My Matches
           homebase_savedRooms    [ { id: "204", name: "Room 204", price: 4500 } ]  written by Explore Rooms
+          homebase_reservations  see assets/reservations.js (requests; Home shows the student's latest one)
           homebase_comparisons   [ { rooms: ["Room 204", "Room 310"], date: "2026-10-25T08:00:00Z" } ]
         price and date are optional. If a key is missing, the card shows its empty state.
       */
@@ -355,15 +369,8 @@
         if (e.key === 'Escape' && !menu.hidden) { setMenu(false); menuBtn.focus(); }
       });
 
-      // ---- landlords get a plain notice, not the student page ----
-      if (user.role === 'landlord') {
-        $('student-view').hidden = true;
-        $('landlord-view').hidden = false;
-        $('nav-links').hidden = true;
-        $('menu-links').hidden = true;
-        menuBtn.hidden = true;
-        return;
-      }
+      // ---- landlords have their own page ----
+      if (user.role === 'landlord') { window.location.replace('landlord.html'); return; }
 
       // ---- profile ----
       $('first-name').textContent = firstName;
@@ -458,7 +465,85 @@
         setState('card-cmp', 'list');
       }
 
+      // ---- your room request ----
+      var cancelling = false;
+      function fmtDate(s) {
+        var d = new Date(s && String(s).length === 10 ? s + 'T00:00:00' : s);
+        return isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
+      }
+      function step(label, state) {
+        var li = document.createElement('li');
+        li.className = 'flex items-center gap-3';
+        var dot = document.createElement('span');
+        dot.className = 'h-4 w-4 shrink-0 rounded-full border-2 border-forest ' + (state === 'done' ? 'bg-forest' : 'bg-white');
+        dot.setAttribute('aria-hidden', 'true');
+        var t = document.createElement('span');
+        t.className = 'text-base ' + (state === 'next' ? 'text-muted' : 'font-semibold');
+        t.textContent = label + (state === 'done' ? ' (done)' : state === 'now' ? ' (now)' : ' (next)');
+        li.appendChild(dot); li.appendChild(t);
+        return li;
+      }
+      function renderReservation() {
+        if (!window.HB || !HB.load().ok) { setState('reservation', 'error'); return; }
+        var mine = HB.forUser(user.id);
+        if (!mine.length) { setState('reservation', 'empty'); return; }
+        var r = mine[0];
+        var box = $('res-view'); box.textContent = '';
+        var mk = function (tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+
+        var head = mk('div', 'flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1');
+        head.appendChild(mk('p', 'font-display text-2xl font-bold tracking-tight', r.roomName));
+        var label = { pending: 'Pending', approved: 'Approved', declined: 'Declined', cancelled: 'Cancelled' }[r.status] || r.status;
+        head.appendChild(mk('p', 'text-base font-semibold ' + (r.status === 'approved' ? 'text-forest' : r.status === 'pending' ? 'text-ink' : 'text-muted'), label));
+        box.appendChild(head);
+        box.appendChild(mk('p', 'mt-1 text-base text-muted', 'Floor ' + r.floor + ', ' + r.type + ' room, ' + peso(r.price)));
+
+        var dl = mk('dl', 'mt-4 grid gap-3 text-base sm:grid-cols-3');
+        var facts = [['Move-in date', fmtDate(r.moveIn)], ['Requested on', fmtDate(r.createdAt)]];
+        if (r.message) facts.push(['Your message', r.message]);
+        facts.forEach(function (f) { var d = mk('div'); d.appendChild(mk('dt', 'text-sm font-medium text-muted', f[0])); d.appendChild(mk('dd', 'break-words', f[1])); dl.appendChild(d); });
+        box.appendChild(dl);
+
+        if (r.status !== 'cancelled') {
+          var ol = mk('ol', 'mt-5 grid gap-2 sm:grid-cols-3');
+          var decided = r.status === 'approved' || r.status === 'declined';
+          ol.setAttribute('aria-label', 'Request progress');
+          ol.appendChild(step('Requested', 'done'));
+          ol.appendChild(step('Under review', decided ? 'done' : 'now'));
+          ol.appendChild(step(r.status === 'approved' ? 'Approved' : r.status === 'declined' ? 'Declined' : 'Decision', decided ? 'done' : 'next'));
+          box.appendChild(ol);
+        }
+
+        var panel = mk('div', 'mt-5 rounded-xl border border-line bg-tint p-4');
+        if (r.status === 'pending') {
+          panel.appendChild(mk('p', 'text-base', 'The dormitory office is reviewing your request. Your room is held for you while you wait.'));
+          var row = mk('div', 'mt-3 flex flex-wrap items-center gap-2');
+          if (cancelling) {
+            row.appendChild(mk('p', 'mr-2 text-base font-medium', 'Cancel this request? The room is released.'));
+            var yes = mk('button', 'btn !border-danger !bg-white !text-danger hover:!bg-[#FEF3F2]', 'Yes, cancel request'); yes.type = 'button';
+            yes.addEventListener('click', function () { cancelling = false; if (!HB.setStatus(r.id, 'cancelled')) { setState('reservation', 'error'); return; } renderReservation(); });
+            var keep = mk('button', 'btn btn-outline', 'Keep my request'); keep.type = 'button';
+            keep.addEventListener('click', function () { cancelling = false; renderReservation(); });
+            row.appendChild(yes); row.appendChild(keep);
+          } else {
+            var c = mk('button', 'btn btn-outline', 'Cancel request'); c.type = 'button';
+            c.addEventListener('click', function () { cancelling = true; renderReservation(); });
+            row.appendChild(c);
+          }
+          panel.appendChild(row);
+        } else if (r.status === 'approved') {
+          panel.appendChild(mk('p', 'font-semibold text-forest-deep', 'Approved. Next step: payment and contract.'));
+          panel.appendChild(mk('p', 'mt-1 text-base', 'Payment and the contract are handled by the dormitory office, outside Homebase. The office contact details will be added here.'));
+        } else {
+          panel.appendChild(mk('p', 'text-base', r.status === 'declined' ? 'This request was declined, so the room is free again.' : 'You cancelled this request. The room was released.'));
+          var a = mk('a', 'btn mt-3', 'Find another room'); a.href = 'rooms.html'; panel.appendChild(a);
+        }
+        box.appendChild(panel);
+        setState('reservation', 'view');
+      }
+
       renderTop();
+      renderReservation();
       renderSaved();
       renderComparisons();
     })();

@@ -23,12 +23,12 @@
   -->
 
   <script>
-    // Guard: must be logged in. Landlords go to home.html, which shows them a notice.
+    // Guard: must be logged in. Landlords go to landlord.html.
     (function () {
       try {
         var u = JSON.parse(localStorage.getItem('homebase_currentUser') || 'null');
         if (!u || !u.email) window.location.replace('index.html');
-        else if (u.role === 'landlord') window.location.replace('home.html');
+        else if (u.role === 'landlord') window.location.replace('landlord.html');
       } catch (e) { window.location.replace('index.html'); }
     })();
   </script>
@@ -100,7 +100,7 @@
         <div class="flex flex-wrap gap-2">
           <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="avail" value="all" checked><span class="choice">All</span></label>
           <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="avail" value="available"><span class="choice">Available</span></label>
-          <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="avail" value="taken"><span class="choice">Taken</span></label>
+          <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="avail" value="unavailable"><span class="choice">Not available</span></label>
         </div>
       </fieldset>
       <fieldset>
@@ -125,12 +125,13 @@
     <section id="results" class="mt-6" aria-labelledby="results-title" aria-live="polite">
       <h2 id="results-title" class="sr-only">Rooms</h2>
       <p id="page-error" role="alert" class="mb-3 hidden text-base font-semibold text-danger"></p>
+      <p id="active-note" hidden class="mb-3 rounded-xl border border-line bg-tint px-4 py-3 text-base">You already have a room request, so you cannot request another. <a class="font-semibold text-forest underline underline-offset-4" href="home.html#reservation">Manage it on Home</a>.</p>
 
       <div data-state="loading"><p class="text-base text-muted" role="status">Loading rooms...</p></div>
 
       <div data-state="error" hidden role="alert" class="rounded-[20px] border border-line p-6">
         <p class="font-display text-xl font-bold tracking-tight">We could not load the rooms</p>
-        <p class="mt-2 text-base text-muted">The room list did not load. Check that <code>assets/js/rooms.js</code> sits next to this page, then reload.</p>
+        <p class="mt-2 text-base text-muted">The room list did not load. Check that <code>assets/rooms.js</code> sits next to this page, then reload.</p>
         <button type="button" data-reload class="btn btn-outline mt-4">Reload this page</button>
       </div>
 
@@ -150,6 +151,7 @@
   </main>
 
   <script src="assets/js/rooms.js"></script>
+  <script src="assets/js/reservation.js"></script>
   <script>
     (function () {
       var K = { user: 'homebase_currentUser', saved: 'homebase_savedRooms' };
@@ -195,9 +197,13 @@
         paintSave(btn, !has, room.name);
       }
 
+      var hasActive = !!HB.activeFor(user.id);
+      $('active-note').hidden = !hasActive;
+
       // ---- one room card ----
       function card(r, saved) {
         var li = el('li', 'flex flex-col overflow-hidden rounded-[20px] border border-line bg-white');
+        var st = HB.roomState(r, user.id);
 
         var frame = el('div', 'aspect-[8/5] bg-track');
         var img = el('img', 'h-full w-full object-cover');
@@ -214,7 +220,7 @@
         var body = el('div', 'flex flex-1 flex-col p-5');
         var head = el('div', 'flex items-baseline justify-between gap-3');
         head.appendChild(el('h3', 'font-display text-lg font-semibold tracking-tight', r.name));
-        head.appendChild(el('span', 'shrink-0 text-sm font-semibold ' + (r.available ? 'text-forest' : 'text-muted'), r.available ? 'Available' : 'Taken'));
+        head.appendChild(el('span', 'shrink-0 text-sm font-semibold ' + (st === 'available' || st === 'yours' ? 'text-forest' : 'text-muted'), { available: 'Available', held: 'Held', taken: 'Taken', yours: 'Your request' }[st]));
         body.appendChild(head);
         body.appendChild(el('p', 'mt-1 text-base text-muted', 'Floor ' + r.floor + ', ' + r.type + ' room'));
         body.appendChild(el('p', 'mt-2 font-display text-xl font-bold tracking-tight', peso(r.price) + ' per month'));
@@ -224,11 +230,23 @@
         body.appendChild(chips);
 
         var foot = el('div', 'mt-auto pt-4');
-        if (r.available) {
+        if (st === 'available') {
+          var row = el('div', hasActive ? '' : 'grid grid-cols-2 gap-2');
+          if (!hasActive) {
+            var rq = el('button', 'btn w-full', 'Request'); rq.type = 'button';
+            rq.setAttribute('aria-label', 'Request ' + r.name);
+            rq.addEventListener('click', function () { HB.openRequest(r, user); });
+            row.appendChild(rq);
+          }
           var b = el('button', 'btn btn-outline w-full'); b.type = 'button';
           paintSave(b, saved.indexOf(r.id) !== -1, r.name);
           b.addEventListener('click', function () { toggleSave(r, b); });
-          foot.appendChild(b);
+          row.appendChild(b); foot.appendChild(row);
+        } else if (st === 'yours') {
+          var a = el('a', 'inline-flex min-h-[44px] items-center font-semibold text-forest underline underline-offset-4', 'See your request on Home');
+          a.href = 'home.html#reservation'; foot.appendChild(a);
+        } else if (st === 'held') {
+          foot.appendChild(el('p', 'text-sm text-muted', 'Another student has a pending request for this room.'));
         } else {
           foot.appendChild(el('p', 'text-sm text-muted', 'This room is taken, so it cannot be saved.'));
         }
@@ -242,8 +260,9 @@
       function render() {
         var avail = form.elements.avail.value, type = form.elements.type.value, sort = $('sort').value;
         var list = ROOMS.filter(function (r) {
-          if (avail === 'available' && !r.available) return false;
-          if (avail === 'taken' && r.available) return false;
+          var st = HB.roomState(r, user.id);
+          if (avail === 'available' && st !== 'available') return false;
+          if (avail === 'unavailable' && st === 'available') return false;
           if (type !== 'Any' && r.type !== type) return false;
           return true;
         });
