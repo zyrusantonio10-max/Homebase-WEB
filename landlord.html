@@ -65,7 +65,7 @@
 
   <main class="mx-auto max-w-4xl px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
     <h1 class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">Reservation requests</h1>
-    <p class="mt-2 max-w-xl text-base text-muted">Students ask for a room here. Approve or decline each request. A pending request keeps the room held.</p>
+    <p class="mt-2 max-w-xl text-base text-muted">Students ask for a room here. Approve or decline each request, set how many days they have to pay, then mark the payment when the office receives it.</p>
 
     <p id="page-error" role="alert" class="mt-4 hidden text-base font-semibold text-danger"></p>
 
@@ -100,7 +100,7 @@
       var $ = function (id) { return document.getElementById(id); };
       function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
       function peso(n) { return '\u20B1' + Number(n).toLocaleString('en-PH'); }
-      function fmt(s, withYear) {
+      function fmt(s) {
         var d = new Date(s && s.length === 10 ? s + 'T00:00:00' : s);
         return isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
       }
@@ -114,69 +114,97 @@
       $('loading').hidden = true;
       if (!window.HB || !HB.load().ok) { $('error').hidden = false; return; }
 
-      var STATUSES = [['pending', 'Pending'], ['approved', 'Approved'], ['declined', 'Declined'], ['cancelled', 'Cancelled'], ['all', 'All']];
+      var FILTERS = [['pending', 'Pending'], ['approved', 'Awaiting payment'], ['confirmed', 'Confirmed'], ['closed', 'Closed'], ['all', 'All']];
+      var CLOSED = ['declined', 'cancelled', 'expired', 'ended'];
+      var LABEL = { pending: 'Pending', approved: 'Awaiting payment', confirmed: 'Confirmed', declined: 'Declined', cancelled: 'Cancelled by student', expired: 'Expired (not paid in time)', ended: 'Stay ended' };
       var filter = 'pending';
-      var confirming = null; // id of the request whose Decline is awaiting confirmation
+      var ui = { kind: null, id: null, error: '' }; // which inline question is open: "approve", "decline" or "end"
 
+      function group(r) { return CLOSED.indexOf(r.status) !== -1 ? 'closed' : r.status; }
       function all() { return HB.load().list.slice().sort(function (a, b) { return String(b.createdAt).localeCompare(String(a.createdAt)); }); }
 
-      function answer(id, status) {
-        if (!HB.setStatus(id, status)) {
-          var err = $('page-error'); err.textContent = 'We could not save your answer. Allow site data for this page in your browser and try again.'; err.classList.remove('hidden'); return;
-        }
-        $('page-error').classList.add('hidden'); confirming = null; render();
+      function done(ok) {
+        if (!ok) { var err = $('page-error'); err.textContent = 'We could not save that change. Allow site data for this page in your browser and try again.'; err.classList.remove('hidden'); return; }
+        $('page-error').classList.add('hidden'); ui = { kind: null, id: null, error: '' }; render();
+      }
+      function open(kind, id) { ui = { kind: kind, id: id, error: '' }; render(); }
+      function btn(text, cls, fn, aria) {
+        var b = el('button', 'btn ' + cls, text); b.type = 'button';
+        if (aria) b.setAttribute('aria-label', aria);
+        b.addEventListener('click', fn); return b;
+      }
+
+      function actions(r) {
+        var acts = el('div', 'mt-5 flex flex-wrap items-center gap-2');
+        var asking = ui.id === r.id ? ui.kind : null;
+
+        if (r.status === 'pending') {
+          if (asking === 'approve') {
+            var lab = el('label', 'text-base font-medium', 'Days to pay'); lab.setAttribute('for', 'days-' + r.id);
+            var inp = el('input', 'h-12 w-24 rounded-xl border border-line bg-white px-3 text-base outline-none focus-visible:border-forest focus-visible:ring-2 focus-visible:ring-forest/30');
+            inp.id = 'days-' + r.id; inp.type = 'number'; inp.min = '1'; inp.max = '30'; inp.step = '1'; inp.value = '7'; inp.inputMode = 'numeric';
+            acts.appendChild(lab); acts.appendChild(inp);
+            acts.appendChild(btn('Approve request', '', function () {
+              var days = Number(inp.value);
+              if (!isFinite(days) || days < 1 || days > 30 || Math.floor(days) !== days) { ui.error = 'Enter a whole number of days from 1 to 30.'; render(); return; }
+              done(HB.approve(r.id, days));
+            }, 'Approve ' + r.studentName + ' for ' + r.roomName));
+            acts.appendChild(btn('Back', 'btn-outline', function () { open(null, null); }));
+            if (ui.error) { var e = el('p', 'w-full text-sm font-medium text-danger', ui.error); e.setAttribute('role', 'alert'); acts.appendChild(e); }
+          } else if (asking === 'decline') {
+            acts.appendChild(el('p', 'mr-2 text-base font-medium', 'Decline this request? The room becomes free again.'));
+            acts.appendChild(btn('Yes, decline', 'btn-danger', function () { done(HB.setStatus(r.id, 'declined')); }));
+            acts.appendChild(btn('Keep it pending', 'btn-outline', function () { open(null, null); }));
+          } else {
+            acts.appendChild(btn('Approve', '', function () { open('approve', r.id); }, 'Approve ' + r.studentName + ' for ' + r.roomName));
+            acts.appendChild(btn('Decline', 'btn-danger', function () { open('decline', r.id); }, 'Decline ' + r.studentName + ' for ' + r.roomName));
+          }
+        } else if (r.status === 'approved') {
+          acts.appendChild(btn('Mark as paid', '', function () { done(HB.confirmPayment(r.id)); }, 'Mark ' + r.studentName + ' as paid for ' + r.roomName));
+        } else if (r.status === 'confirmed') {
+          if (asking === 'end') {
+            acts.appendChild(el('p', 'mr-2 text-base font-medium', 'End this stay? The room becomes available again.'));
+            acts.appendChild(btn('Yes, end stay', 'btn-danger', function () { done(HB.endStay(r.id)); }));
+            acts.appendChild(btn('Keep it', 'btn-outline', function () { open(null, null); }));
+          } else {
+            acts.appendChild(btn('End stay', 'btn-outline', function () { open('end', r.id); }, 'End the stay of ' + r.studentName + ' in ' + r.roomName));
+          }
+        } else { return null; }
+        return acts;
       }
 
       function row(r) {
         var li = el('li', 'rounded-[20px] border border-line bg-white p-5 sm:p-6');
         var top = el('div', 'flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1');
         top.appendChild(el('p', 'font-display text-xl font-bold tracking-tight', r.roomName));
-        var label = { pending: 'Pending', approved: 'Approved', declined: 'Declined', cancelled: 'Cancelled by student' }[r.status] || r.status;
-        top.appendChild(el('p', 'text-sm font-semibold ' + (r.status === 'pending' ? 'text-ink' : r.status === 'approved' ? 'text-forest' : 'text-muted'), label));
+        top.appendChild(el('p', 'text-sm font-semibold ' + (r.status === 'pending' ? 'text-ink' : (r.status === 'approved' || r.status === 'confirmed') ? 'text-forest' : 'text-muted'), LABEL[r.status] || r.status));
         li.appendChild(top);
         li.appendChild(el('p', 'mt-1 text-base text-muted', 'Floor ' + r.floor + ', ' + r.type + ' room, ' + peso(r.price) + ' per month'));
 
         var dl = el('dl', 'mt-4 grid gap-3 text-base sm:grid-cols-3');
-        [['Student', r.studentName + ' (' + r.studentEmail + ')'], ['Move-in date', fmt(r.moveIn)], ['Requested on', fmt(r.createdAt)]].forEach(function (p) {
-          var d = el('div'); d.appendChild(el('dt', 'text-sm font-medium text-muted', p[0])); d.appendChild(el('dd', 'break-words', p[1])); dl.appendChild(d);
-        });
+        var facts = [['Student', r.studentName + ' (' + r.studentEmail + ')'], ['Move-in date', fmt(r.moveIn)], ['Requested on', fmt(r.createdAt)]];
+        if (r.status === 'approved' && r.paymentDueAt) facts.push(['Payment due', fmt(r.paymentDueAt) + ' (' + r.paymentDays + ' days)']);
+        if (r.status === 'expired' && r.paymentDueAt) facts.push(['Payment was due', fmt(r.paymentDueAt)]);
+        if (r.confirmedAt && (r.status === 'confirmed' || r.status === 'ended')) facts.push(['Payment received', fmt(r.confirmedAt)]);
+        if (r.status === 'ended' && r.endedAt) facts.push(['Stay ended', fmt(r.endedAt)]);
+        facts.forEach(function (p) { var d = el('div'); d.appendChild(el('dt', 'text-sm font-medium text-muted', p[0])); d.appendChild(el('dd', 'break-words', p[1])); dl.appendChild(d); });
         li.appendChild(dl);
         if (r.message) {
           var m = el('div', 'mt-3'); m.appendChild(el('p', 'text-sm font-medium text-muted', 'Message'));
           m.appendChild(el('p', 'break-words text-base', r.message)); li.appendChild(m);
         }
-
-        if (r.status === 'pending') {
-          var acts = el('div', 'mt-5 flex flex-wrap items-center gap-2');
-          if (confirming === r.id) {
-            acts.appendChild(el('p', 'mr-2 text-base font-medium', 'Decline this request? The room becomes free again.'));
-            var yes = el('button', 'btn btn-danger', 'Yes, decline'); yes.type = 'button';
-            yes.addEventListener('click', function () { answer(r.id, 'declined'); });
-            var no = el('button', 'btn btn-outline', 'Keep it pending'); no.type = 'button';
-            no.addEventListener('click', function () { confirming = null; render(); });
-            acts.appendChild(yes); acts.appendChild(no);
-          } else {
-            var ok = el('button', 'btn', 'Approve'); ok.type = 'button';
-            ok.setAttribute('aria-label', 'Approve ' + r.studentName + ' for ' + r.roomName);
-            ok.addEventListener('click', function () { answer(r.id, 'approved'); });
-            var dec = el('button', 'btn btn-danger', 'Decline'); dec.type = 'button';
-            dec.setAttribute('aria-label', 'Decline ' + r.studentName + ' for ' + r.roomName);
-            dec.addEventListener('click', function () { confirming = r.id; render(); });
-            acts.appendChild(ok); acts.appendChild(dec);
-          }
-          li.appendChild(acts);
-        }
+        var a = actions(r); if (a) li.appendChild(a);
         return li;
       }
 
       function renderChips(list) {
         var box = $('chips'); box.textContent = '';
-        STATUSES.forEach(function (s) {
-          var n = s[0] === 'all' ? list.length : list.filter(function (r) { return r.status === s[0]; }).length;
+        FILTERS.forEach(function (f) {
+          var n = f[0] === 'all' ? list.length : list.filter(function (r) { return group(r) === f[0]; }).length;
           var label = el('label', 'relative block cursor-pointer');
-          var input = el('input', 'peer sr-only'); input.type = 'radio'; input.name = 'status'; input.value = s[0]; input.checked = filter === s[0];
-          input.addEventListener('change', function () { filter = s[0]; confirming = null; render(); });
-          label.appendChild(input); label.appendChild(el('span', 'choice', s[1] + ' (' + n + ')'));
+          var input = el('input', 'peer sr-only'); input.type = 'radio'; input.name = 'status'; input.value = f[0]; input.checked = filter === f[0];
+          input.addEventListener('change', function () { filter = f[0]; ui = { kind: null, id: null, error: '' }; render(); });
+          label.appendChild(input); label.appendChild(el('span', 'choice', f[1] + ' (' + n + ')'));
           box.appendChild(label);
         });
       }
@@ -186,9 +214,9 @@
         if (!list.length) { $('empty').hidden = false; $('board').hidden = true; return; }
         $('empty').hidden = true; $('board').hidden = false;
         renderChips(list);
-        var shown = filter === 'all' ? list : list.filter(function (r) { return r.status === filter; });
+        var shown = filter === 'all' ? list : list.filter(function (r) { return group(r) === filter; });
         $('none').hidden = shown.length > 0;
-        $('none').textContent = 'No ' + (filter === 'all' ? '' : filter + ' ') + 'requests right now.';
+        $('none').textContent = 'No ' + (filter === 'all' ? '' : (FILTERS.filter(function (f) { return f[0] === filter; })[0][1].toLowerCase() + ' ')) + 'requests right now.';
         var ul = $('list'); ul.textContent = '';
         shown.forEach(function (r) { ul.appendChild(row(r)); });
       }
@@ -197,4 +225,4 @@
     })();
   </script>
 </body>
-</html>
+</html> 

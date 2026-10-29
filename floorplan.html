@@ -126,7 +126,7 @@
 
         <ul class="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted" aria-label="Legend">
           <li class="flex items-center gap-2"><span class="grid h-6 w-6 place-items-start rounded-md border-2 border-forest bg-white p-0.5" aria-hidden="true"><i class="block h-2 w-2 rounded-sm bg-lime ring-1 ring-forest"></i></span>Available</li>
-          <li class="flex items-center gap-2"><span class="grid h-6 w-6 place-items-start rounded-md border-2 border-line bg-track p-0.5" aria-hidden="true"><i class="block h-2 w-2 rounded-sm bg-forest-deep"></i></span>Taken or held</li>
+          <li class="flex items-center gap-2"><span class="grid h-6 w-6 place-items-start rounded-md border-2 border-line bg-track p-0.5" aria-hidden="true"><i class="block h-2 w-2 rounded-sm bg-forest-deep"></i></span>Not available</li>
           <li class="flex items-center gap-2"><span class="h-6 w-6 rounded-md border-2 border-forest bg-forest" aria-hidden="true"></span>Selected</li>
         </ul>
         <p class="mt-4 text-sm text-muted">Sample rooms. Prices and availability are placeholders until the real room list is added. The plan is a schematic: room positions and the corridor are not the real building layout.</p>
@@ -214,7 +214,7 @@
 
         var head = el('div', 'mt-4 flex items-baseline justify-between gap-3');
         head.appendChild(el('p', 'font-display text-2xl font-bold tracking-tight', r.name));
-        head.appendChild(el('span', 'text-sm font-semibold ' + (st === 'available' || st === 'yours' ? 'text-forest' : 'text-muted'), { available: 'Available', held: 'Held', taken: 'Taken', yours: 'Your request' }[st]));
+        head.appendChild(el('span', 'text-sm font-semibold ' + (st === 'available' || st === 'yours' ? 'text-forest' : 'text-muted'), { available: 'Available', held: 'Held', reserved: 'Reserved', occupied: 'Occupied', taken: 'Taken', yours: 'Your request' }[st]));
         box.appendChild(head);
         box.appendChild(el('p', 'mt-1 text-base text-muted', 'Floor ' + r.floor + ', ' + r.type + ' room'));
         box.appendChild(el('p', 'mt-2 font-display text-xl font-bold tracking-tight', peso(r.price) + ' per month'));
@@ -238,8 +238,8 @@
         } else if (st === 'yours') {
           var a = el('a', 'inline-flex min-h-[44px] items-center font-semibold text-forest underline underline-offset-4', 'See your request on Home');
           a.href = 'home.html#reservation'; foot.appendChild(a);
-        } else if (st === 'held') {
-          foot.appendChild(el('p', 'text-sm text-muted', 'Another student has a pending request for this room, so it cannot be saved.'));
+        } else if (st === 'held' || st === 'reserved') {
+          foot.appendChild(el('p', 'text-sm text-muted', st === 'held' ? 'Another student has a pending request for this room, so it cannot be saved.' : 'This room is reserved for another student, so it cannot be saved.'));
         } else {
           foot.appendChild(el('p', 'text-sm text-muted', 'This room is taken, so it cannot be saved.'));
         }
@@ -250,14 +250,14 @@
       function tile(r) {
         var li = el('li');
         var st = HB.roomState(r, user.id);
-        var b = el('button', 'tile' + (st === 'held' || st === 'taken' ? ' tile-taken' : '')); b.type = 'button';
+        var b = el('button', 'tile' + (st === 'available' || st === 'yours' ? '' : ' tile-taken')); b.type = 'button';
         b.setAttribute('aria-pressed', String(state.selected === r.id));
-        b.setAttribute('aria-label', r.name + ', ' + r.type + ', ' + { available: 'available', held: 'held, request pending', taken: 'taken', yours: 'your request' }[st]);
+        b.setAttribute('aria-label', r.name + ', ' + r.type + ', ' + { available: 'available', held: 'held, request pending', reserved: 'reserved', occupied: 'occupied', taken: 'taken', yours: 'your request' }[st]);
         var win = el('span', 'absolute right-2 top-2 block h-3 w-3 rounded-sm ' + (st === 'available' || st === 'yours' ? 'bg-lime ring-1 ring-forest' : 'bg-forest-deep'));
         win.setAttribute('aria-hidden', 'true');
         b.appendChild(win);
         b.appendChild(el('span', 'font-display text-lg font-bold leading-none', r.id));
-        b.appendChild(el('span', 'mt-1 text-sm', { available: r.type, held: 'Held', taken: 'Taken', yours: 'Yours' }[st]));
+        b.appendChild(el('span', 'mt-1 text-sm', { available: r.type, held: 'Held', reserved: 'Reserved', occupied: 'Occupied', taken: 'Taken', yours: 'Yours' }[st]));
         b.addEventListener('click', function () { state.selected = r.id; renderPlan(); showDetail(r); });
         li.appendChild(b);
         return li;

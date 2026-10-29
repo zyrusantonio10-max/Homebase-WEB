@@ -4,10 +4,13 @@
   "reservations" table would have, so the move to PHP + MySQL later only swaps load() and save():
 
     { id, userId, studentName, studentEmail, roomId, roomName, floor, type, price,
-      moveIn: "2026-11-02", message, status: "pending" | "approved" | "declined" | "cancelled", createdAt, updatedAt }
+      moveIn: "2026-11-02", message, status: "pending" | "approved" | "confirmed" | "declined" | "cancelled" | "expired" | "ended",
+      paymentDays, paymentDueAt, approvedAt, confirmedAt, endedAt (filled in as the request moves along), createdAt, updatedAt }
 
   Rules: a student can have ONE active request (pending or approved) at a time.
-         A room with a pending request is "held", with an approved request it is "taken".
+         A room is "held" while a request is pending, "reserved" once approved (waiting for payment), "occupied" once payment is confirmed.
+         Life of a request: pending -> approved -> confirmed -> ended. Side exits: declined, cancelled (student), expired (not paid in time).
+         The landlord sets the payment window (days) when approving. An approved request that is not marked paid by its deadline becomes "expired".
          The student who asked for it sees it as "yours".
   Payment is NOT handled here. The dormitory office handles payment and the contract.
 */
@@ -17,11 +20,17 @@
   function load() {
     try {
       var raw = localStorage.getItem(KEY), v = raw ? JSON.parse(raw) : [];
-      return { ok: true, list: Array.isArray(v) ? v : [] };
+      var list = Array.isArray(v) ? v : [], changed = false, now = Date.now();
+      // approved requests that were not paid by their deadline expire here, so every page agrees
+      list.forEach(function (r) {
+        if (r.status === 'approved' && r.paymentDueAt && Date.parse(r.paymentDueAt) < now) { r.status = 'expired'; r.updatedAt = nowIso(); changed = true; }
+      });
+      if (changed) save(list);
+      return { ok: true, list: list };
     } catch (e) { return { ok: false, list: [] }; }
   }
   function save(list) { try { localStorage.setItem(KEY, JSON.stringify(list)); return true; } catch (e) { return false; } }
-  function isActive(r) { return r.status === 'pending' || r.status === 'approved'; }
+  function isActive(r) { return r.status === 'pending' || r.status === 'approved' || r.status === 'confirmed'; }
   function nowIso() { return new Date().toISOString(); }
 
   var HB = {
@@ -38,7 +47,7 @@
     // "available" | "held" | "taken" | "yours"
     roomState: function (room, userId) {
       var hit = load().list.filter(function (r) { return r.roomId === room.id && isActive(r); })[0];
-      if (hit) return hit.userId === userId ? 'yours' : (hit.status === 'approved' ? 'taken' : 'held');
+      if (hit) return hit.userId === userId ? 'yours' : { pending: 'held', approved: 'reserved', confirmed: 'occupied' }[hit.status];
       return room.available ? 'available' : 'taken';
     },
 
@@ -63,6 +72,34 @@
       var hit = all.list.filter(function (r) { return r.id === id; })[0];
       if (!hit) return false;
       hit.status = status; hit.updatedAt = nowIso();
+      return save(all.list);
+    },
+
+    // landlord approves and sets the payment window (1 to 30 days)
+    approve: function (id, days) {
+      days = Math.floor(Number(days));
+      if (!isFinite(days) || days < 1 || days > 30) return false;
+      var all = load(); if (!all.ok) return false;
+      var hit = all.list.filter(function (r) { return r.id === id && r.status === 'pending'; })[0];
+      if (!hit) return false;
+      hit.status = 'approved'; hit.paymentDays = days; hit.approvedAt = nowIso(); hit.updatedAt = nowIso();
+      hit.paymentDueAt = new Date(Date.now() + days * 86400000).toISOString();
+      return save(all.list);
+    },
+    // landlord marks that the office received payment
+    confirmPayment: function (id) {
+      var all = load(); if (!all.ok) return false;
+      var hit = all.list.filter(function (r) { return r.id === id && r.status === 'approved'; })[0];
+      if (!hit) return false;
+      hit.status = 'confirmed'; hit.confirmedAt = nowIso(); hit.updatedAt = nowIso();
+      return save(all.list);
+    },
+    // landlord ends the stay, the room becomes available again
+    endStay: function (id) {
+      var all = load(); if (!all.ok) return false;
+      var hit = all.list.filter(function (r) { return r.id === id && r.status === 'confirmed'; })[0];
+      if (!hit) return false;
+      hit.status = 'ended'; hit.endedAt = nowIso(); hit.updatedAt = nowIso();
       return save(all.list);
     },
 

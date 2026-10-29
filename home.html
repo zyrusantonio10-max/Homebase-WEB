@@ -490,36 +490,42 @@
         var r = mine[0];
         var box = $('res-view'); box.textContent = '';
         var mk = function (tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+        var due = r.paymentDueAt ? fmtDate(r.paymentDueAt) : '';
 
         var head = mk('div', 'flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1');
         head.appendChild(mk('p', 'font-display text-2xl font-bold tracking-tight', r.roomName));
-        var label = { pending: 'Pending', approved: 'Approved', declined: 'Declined', cancelled: 'Cancelled' }[r.status] || r.status;
-        head.appendChild(mk('p', 'text-base font-semibold ' + (r.status === 'approved' ? 'text-forest' : r.status === 'pending' ? 'text-ink' : 'text-muted'), label));
+        var label = { pending: 'Pending', approved: 'Approved, payment due', confirmed: 'Confirmed', declined: 'Declined', cancelled: 'Cancelled', expired: 'Expired', ended: 'Stay ended' }[r.status] || r.status;
+        head.appendChild(mk('p', 'text-base font-semibold ' + (r.status === 'approved' || r.status === 'confirmed' ? 'text-forest' : r.status === 'pending' ? 'text-ink' : 'text-muted'), label));
         box.appendChild(head);
         box.appendChild(mk('p', 'mt-1 text-base text-muted', 'Floor ' + r.floor + ', ' + r.type + ' room, ' + peso(r.price)));
 
         var dl = mk('dl', 'mt-4 grid gap-3 text-base sm:grid-cols-3');
         var facts = [['Move-in date', fmtDate(r.moveIn)], ['Requested on', fmtDate(r.createdAt)]];
+        if (r.status === 'approved' && due) facts.push(['Pay the office by', due]);
+        if (r.status === 'confirmed' && r.confirmedAt) facts.push(['Payment received', fmtDate(r.confirmedAt)]);
         if (r.message) facts.push(['Your message', r.message]);
         facts.forEach(function (f) { var d = mk('div'); d.appendChild(mk('dt', 'text-sm font-medium text-muted', f[0])); d.appendChild(mk('dd', 'break-words', f[1])); dl.appendChild(d); });
         box.appendChild(dl);
 
-        if (r.status !== 'cancelled') {
+        var steps = {
+          pending:   [['Requested', 'done'], ['Landlord decision', 'now'], ['Payment', 'next']],
+          approved:  [['Requested', 'done'], ['Approved', 'done'], ['Payment', 'now']],
+          confirmed: [['Requested', 'done'], ['Approved', 'done'], ['Payment confirmed', 'done']],
+          declined:  [['Requested', 'done'], ['Declined', 'done']],
+          expired:   [['Requested', 'done'], ['Approved', 'done'], ['Payment not received in time', 'done']],
+          ended:     [['Requested', 'done'], ['Payment confirmed', 'done'], ['Stay ended', 'done']]
+        }[r.status];
+        if (steps) {
           var ol = mk('ol', 'mt-5 grid gap-2 sm:grid-cols-3');
-          var decided = r.status === 'approved' || r.status === 'declined';
           ol.setAttribute('aria-label', 'Request progress');
-          ol.appendChild(step('Requested', 'done'));
-          ol.appendChild(step('Under review', decided ? 'done' : 'now'));
-          ol.appendChild(step(r.status === 'approved' ? 'Approved' : r.status === 'declined' ? 'Declined' : 'Decision', decided ? 'done' : 'next'));
+          steps.forEach(function (st) { ol.appendChild(step(st[0], st[1])); });
           box.appendChild(ol);
         }
 
-        var panel = mk('div', 'mt-5 rounded-xl border border-line bg-tint p-4');
-        if (r.status === 'pending') {
-          panel.appendChild(mk('p', 'text-base', 'The dormitory office is reviewing your request. Your room is held for you while you wait.'));
+        function cancelRow(question) {
           var row = mk('div', 'mt-3 flex flex-wrap items-center gap-2');
           if (cancelling) {
-            row.appendChild(mk('p', 'mr-2 text-base font-medium', 'Cancel this request? The room is released.'));
+            row.appendChild(mk('p', 'mr-2 text-base font-medium', question));
             var yes = mk('button', 'btn !border-danger !bg-white !text-danger hover:!bg-[#FEF3F2]', 'Yes, cancel request'); yes.type = 'button';
             yes.addEventListener('click', function () { cancelling = false; if (!HB.setStatus(r.id, 'cancelled')) { setState('reservation', 'error'); return; } renderReservation(); });
             var keep = mk('button', 'btn btn-outline', 'Keep my request'); keep.type = 'button';
@@ -530,12 +536,23 @@
             c.addEventListener('click', function () { cancelling = true; renderReservation(); });
             row.appendChild(c);
           }
-          panel.appendChild(row);
+          return row;
+        }
+
+        var panel = mk('div', 'mt-5 rounded-xl border border-line bg-tint p-4');
+        if (r.status === 'pending') {
+          panel.appendChild(mk('p', 'text-base', 'The dormitory office is reviewing your request. Your room is held for you while you wait.'));
+          panel.appendChild(cancelRow('Cancel this request? The room is released.'));
         } else if (r.status === 'approved') {
-          panel.appendChild(mk('p', 'font-semibold text-forest-deep', 'Approved. Next step: payment and contract.'));
-          panel.appendChild(mk('p', 'mt-1 text-base', 'Payment and the contract are handled by the dormitory office, outside Homebase. The office contact details will be added here.'));
+          panel.appendChild(mk('p', 'font-semibold text-forest-deep', 'Approved. Next step: pay the dormitory office' + (due ? ' by ' + due : '') + '.'));
+          panel.appendChild(mk('p', 'mt-1 text-base', 'Payment and the contract are handled by the dormitory office, outside Homebase. If it is not paid in time, the room is released. The office contact details will be added here.'));
+          panel.appendChild(cancelRow('Cancel this approved request? The room is released.'));
+        } else if (r.status === 'confirmed') {
+          panel.appendChild(mk('p', 'font-semibold text-forest-deep', 'You are all set.'));
+          panel.appendChild(mk('p', 'mt-1 text-base', 'The office received your payment. ' + r.roomName + ' is yours, with move-in on ' + fmtDate(r.moveIn) + '.'));
         } else {
-          panel.appendChild(mk('p', 'text-base', r.status === 'declined' ? 'This request was declined, so the room is free again.' : 'You cancelled this request. The room was released.'));
+          var msg = { declined: 'This request was declined, so the room is free again.', cancelled: 'You cancelled this request. The room was released.', expired: 'Payment was not received by ' + due + ', so the room was released.', ended: 'This stay has ended.' }[r.status] || '';
+          panel.appendChild(mk('p', 'text-base', msg));
           var a = mk('a', 'btn mt-3', 'Find another room'); a.href = 'rooms.html'; panel.appendChild(a);
         }
         box.appendChild(panel);
