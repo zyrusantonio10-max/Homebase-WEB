@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -17,16 +17,8 @@
     - Not built on purpose: reversing an approval or editing a request. Payment is handled by the dormitory office.
   -->
 
-  <script>
-    // Guard: landlords only. Students go to home.html.
-    (function () {
-      try {
-        var u = JSON.parse(localStorage.getItem('homebase_currentUser') || 'null');
-        if (!u || !u.email) window.location.replace('index.html');
-        else if (u.role !== 'landlord') window.location.replace('home.html');
-      } catch (e) { window.location.replace('index.html'); }
-    })();
-  </script>
+  <script src="assets/js/auth.js"></script>
+  <script>HB_AUTH.requireAuth('landlord');</script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -58,7 +50,7 @@
       </span>
       <div class="flex items-center gap-3">
         <span id="nav-name" class="hidden max-w-[12rem] truncate text-sm font-medium sm:block"></span>
-        <button type="button" id="logout" class="btn btn-outline">Log out</button>
+        <button type="button" id="logout" data-logout class="btn btn-outline">Log out</button>
       </div>
     </nav>
   </header>
@@ -105,10 +97,9 @@
         return isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
       }
 
-      var user = {};
-      try { user = JSON.parse(localStorage.getItem('homebase_currentUser') || '{}') || {}; } catch (e) {}
+      var user = HB_AUTH.getUser() || {};
       $('nav-name').textContent = String(user.name || user.email || '');
-      $('logout').addEventListener('click', function () { try { localStorage.removeItem('homebase_currentUser'); } catch (e) {} window.location.href = 'index.html'; });
+      HB_AUTH.bindLogout();
       $('reload').addEventListener('click', function () { window.location.reload(); });
 
       $('loading').hidden = true;
@@ -183,6 +174,7 @@
 
         var dl = el('dl', 'mt-4 grid gap-3 text-base sm:grid-cols-3');
         var facts = [['Student', r.studentName + ' (' + r.studentEmail + ')'], ['Move-in date', fmt(r.moveIn)], ['Requested on', fmt(r.createdAt)]];
+        if (r.rulesAcceptedAt) facts.push(['House rules', 'Agreed on ' + fmt(r.rulesAcceptedAt)]);
         if (r.status === 'approved' && r.paymentDueAt) facts.push(['Payment due', fmt(r.paymentDueAt) + ' (' + r.paymentDays + ' days)']);
         if (r.status === 'expired' && r.paymentDueAt) facts.push(['Payment was due', fmt(r.paymentDueAt)]);
         if (r.confirmedAt && (r.status === 'confirmed' || r.status === 'ended')) facts.push(['Payment received', fmt(r.confirmedAt)]);

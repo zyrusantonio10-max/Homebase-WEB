@@ -22,16 +22,8 @@
     - Numbers come from assets/js/rooms.js (SAMPLE data, labeled). Radius: 12px tiles, 20px cards, pill buttons. No shadows, no glow, no motion.
   -->
 
-  <script>
-    // Guard: must be logged in. Landlords go to landlord.html.
-    (function () {
-      try {
-        var u = JSON.parse(localStorage.getItem('homebase_currentUser') || 'null');
-        if (!u || !u.email) window.location.replace('index.html');
-        else if (u.role === 'landlord') window.location.replace('landlord.html');
-      } catch (e) { window.location.replace('index.html'); }
-    })();
-  </script>
+  <script src="assets/js/auth.js"></script>
+  <script>HB_AUTH.requireAuth('student');</script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -145,7 +137,11 @@
   <script src="assets/js/reservation.js"></script>
   <script>
     (function () {
-      var K = { user: 'homebase_currentUser', saved: 'homebase_savedRooms' };
+      var user = HB_AUTH.getUser() || {};
+      var K = {
+        user: HB_AUTH.CURRENT_KEY,
+        saved: HB_AUTH.userKey('homebase_savedRooms')
+      };
       var $ = function (id) { return document.getElementById(id); };
 
       function read(key) { try { var r = localStorage.getItem(key); return { ok: true, value: r ? JSON.parse(r) : null }; } catch (e) { return { ok: false, value: null }; } }
@@ -155,13 +151,10 @@
       function peso(n) { return '\u20B1' + n.toLocaleString('en-PH'); }
 
       // ---- navbar ----
-      var user = (read(K.user).value) || {};
-      var uid = user.id ? ('_' + user.id) : '';
-      K.saved = 'homebase_savedRooms' + uid;
       var fullName = String(user.name || user.email || '');
       $('nav-initial').textContent = fullName.charAt(0).toUpperCase();
       $('nav-name').textContent = fullName.split(/\s+/)[0];
-      document.querySelectorAll('[data-logout]').forEach(function (b) { b.addEventListener('click', function () { drop(K.user); window.location.href = 'index.html'; }); });
+      HB_AUTH.bindLogout();
       document.querySelectorAll('[data-reload]').forEach(function (b) { b.addEventListener('click', function () { window.location.reload(); }); });
       var menuBtn = $('menu-btn'), menu = $('menu');
       function setMenu(o) { menu.hidden = !o; menuBtn.setAttribute('aria-expanded', String(o)); $('menu-label').textContent = o ? 'Close' : 'Menu'; }
@@ -268,7 +261,8 @@
       function renderFloors() {
         var box = $('floors'); box.textContent = '';
         floors.forEach(function (f) {
-          var b = el('button', 'floor-btn', 'Floor ' + f); b.type = 'button';
+          var free = ROOMS.filter(function (r) { return r.floor === f && HB.roomState(r, user.id) === 'available'; }).length;
+          var b = el('button', 'floor-btn', 'Floor ' + f + ' (' + free + ' free)'); b.type = 'button';
           b.setAttribute('aria-pressed', String(f === state.floor));
           b.addEventListener('click', function () {
             state.floor = f; state.selected = null;
@@ -294,4 +288,4 @@
     })();
   </script>
 </body>
-</html>     
+</html>
