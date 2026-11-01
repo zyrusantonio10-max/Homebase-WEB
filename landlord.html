@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -12,21 +12,13 @@
     - One list, filtered by status. Pending is the default because that is the job. Rows, not cards in a grid, because each request
       is read top to bottom (who, which room, when, message) and answered with one of two buttons.
     - Approve is immediate. Decline asks first, because a student is waiting on it and it cannot be undone from this page.
-    - No invented requests: the list only holds what students really sent (assets/reservations.js).
+    - No invented requests: the list only holds what students really sent (assets/js/reservation.js).
     - Lime is not used here. Radius: pill buttons, 20px rows, 12px filter chips. No shadows, no motion.
     - Not built on purpose: reversing an approval or editing a request. Payment is handled by the dormitory office.
   -->
 
-  <script>
-    // Guard: landlords only. Students go to home.html.
-    (function () {
-      try {
-        var u = JSON.parse(localStorage.getItem('homebase_currentUser') || 'null');
-        if (!u || !u.email) window.location.replace('index.html');
-        else if (u.role !== 'landlord') window.location.replace('home.html');
-      } catch (e) { window.location.replace('index.html'); }
-    })();
-  </script>
+  <script src="assets/js/auth.js"></script>
+  <script>HB_AUTH.requireAuth('landlord');</script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -58,7 +50,7 @@
       </span>
       <div class="flex items-center gap-3">
         <span id="nav-name" class="hidden max-w-[12rem] truncate text-sm font-medium sm:block"></span>
-        <button type="button" id="logout" class="btn btn-outline">Log out</button>
+        <button type="button" id="logout" data-logout class="btn btn-outline">Log out</button>
       </div>
     </nav>
   </header>
@@ -73,7 +65,7 @@
 
     <div id="error" hidden role="alert" class="mt-8 rounded-[20px] border border-line p-6">
       <p class="font-display text-xl font-bold tracking-tight">We could not read the requests</p>
-      <p class="mt-2 text-base text-muted">Your browser may be blocking site data. Allow site data for this page, then reload.</p>
+      <p class="mt-2 text-base text-muted">Either your browser is blocking site data, or <code>assets/js/reservation.js</code> did not load. Check that the file is where this page expects it, then reload.</p>
       <button type="button" id="reload" class="btn btn-outline mt-4">Reload this page</button>
     </div>
 
@@ -105,10 +97,9 @@
         return isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
       }
 
-      var user = {};
-      try { user = JSON.parse(localStorage.getItem('homebase_currentUser') || '{}') || {}; } catch (e) {}
+      var user = HB_AUTH.getUser() || {};
       $('nav-name').textContent = String(user.name || user.email || '');
-      $('logout').addEventListener('click', function () { try { localStorage.removeItem('homebase_currentUser'); } catch (e) {} window.location.href = 'index.html'; });
+      HB_AUTH.bindLogout();
       $('reload').addEventListener('click', function () { window.location.reload(); });
 
       $('loading').hidden = true;
@@ -183,6 +174,7 @@
 
         var dl = el('dl', 'mt-4 grid gap-3 text-base sm:grid-cols-3');
         var facts = [['Student', r.studentName + ' (' + r.studentEmail + ')'], ['Move-in date', fmt(r.moveIn)], ['Requested on', fmt(r.createdAt)]];
+        if (r.rulesAcceptedAt) facts.push(['House rules', 'Agreed on ' + fmt(r.rulesAcceptedAt)]);
         if (r.status === 'approved' && r.paymentDueAt) facts.push(['Payment due', fmt(r.paymentDueAt) + ' (' + r.paymentDays + ' days)']);
         if (r.status === 'expired' && r.paymentDueAt) facts.push(['Payment was due', fmt(r.paymentDueAt)]);
         if (r.confirmedAt && (r.status === 'confirmed' || r.status === 'ended')) facts.push(['Payment received', fmt(r.confirmedAt)]);
@@ -225,4 +217,4 @@
     })();
   </script>
 </body>
-</html> 
+</html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -14,24 +14,16 @@
     with availability stated in words, and a filter row on top.
     Reasons (R-31):
     - Cards in a grid: this is a catalog of same-kind things, so equal cards are the content, not a template.
-    - Pictures: generated ILLUSTRATIONS in assets/rooms/, labeled as such on the page (R-22, R-38). They show the real bed count,
+    - Pictures: generated ILLUSTRATIONS in assets/images/, labeled as such on the page (R-22, R-38). They show the real bed count,
       and whether the room has a desk, AC and private bathroom. The window has one lit pane when the room is available
       (same lit-window motif as the landing page) and is dark when it is taken.
     - Lime: not used on this page except inside the illustrations. Buttons stay forest.
-    - Numbers all come from assets/rooms.js (SAMPLE data, labeled on the page).
+    - Numbers all come from assets/js/rooms.js (SAMPLE data, labeled on the page).
     - Radius: pill for buttons, 20px cards, 12px chips and fields. No shadows, no glow. No motion beyond hover colors.
   -->
 
-  <script>
-    // Guard: must be logged in. Landlords go to landlord.html.
-    (function () {
-      try {
-        var u = JSON.parse(localStorage.getItem('homebase_currentUser') || 'null');
-        if (!u || !u.email) window.location.replace('index.html');
-        else if (u.role === 'landlord') window.location.replace('landlord.html');
-      } catch (e) { window.location.replace('index.html'); }
-    })();
-  </script>
+  <script src="assets/js/auth.js"></script>
+  <script>HB_AUTH.requireAuth('student');</script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -89,12 +81,12 @@
     </div>
   </header>
 
-  <main class="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
+  <main class="mx-auto max-w-6xl px-4 pb-28 pt-6 sm:px-6 sm:pt-8">
     <h1 class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">Explore Rooms</h1>
-    <p class="mt-2 max-w-xl text-base text-muted">Every room at Ariate Dormitory, available or taken.</p>
+    <p class="mt-2 max-w-xl text-base text-muted">Every room at Ariate Dormitory, available or taken. Tick Compare on two or three rooms to see them side by side.</p>
 
     <!-- FILTERS: apply as soon as you change them -->
-    <form id="filters" class="mt-6 grid gap-4 rounded-[20px] border border-line bg-tint p-5 md:grid-cols-[auto_auto_220px] md:items-end md:gap-6" onsubmit="return false">
+    <form id="filters" class="mt-6 flex flex-wrap items-end gap-x-6 gap-y-4 rounded-[20px] border border-line bg-tint p-5" onsubmit="return false">
       <fieldset>
         <legend class="label">Availability</legend>
         <div class="flex flex-wrap gap-2">
@@ -112,7 +104,11 @@
           <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Quad"><span class="choice">Quad</span></label>
         </div>
       </fieldset>
-      <div>
+      <fieldset>
+        <legend class="label">Floor</legend>
+        <div id="floor-choices" class="flex flex-wrap gap-2"></div>
+      </fieldset>
+      <div class="w-full sm:w-56">
         <label class="label" for="sort">Sort by</label>
         <select id="sort" class="field">
           <option value="number">Room number</option>
@@ -131,7 +127,7 @@
 
       <div data-state="error" hidden role="alert" class="rounded-[20px] border border-line p-6">
         <p class="font-display text-xl font-bold tracking-tight">We could not load the rooms</p>
-        <p class="mt-2 text-base text-muted">The room list did not load. Check that <code>assets/rooms.js</code> sits next to this page, then reload.</p>
+        <p class="mt-2 text-base text-muted">A page file did not load. Check that <code>assets/js/rooms.js</code> and <code>assets/js/reservation.js</code> are where this page expects them, then reload.</p>
         <button type="button" data-reload class="btn btn-outline mt-4">Reload this page</button>
       </div>
 
@@ -152,9 +148,15 @@
 
   <script src="assets/js/rooms.js"></script>
   <script src="assets/js/reservation.js"></script>
+  <script src="assets/js/compare.js"></script>
   <script>
     (function () {
-      var K = { user: 'homebase_currentUser', saved: 'homebase_savedRooms' };
+      var user = HB_AUTH.getUser() || {};
+      var K = {
+        user: HB_AUTH.CURRENT_KEY,
+        saved: HB_AUTH.userKey('homebase_savedRooms'),
+        cmp: HB_AUTH.userKey('homebase_comparisons')
+      };
       var $ = function (id) { return document.getElementById(id); };
 
       function read(key) { try { var r = localStorage.getItem(key); return { ok: true, value: r ? JSON.parse(r) : null }; } catch (e) { return { ok: false, value: null }; } }
@@ -165,11 +167,10 @@
       function setState(s) { document.querySelectorAll('#results [data-state]').forEach(function (n) { n.hidden = n.getAttribute('data-state') !== s; }); }
 
       // ---- navbar ----
-      var user = (read(K.user).value) || {};
       var fullName = String(user.name || user.email || '');
       $('nav-initial').textContent = fullName.charAt(0).toUpperCase();
       $('nav-name').textContent = fullName.split(/\s+/)[0];
-      document.querySelectorAll('[data-logout]').forEach(function (b) { b.addEventListener('click', function () { drop(K.user); window.location.href = 'index.html'; }); });
+      HB_AUTH.bindLogout();
       document.querySelectorAll('[data-reload]').forEach(function (b) { b.addEventListener('click', function () { window.location.reload(); }); });
       var menuBtn = $('menu-btn'), menu = $('menu');
       function setMenu(o) { menu.hidden = !o; menuBtn.setAttribute('aria-expanded', String(o)); $('menu-label').textContent = o ? 'Close' : 'Menu'; }
@@ -178,7 +179,7 @@
 
       // ---- data ----
       var ROOMS = window.HOMEBASE_ROOMS;
-      if (!Array.isArray(ROOMS)) { setState('error'); return; }
+      if (!Array.isArray(ROOMS) || !window.HB) { setState('error'); return; }
 
       // ---- saved rooms (same list Home and My Matches use) ----
       function savedIds() { var r = read(K.saved).value; return Array.isArray(r) ? r.map(function (x) { return x.id; }) : []; }
@@ -200,6 +201,9 @@
       var hasActive = !!HB.activeFor(user.id);
       $('active-note').hidden = !hasActive;
 
+      // ---- comparing rooms (shared with My Matches, see assets/js/compare.js) ----
+      var cmp = HBCompare.mount({ rooms: ROOMS, user: user, hasActive: hasActive });
+
       // ---- one room card ----
       function card(r, saved) {
         var li = el('li', 'flex flex-col overflow-hidden rounded-[20px] border border-line bg-white');
@@ -207,7 +211,7 @@
 
         var frame = el('div', 'aspect-[8/5] bg-track');
         var img = el('img', 'h-full w-full object-cover');
-        img.src = r.image || ('assets/rooms/room-' + r.id + '.svg');
+        img.src = r.image || ((window.HOMEBASE_IMAGE_DIR || 'assets/images/') + 'room-' + r.id + '.svg');
         img.alt = r.name + ', ' + r.type.toLowerCase() + ' room on floor ' + r.floor + ' (illustration)';
         img.width = 640; img.height = 400; img.loading = 'lazy'; img.decoding = 'async';
         img.addEventListener('error', function () {
@@ -228,6 +232,8 @@
         var chips = el('ul', 'mt-3 flex flex-wrap gap-1.5');
         r.amenities.forEach(function (a) { chips.appendChild(el('li', 'rounded-lg border border-line bg-tint px-2.5 py-1 text-sm', a)); });
         body.appendChild(chips);
+
+        body.appendChild(cmp.checkbox(r, { cls: 'mt-3' }));
 
         var foot = el('div', 'mt-auto pt-4');
         if (st === 'available') {
@@ -257,13 +263,23 @@
 
       // ---- filters ----
       var form = $('filters');
+      var floorList = [];
+      ROOMS.forEach(function (r) { if (floorList.indexOf(r.floor) === -1) floorList.push(r.floor); });
+      floorList.sort(function (a, b) { return a - b; });
+      [['Any', 'Any']].concat(floorList.map(function (f) { return [String(f), 'Floor ' + f]; })).forEach(function (o, i) {
+        var label = el('label', 'relative block cursor-pointer');
+        var input = el('input', 'peer sr-only'); input.type = 'radio'; input.name = 'floor'; input.value = o[0]; input.checked = i === 0;
+        label.appendChild(input); label.appendChild(el('span', 'choice', o[1]));
+        $('floor-choices').appendChild(label);
+      });
       function render() {
-        var avail = form.elements.avail.value, type = form.elements.type.value, sort = $('sort').value;
+        var avail = form.elements.avail.value, type = form.elements.type.value, floorSel = form.elements.floor.value, sort = $('sort').value;
         var list = ROOMS.filter(function (r) {
           var st = HB.roomState(r, user.id);
           if (avail === 'available' && st !== 'available') return false;
           if (avail === 'unavailable' && st === 'available') return false;
           if (type !== 'Any' && r.type !== type) return false;
+          if (floorSel !== 'Any' && r.floor !== Number(floorSel)) return false;
           return true;
         });
         list.sort(function (a, b) {
@@ -279,9 +295,13 @@
       }
       form.addEventListener('change', render);
       $('reset').addEventListener('click', function () {
-        form.elements.avail.value = 'all'; form.elements.type.value = 'Any'; $('sort').value = 'number'; render();
+        form.elements.avail.value = 'all'; form.elements.type.value = 'Any'; form.elements.floor.value = 'Any'; $('sort').value = 'number'; render();
       });
       render();
+
+      // opened from a link on Home: rooms.html?compare=204,301
+      var fromUrl = (new URLSearchParams(window.location.search).get('compare') || '').split(',').filter(function (id) { return ROOMS.some(function (r) { return r.id === id; }); }).slice(0, 3);
+      if (fromUrl.length > 1) { cmp.setPicked(fromUrl); cmp.open(fromUrl); }
     })();
   </script>
 </body>

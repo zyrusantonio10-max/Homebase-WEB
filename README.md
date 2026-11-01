@@ -1,4 +1,4 @@
-# Homebase 🏠
+﻿# Homebase 🏠
 
 > A modern student dormitory discovery and room matching platform for Ariate Dormitory, helping students find affordable, convenient, and fitting accommodations.
 
@@ -20,6 +20,9 @@
 Homebase-WEB/
 ├── assets/
 │   ├── js/
+│   │   ├── auth.js           # Client authentication, user sessions & scoped storage
+│   │   ├── compare.js        # Side-by-side room comparison manager
+│   │   ├── reservation.js    # Student reservation request pipeline
 │   │   ├── rooms.js          # Room inventory data, pricing, and amenities
 │   │   └── tw-config.js      # Shared Tailwind CSS color scheme & design tokens
 │   └── images/               # Media assets and illustrations

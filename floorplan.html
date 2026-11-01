@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -19,19 +19,11 @@
       taken tiles say "Taken" and have a dark square, the selected tile is solid forest with a check word in its label for screen readers.
     - Taken rooms can still be opened to see their details, because students compare against them. They just cannot be saved.
     - There is no booking system, so there is no Reserve button. The action is Save room (same list as Home and My Matches).
-    - Numbers come from assets/rooms.js (SAMPLE data, labeled). Radius: 12px tiles, 20px cards, pill buttons. No shadows, no glow, no motion.
+    - Numbers come from assets/js/rooms.js (SAMPLE data, labeled). Radius: 12px tiles, 20px cards, pill buttons. No shadows, no glow, no motion.
   -->
 
-  <script>
-    // Guard: must be logged in. Landlords go to landlord.html.
-    (function () {
-      try {
-        var u = JSON.parse(localStorage.getItem('homebase_currentUser') || 'null');
-        if (!u || !u.email) window.location.replace('index.html');
-        else if (u.role === 'landlord') window.location.replace('landlord.html');
-      } catch (e) { window.location.replace('index.html'); }
-    })();
-  </script>
+  <script src="assets/js/auth.js"></script>
+  <script>HB_AUTH.requireAuth('student');</script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -101,13 +93,13 @@
 
     <div id="error" hidden role="alert" class="mt-8 rounded-[20px] border border-line p-6">
       <p class="font-display text-xl font-bold tracking-tight">We could not load the rooms</p>
-      <p class="mt-2 text-base text-muted">The room list did not load. Check that <code>assets/rooms.js</code> sits next to this page, then reload.</p>
+      <p class="mt-2 text-base text-muted">A page file did not load. Check that <code>assets/js/rooms.js</code> and <code>assets/js/reservation.js</code> are where this page expects them, then reload.</p>
       <button type="button" data-reload class="btn btn-outline mt-4">Reload this page</button>
     </div>
 
     <div id="empty" hidden class="mt-8 rounded-[20px] border border-line p-6">
       <p class="font-display text-xl font-bold tracking-tight">There are no rooms to show yet</p>
-      <p class="mt-2 text-base text-muted">Add rooms to <code>assets/rooms.js</code> and they appear here by floor.</p>
+      <p class="mt-2 text-base text-muted">Add rooms to <code>assets/js/rooms.js</code> and they appear here by floor.</p>
     </div>
 
     <div id="plan" hidden class="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
@@ -145,7 +137,11 @@
   <script src="assets/js/reservation.js"></script>
   <script>
     (function () {
-      var K = { user: 'homebase_currentUser', saved: 'homebase_savedRooms' };
+      var user = HB_AUTH.getUser() || {};
+      var K = {
+        user: HB_AUTH.CURRENT_KEY,
+        saved: HB_AUTH.userKey('homebase_savedRooms')
+      };
       var $ = function (id) { return document.getElementById(id); };
 
       function read(key) { try { var r = localStorage.getItem(key); return { ok: true, value: r ? JSON.parse(r) : null }; } catch (e) { return { ok: false, value: null }; } }
@@ -155,11 +151,10 @@
       function peso(n) { return '\u20B1' + n.toLocaleString('en-PH'); }
 
       // ---- navbar ----
-      var user = (read(K.user).value) || {};
       var fullName = String(user.name || user.email || '');
       $('nav-initial').textContent = fullName.charAt(0).toUpperCase();
       $('nav-name').textContent = fullName.split(/\s+/)[0];
-      document.querySelectorAll('[data-logout]').forEach(function (b) { b.addEventListener('click', function () { drop(K.user); window.location.href = 'index.html'; }); });
+      HB_AUTH.bindLogout();
       document.querySelectorAll('[data-reload]').forEach(function (b) { b.addEventListener('click', function () { window.location.reload(); }); });
       var menuBtn = $('menu-btn'), menu = $('menu');
       function setMenu(o) { menu.hidden = !o; menuBtn.setAttribute('aria-expanded', String(o)); $('menu-label').textContent = o ? 'Close' : 'Menu'; }
@@ -169,7 +164,7 @@
       // ---- data ----
       var ROOMS = window.HOMEBASE_ROOMS;
       $('loading').hidden = true;
-      if (!Array.isArray(ROOMS)) { $('error').hidden = false; return; }
+      if (!Array.isArray(ROOMS) || !window.HB) { $('error').hidden = false; return; }
       if (!ROOMS.length) { $('empty').hidden = false; return; }
       $('plan').hidden = false;
 
@@ -206,7 +201,7 @@
 
         var frame = el('div', 'aspect-[8/5] overflow-hidden rounded-xl bg-track');
         var img = el('img', 'h-full w-full object-cover');
-        img.src = r.image || ('assets/rooms/room-' + r.id + '.svg');
+        img.src = r.image || ((window.HOMEBASE_IMAGE_DIR || 'assets/images/') + 'room-' + r.id + '.svg');
         img.alt = r.name + ', ' + r.type.toLowerCase() + ' room on floor ' + r.floor + ' (illustration)';
         img.width = 640; img.height = 400; img.decoding = 'async';
         img.addEventListener('error', function () { frame.textContent = ''; frame.appendChild(el('p', 'grid h-full place-items-center px-4 text-center text-sm text-muted', 'No picture for this room yet')); });
@@ -266,7 +261,8 @@
       function renderFloors() {
         var box = $('floors'); box.textContent = '';
         floors.forEach(function (f) {
-          var b = el('button', 'floor-btn', 'Floor ' + f); b.type = 'button';
+          var free = ROOMS.filter(function (r) { return r.floor === f && HB.roomState(r, user.id) === 'available'; }).length;
+          var b = el('button', 'floor-btn', 'Floor ' + f + ' (' + free + ' free)'); b.type = 'button';
           b.setAttribute('aria-pressed', String(f === state.floor));
           b.addEventListener('click', function () {
             state.floor = f; state.selected = null;

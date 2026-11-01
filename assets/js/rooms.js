@@ -5,9 +5,12 @@
 
   Each room: { id, name, floor, type: "Single" | "Double" | "Quad", price (per month, in pesos), amenities: [...], available: true | false }
 
-  Pictures: each room shows assets/rooms/room-<id>.svg, a generated ILLUSTRATION (not a photo).
-  To use a real photo, put it in assets/rooms/ and add  image: 'assets/rooms/room-101.jpg'  to that room. Explore Rooms uses it automatically.
+  Pictures: each room shows assets/images/room-<id>.svg, a generated ILLUSTRATION (not a photo).
+  To use a real photo, put it in assets/images/ and add  image: 'assets/images/room-101.jpg'  to that room. Explore Rooms uses it automatically.
 */
+// Where the room pictures live. Change this one line if you move the images folder.
+window.HOMEBASE_IMAGE_DIR = 'assets/images/';
+
 window.HOMEBASE_AMENITIES = ['Wi-Fi', 'Air conditioning', 'Study desk', 'Private bathroom', 'Laundry access', 'Kitchenette'];
 
 window.HOMEBASE_ROOMS = [

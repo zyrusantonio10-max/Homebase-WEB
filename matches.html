@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -16,23 +16,15 @@
       because rank 1 matters more than rank 7 and should not look identical.
     - Lime: only on the button inside the #1 card and the lit window, same rule as home.html.
     - Score is explained on the page (details box), not hidden. Rules are in the script, search "SCORING".
-    - Numbers all come from assets/rooms.js, which is SAMPLE data and is labeled as such on the page (R-38).
+    - Numbers all come from assets/js/rooms.js, which is SAMPLE data and is labeled as such on the page (R-38).
     - Commute and safety are not criteria (your decision).
     - No motion except hover transitions (MOTION 1).
 
     Storage written by this page: homebase_preferences, homebase_topMatch (Home reads it), homebase_savedRooms (Home reads it).
   -->
 
-  <script>
-    // Guard: must be logged in. Landlords go to landlord.html.
-    (function () {
-      try {
-        var u = JSON.parse(localStorage.getItem('homebase_currentUser') || 'null');
-        if (!u || !u.email) window.location.replace('index.html');
-        else if (u.role === 'landlord') window.location.replace('landlord.html');
-      } catch (e) { window.location.replace('index.html'); }
-    })();
-  </script>
+  <script src="assets/js/auth.js"></script>
+  <script>HB_AUTH.requireAuth('student');</script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -92,7 +84,7 @@
     </div>
   </header>
 
-  <main class="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
+  <main class="mx-auto max-w-6xl px-4 pb-28 pt-6 sm:px-6 sm:pt-8">
     <h1 class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">My Matches</h1>
     <p class="mt-2 max-w-xl text-base text-muted">Tell Homebase your budget and what you need. It ranks the available rooms by how well they fit.</p>
 
@@ -119,6 +111,11 @@
           </fieldset>
 
           <fieldset>
+            <legend class="label">Preferred floor (optional)</legend>
+            <div id="floor-list" class="grid grid-cols-2 gap-2"></div>
+          </fieldset>
+
+          <fieldset>
             <legend class="label">Amenities you need</legend>
             <div id="amenity-list" class="grid gap-2"></div>
           </fieldset>
@@ -130,9 +127,11 @@
           <summary class="inline-flex min-h-[44px] cursor-pointer items-center rounded font-semibold text-forest outline-none focus-visible:ring-2 focus-visible:ring-forest">How the score works</summary>
           <ul class="mt-2 space-y-2 text-sm text-muted">
             <li><b class="text-ink">Budget, 40 points.</b> Only rooms at or under your limit are listed. A room at 90% of your limit or less gets all 40. A room closer to your limit gets 25, because there is little cushion.</li>
-            <li><b class="text-ink">Amenities, 40 points.</b> Shared out by how many of your chosen amenities the room has. If you pick none, every room gets 40.</li>
-            <li><b class="text-ink">Room type, 20 points.</b> All 20 if the type matches, or if you chose Any.</li>
-            <li>Rooms that are taken are never listed.</li>
+            <li><b class="text-ink">Amenities, 30 points.</b> Shared out by how many of your chosen amenities the room has. If you pick none, every room gets 30.</li>
+            <li><b class="text-ink">Room type, 15 points.</b> All 15 if the type matches, or if you chose Any.</li>
+            <li><b class="text-ink">Floor, 15 points.</b> All 15 if the room is on your preferred floor, or if you have no preference.</li>
+            <li><b class="text-ink">Labels.</b> Great fit means 85 or more with nothing missing and the right room type and floor. Otherwise 65 or more is a Good fit, 45 to 64 Okay, and below 45 Weak.</li>
+            <li>Rooms that are taken or on hold are never listed.</li>
           </ul>
         </details>
       </aside>
@@ -147,7 +146,7 @@
 
         <div data-state="error" hidden role="alert" class="rounded-[20px] border border-line p-6">
           <p class="font-display text-xl font-bold tracking-tight">We could not load the rooms</p>
-          <p class="mt-2 text-base text-muted">The room list did not load. Check that <code>assets/rooms.js</code> sits next to this page, then reload.</p>
+          <p class="mt-2 text-base text-muted">A page file did not load. Check that <code>assets/js/rooms.js</code> and <code>assets/js/reservation.js</code> are where this page expects them, then reload.</p>
           <button type="button" data-reload class="btn btn-outline mt-4">Reload this page</button>
         </div>
 
@@ -174,9 +173,16 @@
 
   <script src="assets/js/rooms.js"></script>
   <script src="assets/js/reservation.js"></script>
+  <script src="assets/js/compare.js"></script>
   <script>
     (function () {
-      var K = { user: 'homebase_currentUser', prefs: 'homebase_preferences', top: 'homebase_topMatch', saved: 'homebase_savedRooms' };
+      var user = HB_AUTH.getUser() || {};
+      var K = {
+        user: HB_AUTH.CURRENT_KEY,
+        prefs: HB_AUTH.userKey('homebase_preferences'),
+        top: HB_AUTH.userKey('homebase_topMatch'),
+        saved: HB_AUTH.userKey('homebase_savedRooms')
+      };
       var $ = function (id) { return document.getElementById(id); };
 
       function read(key) { try { var r = localStorage.getItem(key); return { ok: true, value: r ? JSON.parse(r) : null }; } catch (e) { return { ok: false, value: null }; } }
@@ -189,13 +195,10 @@
       }
 
       // ---- navbar ----
-      var user = (read(K.user).value) || {};
       var fullName = String(user.name || user.email || '');
       $('nav-initial').textContent = fullName.charAt(0).toUpperCase();
       $('nav-name').textContent = fullName.split(/\s+/)[0];
-      document.querySelectorAll('[data-logout]').forEach(function (b) {
-        b.addEventListener('click', function () { drop(K.user); window.location.href = 'index.html'; });
-      });
+      HB_AUTH.bindLogout();
       document.querySelectorAll('[data-reload]').forEach(function (b) { b.addEventListener('click', function () { window.location.reload(); }); });
       var menuBtn = $('menu-btn'), menu = $('menu');
       function setMenu(o) { menu.hidden = !o; menuBtn.setAttribute('aria-expanded', String(o)); $('menu-label').textContent = o ? 'Close' : 'Menu'; }
@@ -204,7 +207,7 @@
 
       // ---- data ----
       var ROOMS = window.HOMEBASE_ROOMS, AMENITIES = window.HOMEBASE_AMENITIES;
-      if (!Array.isArray(ROOMS) || !Array.isArray(AMENITIES)) { setState('error'); return; }
+      if (!Array.isArray(ROOMS) || !Array.isArray(AMENITIES) || !window.HB) { setState('error'); return; }
 
       AMENITIES.forEach(function (a, i) {
         var label = el('label', 'relative block cursor-pointer');
@@ -213,14 +216,42 @@
         label.appendChild(input); label.appendChild(span); $('amenity-list').appendChild(label);
       });
 
+      // ---- floor choices ----
+      var floorList = [];
+      ROOMS.forEach(function (r) { if (floorList.indexOf(r.floor) === -1) floorList.push(r.floor); });
+      floorList.sort(function (a, b) { return a - b; });
+      [['Any', 'Any']].concat(floorList.map(function (f) { return [String(f), 'Floor ' + f]; })).forEach(function (o, i) {
+        var label = el('label', 'relative block cursor-pointer');
+        var input = el('input', 'peer sr-only'); input.type = 'radio'; input.name = 'floor'; input.value = o[0]; input.checked = i === 0;
+        label.appendChild(input); label.appendChild(el('span', 'choice', o[1]));
+        $('floor-list').appendChild(label);
+      });
+
       // ---- SCORING (change the numbers here if your teacher or manager wants different weights) ----
       function score(room, prefs) {
         var budgetPts = room.price <= prefs.budget * 0.9 ? 40 : 25;
         var matched = prefs.amenities.filter(function (a) { return room.amenities.indexOf(a) !== -1; });
         var missing = prefs.amenities.filter(function (a) { return room.amenities.indexOf(a) === -1; });
-        var amenityPts = prefs.amenities.length ? Math.round(40 * matched.length / prefs.amenities.length) : 40;
-        var typePts = (prefs.type === 'Any' || room.type === prefs.type) ? 20 : 0;
-        return { room: room, total: budgetPts + amenityPts + typePts, budgetPts: budgetPts, amenityPts: amenityPts, typePts: typePts, matched: matched, missing: missing };
+        var amenityPts = prefs.amenities.length ? Math.round(30 * matched.length / prefs.amenities.length) : 30;
+        var typePts = (prefs.type === 'Any' || room.type === prefs.type) ? 15 : 0;
+        var floorPts = (prefs.floor === 'Any' || room.floor === prefs.floor) ? 15 : 0;
+        return { room: room, total: budgetPts + amenityPts + typePts + floorPts, budgetPts: budgetPts, amenityPts: amenityPts, typePts: typePts, floorPts: floorPts, matched: matched, missing: missing };
+      }
+
+      // plain-language label for a score
+      // Great fit needs 85 or more AND no gaps (nothing missing, the right room type, the right floor).
+      function gapCount(s) { return s.missing.length + (s.typePts === 0 ? 1 : 0) + (s.floorPts === 0 ? 1 : 0); }
+      function fitLabel(s) { return (s.total >= 85 && gapCount(s) === 0) ? 'Great fit' : s.total >= 65 ? 'Good fit' : s.total >= 45 ? 'Okay fit' : 'Weak fit'; }
+
+      // one sentence on why a room scored the way it did
+      var current = null;
+      function why(s) {
+        var p = current, good = [], gaps = [];
+        good.push(s.room.price <= p.budget * 0.9 ? 'comfortably within your budget' : 'within your budget but close to your limit');
+        if (p.amenities.length) { if (s.missing.length) gaps.push('missing ' + s.missing.join(', ')); else good.push('has every amenity you need'); }
+        if (p.type !== 'Any') { if (s.room.type === p.type) good.push('is a ' + p.type + ' room'); else gaps.push('is a ' + s.room.type + ' room, not ' + p.type); }
+        if (p.floor !== 'Any') { if (s.room.floor === p.floor) good.push('is on Floor ' + p.floor); else gaps.push('is on Floor ' + s.room.floor + ', not Floor ' + p.floor); }
+        return 'Why: ' + good.join(', ') + '.' + (gaps.length ? ' Gaps: ' + gaps.join(', ') + '.' : '');
       }
 
       function rank(prefs) {
@@ -243,6 +274,8 @@
         b.addEventListener('click', function () { HB.openRequest(room, user); });
         return b;
       }
+
+      var cmp = HBCompare.mount({ rooms: ROOMS, user: user, hasActive: hasActive });
 
       // ---- saving rooms (Home reads this list) ----
       function savedIds() { var r = read(K.saved).value; return Array.isArray(r) ? r.map(function (x) { return x.id; }) : []; }
@@ -269,7 +302,7 @@
 
       // ---- rendering ----
       function breakdown(s, cls) {
-        return el('p', cls, 'Budget ' + s.budgetPts + '/40, amenities ' + s.amenityPts + '/40, room type ' + s.typePts + '/20');
+        return el('p', cls, 'Budget ' + s.budgetPts + '/40, amenities ' + s.amenityPts + '/30, room type ' + s.typePts + '/15, floor ' + s.floorPts + '/15');
       }
       function facts(r) { return 'Floor ' + r.floor + ', ' + r.type + ' room, ' + peso(r.price) + ' per month'; }
 
@@ -279,7 +312,7 @@
         card.appendChild(el('p', 'font-display text-base font-semibold text-white/85', 'Best match'));
         card.appendChild(el('p', 'mt-2 font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl', s.room.name));
         var line = el('p', 'mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1');
-        line.appendChild(el('span', 'font-display text-2xl font-bold', s.total + '% fit'));
+        line.appendChild(el('span', 'font-display text-2xl font-bold', fitLabel(s) + ' (' + s.total + '%)'));
         line.appendChild(el('span', 'text-base text-white/85', facts(s.room)));
         card.appendChild(line);
         var chips = el('ul', 'mt-4 flex flex-wrap gap-2');
@@ -288,12 +321,13 @@
           chips.appendChild(el('li', 'rounded-lg border px-2.5 py-1 text-sm ' + (on ? 'border-lime bg-lime text-ink font-semibold' : 'border-white/40 text-white'), a));
         });
         card.appendChild(chips);
-        if (s.missing.length) card.appendChild(el('p', 'mt-3 text-sm text-white/85', 'Missing: ' + s.missing.join(', ')));
+        card.appendChild(el('p', 'mt-3 text-sm text-white/85', why(s)));
         card.appendChild(breakdown(s, 'mt-3 text-sm text-white/85'));
         var actions = el('div', 'mt-5 flex flex-wrap gap-2');
         if (!hasActive) actions.appendChild(requestButton(s.room, 'btn-lime'));
         actions.appendChild(saveButton(s.room, 'btn-outline focus-visible:ring-lime focus-visible:ring-offset-forest'));
         card.appendChild(actions);
+        card.appendChild(cmp.checkbox(s.room, { dark: true, cls: 'mt-2' }));
         box.appendChild(card);
       }
 
@@ -304,11 +338,12 @@
           var left = el('div', 'min-w-0');
           var head = el('p', 'flex flex-wrap items-baseline gap-x-3');
           head.appendChild(el('span', 'font-display text-lg font-semibold tracking-tight', (i + 2) + '. ' + s.room.name));
-          head.appendChild(el('span', 'font-semibold text-forest', s.total + '% fit'));
+          head.appendChild(el('span', 'font-semibold text-forest', fitLabel(s) + ' (' + s.total + '%)'));
           left.appendChild(head);
           left.appendChild(el('p', 'mt-1 text-base text-muted', facts(s.room)));
-          if (s.missing.length) left.appendChild(el('p', 'mt-1 text-sm text-muted', 'Missing: ' + s.missing.join(', ')));
+          left.appendChild(el('p', 'mt-1 text-sm text-muted', why(s)));
           left.appendChild(breakdown(s, 'mt-1 text-sm text-muted'));
+          left.appendChild(cmp.checkbox(s.room, { cls: 'mt-1' }));
           li.appendChild(left);
           var btns = el('div', 'flex flex-wrap gap-2');
           if (!hasActive) btns.appendChild(requestButton(s.room, ''));
@@ -319,6 +354,7 @@
       }
 
       function run(prefs) {
+        current = prefs;
         var res = rank(prefs);
         if (!res.list.length) {
           drop(K.top);
@@ -328,7 +364,7 @@
         var best = res.list[0];
         $('summary').textContent = res.list.length + ' available room' + (res.list.length === 1 ? ' fits' : 's fit') + ' your budget. ' + res.over + ' available over budget, ' + res.taken + ' taken or on hold.';
         renderTop(best); renderRest(res.list.slice(1));
-        if (!write(K.top, { name: best.room.name, score: best.total, price: best.room.price })) {
+        if (!write(K.top, { name: best.room.name, score: best.total, label: fitLabel(best), price: best.room.price })) {
           var err = $('page-error'); err.textContent = 'Your matches are shown, but your browser blocked saving them, so Home will not show your best match.'; err.classList.remove('hidden');
         }
         setState('list');
@@ -338,7 +374,8 @@
       var form = $('form');
       function readForm() {
         var checked = []; form.querySelectorAll('input[name=amenity]:checked').forEach(function (c) { checked.push(c.value); });
-        return { budget: Number($('budget').value), type: form.elements.type.value, amenities: checked };
+        var fl = form.elements.floor.value;
+        return { budget: Number($('budget').value), type: form.elements.type.value, floor: fl === 'Any' ? 'Any' : Number(fl), amenities: checked };
       }
       form.addEventListener('submit', function (e) {
         e.preventDefault();
@@ -359,8 +396,10 @@
       if (p && typeof p.budget === 'number' && p.budget > 0 && Array.isArray(p.amenities)) {
         $('budget').value = p.budget;
         var radio = form.querySelector('input[name=type][value="' + p.type + '"]'); if (radio) radio.checked = true;
+        var floorVal = typeof p.floor === 'number' ? p.floor : 'Any';
+        var fr = form.querySelector('input[name=floor][value="' + floorVal + '"]'); if (fr) fr.checked = true; else floorVal = 'Any';
         form.querySelectorAll('input[name=amenity]').forEach(function (c) { c.checked = p.amenities.indexOf(c.value) !== -1; });
-        run({ budget: p.budget, type: radio ? p.type : 'Any', amenities: p.amenities });
+        run({ budget: p.budget, type: radio ? p.type : 'Any', floor: floorVal, amenities: p.amenities });
       } else {
         setState('empty');
       }
