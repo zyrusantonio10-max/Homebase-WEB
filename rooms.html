@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -14,11 +14,11 @@
     with availability stated in words, and a filter row on top.
     Reasons (R-31):
     - Cards in a grid: this is a catalog of same-kind things, so equal cards are the content, not a template.
-    - Pictures: generated ILLUSTRATIONS in assets/rooms/, labeled as such on the page (R-22, R-38). They show the real bed count,
+    - Pictures: generated ILLUSTRATIONS in assets/images/, labeled as such on the page (R-22, R-38). They show the real bed count,
       and whether the room has a desk, AC and private bathroom. The window has one lit pane when the room is available
       (same lit-window motif as the landing page) and is dark when it is taken.
     - Lime: not used on this page except inside the illustrations. Buttons stay forest.
-    - Numbers all come from assets/rooms.js (SAMPLE data, labeled on the page).
+    - Numbers all come from assets/js/rooms.js (SAMPLE data, labeled on the page).
     - Radius: pill for buttons, 20px cards, 12px chips and fields. No shadows, no glow. No motion beyond hover colors.
   -->
 
@@ -89,9 +89,9 @@
     </div>
   </header>
 
-  <main class="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
+  <main class="mx-auto max-w-6xl px-4 pb-28 pt-6 sm:px-6 sm:pt-8">
     <h1 class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">Explore Rooms</h1>
-    <p class="mt-2 max-w-xl text-base text-muted">Every room at Ariate Dormitory, available or taken.</p>
+    <p class="mt-2 max-w-xl text-base text-muted">Every room at Ariate Dormitory, available or taken. Tick Compare on two or three rooms to see them side by side.</p>
 
     <!-- FILTERS: apply as soon as you change them -->
     <form id="filters" class="mt-6 grid gap-4 rounded-[20px] border border-line bg-tint p-5 md:grid-cols-[auto_auto_220px] md:items-end md:gap-6" onsubmit="return false">
@@ -131,7 +131,7 @@
 
       <div data-state="error" hidden role="alert" class="rounded-[20px] border border-line p-6">
         <p class="font-display text-xl font-bold tracking-tight">We could not load the rooms</p>
-        <p class="mt-2 text-base text-muted">The room list did not load. Check that <code>assets/rooms.js</code> sits next to this page, then reload.</p>
+        <p class="mt-2 text-base text-muted">A page file did not load. Check that <code>assets/js/rooms.js</code> and <code>assets/js/reservation.js</code> are where this page expects them, then reload.</p>
         <button type="button" data-reload class="btn btn-outline mt-4">Reload this page</button>
       </div>
 
@@ -150,11 +150,39 @@
     </section>
   </main>
 
+  <!-- COMPARE: bar appears when at least one room is ticked -->
+  <div id="cmp-bar" hidden class="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white px-4 py-3 sm:px-6">
+    <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
+      <p id="cmp-count" class="text-base font-medium" aria-live="polite"></p>
+      <div class="flex gap-2">
+        <button type="button" id="cmp-clear" class="btn btn-outline">Clear</button>
+        <button type="button" id="cmp-open" class="btn">Compare rooms</button>
+      </div>
+    </div>
+  </div>
+
+  <dialog id="cmp-dialog" aria-labelledby="cmp-title" class="max-h-[90vh] w-[calc(100vw-2rem)] max-w-4xl overflow-y-auto rounded-2xl border border-line bg-white p-0 text-ink shadow-xl backdrop:bg-ink/50">
+    <div class="p-6">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h2 id="cmp-title" class="font-display text-xl font-bold tracking-tight">Compare rooms</h2>
+          <p class="mt-1 text-base text-muted">Side by side, so the differences are easy to see.</p>
+        </div>
+        <button type="button" id="cmp-x" aria-label="Close" class="-mr-2 -mt-2 grid h-11 w-11 shrink-0 place-items-center rounded-lg text-muted outline-none hover:bg-track focus-visible:ring-2 focus-visible:ring-forest">
+          <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div class="mt-5 overflow-x-auto"><table id="cmp-table" class="w-full min-w-[560px] border-collapse text-left text-base"></table></div>
+      <p class="mt-4 text-sm text-muted">Sample rooms. Prices and availability are placeholders. Pictures are illustrations, not photos.</p>
+      <button type="button" id="cmp-close" class="btn mt-5">Close</button>
+    </div>
+  </dialog>
+
   <script src="assets/js/rooms.js"></script>
   <script src="assets/js/reservation.js"></script>
   <script>
     (function () {
-      var K = { user: 'homebase_currentUser', saved: 'homebase_savedRooms' };
+      var K = { user: 'homebase_currentUser', saved: 'homebase_savedRooms', cmp: 'homebase_comparisons' };
       var $ = function (id) { return document.getElementById(id); };
 
       function read(key) { try { var r = localStorage.getItem(key); return { ok: true, value: r ? JSON.parse(r) : null }; } catch (e) { return { ok: false, value: null }; } }
@@ -166,6 +194,9 @@
 
       // ---- navbar ----
       var user = (read(K.user).value) || {};
+      var uid = user.id ? ('_' + user.id) : '';
+      K.saved = 'homebase_savedRooms' + uid;
+      K.cmp = 'homebase_comparisons' + uid;
       var fullName = String(user.name || user.email || '');
       $('nav-initial').textContent = fullName.charAt(0).toUpperCase();
       $('nav-name').textContent = fullName.split(/\s+/)[0];
@@ -178,7 +209,7 @@
 
       // ---- data ----
       var ROOMS = window.HOMEBASE_ROOMS;
-      if (!Array.isArray(ROOMS)) { setState('error'); return; }
+      if (!Array.isArray(ROOMS) || !window.HB) { setState('error'); return; }
 
       // ---- saved rooms (same list Home and My Matches use) ----
       function savedIds() { var r = read(K.saved).value; return Array.isArray(r) ? r.map(function (x) { return x.id; }) : []; }
@@ -200,6 +231,89 @@
       var hasActive = !!HB.activeFor(user.id);
       $('active-note').hidden = !hasActive;
 
+      // ---- comparing rooms (pick 2 or 3, shown side by side, remembered on Home) ----
+      var picked = [], MAX_PICK = 3;
+      function roomById(id) { return ROOMS.filter(function (r) { return r.id === id; })[0]; }
+
+      function updateBar() {
+        $('cmp-bar').hidden = picked.length === 0;
+        $('cmp-count').textContent = picked.length < 2
+          ? picked.length + ' room ticked. Pick at least one more to compare.'
+          : picked.length + ' rooms ticked' + (picked.length === MAX_PICK ? ' (the most you can compare).' : '. You can add one more.');
+        $('cmp-open').disabled = picked.length < 2;
+      }
+      function togglePick(id, on) {
+        picked = picked.filter(function (x) { return x !== id; });
+        if (on) picked.push(id);
+        document.querySelectorAll('input[data-cmp]').forEach(function (c) {
+          c.disabled = !c.checked && picked.length >= MAX_PICK;
+        });
+        updateBar();
+      }
+
+      function saveComparison(rooms) {
+        var cur = read(K.cmp).value; cur = Array.isArray(cur) ? cur : [];
+        var ids = rooms.map(function (r) { return r.id; }), key = ids.slice().sort().join(',');
+        cur = cur.filter(function (x) { return !(Array.isArray(x.ids) && x.ids.slice().sort().join(',') === key); });
+        cur.unshift({ rooms: rooms.map(function (r) { return r.name; }), ids: ids, date: new Date().toISOString() });
+        if (!write(K.cmp, cur.slice(0, 10))) {
+          var err = $('page-error'); err.textContent = 'The comparison is shown, but your browser blocked saving it, so Home will not list it.'; err.classList.remove('hidden');
+        }
+      }
+
+      var STATUS = { available: 'Available', held: 'Held (request pending)', reserved: 'Reserved', occupied: 'Occupied', taken: 'Taken', yours: 'Your request' };
+
+      function buildTable(rooms) {
+        var t = $('cmp-table'); t.textContent = '';
+        var head = el('thead'), hr = el('tr');
+        var corner = el('th', 'w-32 p-3'); corner.appendChild(el('span', 'sr-only', 'Feature')); hr.appendChild(corner);
+        rooms.forEach(function (r) {
+          var th = el('th', 'min-w-[150px] p-3 align-top'); th.scope = 'col';
+          var img = el('img', 'aspect-[8/5] w-full rounded-lg bg-track object-cover');
+          img.src = r.image || ((window.HOMEBASE_IMAGE_DIR || 'assets/images/') + 'room-' + r.id + '.svg'); img.alt = r.name + ' (illustration)'; img.width = 640; img.height = 400; img.decoding = 'async';
+          th.appendChild(img); th.appendChild(el('span', 'mt-2 block font-display text-lg font-semibold tracking-tight', r.name));
+          hr.appendChild(th);
+        });
+        head.appendChild(hr); t.appendChild(head);
+
+        var body = el('tbody');
+        function addRow(label, fn) {
+          var tr = el('tr'); var th = el('th', 'border-t border-line p-3 align-top text-sm font-medium text-muted', label); th.scope = 'row'; tr.appendChild(th);
+          rooms.forEach(function (r) { var v = fn(r); tr.appendChild(el('td', 'border-t border-line p-3 align-top ' + (v.strong ? 'font-semibold text-forest' : ''), v.text)); });
+          body.appendChild(tr);
+        }
+        var low = Math.min.apply(null, rooms.map(function (r) { return r.price; }));
+        addRow('Status', function (r) { return { text: STATUS[HB.roomState(r, user.id)] }; });
+        addRow('Floor', function (r) { return { text: 'Floor ' + r.floor }; });
+        addRow('Room type', function (r) { return { text: r.type }; });
+        addRow('Price per month', function (r) { var lowest = r.price === low && rooms.some(function (o) { return o.price !== low; }); return { text: peso(r.price) + (lowest ? ' (lowest)' : ''), strong: lowest }; });
+        (window.HOMEBASE_AMENITIES || []).forEach(function (a) {
+          addRow(a, function (r) { var has = r.amenities.indexOf(a) !== -1; return { text: has ? 'Yes' : 'No', strong: false }; });
+        });
+        var tr = el('tr'); tr.appendChild(el('th', 'border-t border-line p-3')); tr.firstChild.appendChild(el('span', 'sr-only', 'Action'));
+        rooms.forEach(function (r) {
+          var td = el('td', 'border-t border-line p-3 align-top');
+          if (HB.roomState(r, user.id) === 'available' && !hasActive) {
+            var b = el('button', 'btn', 'Request'); b.type = 'button'; b.setAttribute('aria-label', 'Request ' + r.name);
+            b.addEventListener('click', function () { HB.openRequest(r, user); });
+            td.appendChild(b);
+          }
+          tr.appendChild(td);
+        });
+        body.appendChild(tr); t.appendChild(body);
+      }
+
+      function openCompare(ids) {
+        var rooms = ids.map(roomById).filter(Boolean).slice(0, MAX_PICK);
+        if (rooms.length < 2) return;
+        buildTable(rooms); saveComparison(rooms);
+        var d = $('cmp-dialog'); if (d.showModal) d.showModal(); else d.setAttribute('open', '');
+      }
+      $('cmp-open').addEventListener('click', function () { openCompare(picked); });
+      $('cmp-clear').addEventListener('click', function () { picked = []; render(); updateBar(); });
+      ['cmp-close', 'cmp-x'].forEach(function (id) { $(id).addEventListener('click', function () { $('cmp-dialog').close(); }); });
+      $('cmp-dialog').addEventListener('click', function (e) { if (e.target === $('cmp-dialog')) $('cmp-dialog').close(); });
+
       // ---- one room card ----
       function card(r, saved) {
         var li = el('li', 'flex flex-col overflow-hidden rounded-[20px] border border-line bg-white');
@@ -207,7 +321,7 @@
 
         var frame = el('div', 'aspect-[8/5] bg-track');
         var img = el('img', 'h-full w-full object-cover');
-        img.src = r.image || ('assets/rooms/room-' + r.id + '.svg');
+        img.src = r.image || ((window.HOMEBASE_IMAGE_DIR || 'assets/images/') + 'room-' + r.id + '.svg');
         img.alt = r.name + ', ' + r.type.toLowerCase() + ' room on floor ' + r.floor + ' (illustration)';
         img.width = 640; img.height = 400; img.loading = 'lazy'; img.decoding = 'async';
         img.addEventListener('error', function () {
@@ -228,6 +342,14 @@
         var chips = el('ul', 'mt-3 flex flex-wrap gap-1.5');
         r.amenities.forEach(function (a) { chips.appendChild(el('li', 'rounded-lg border border-line bg-tint px-2.5 py-1 text-sm', a)); });
         body.appendChild(chips);
+
+        var cmp = el('label', 'mt-3 flex min-h-[44px] cursor-pointer items-center gap-3 text-base font-medium');
+        var cb = el('input', 'h-5 w-5 shrink-0 cursor-pointer accent-forest outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2');
+        cb.type = 'checkbox'; cb.setAttribute('data-cmp', r.id); cb.setAttribute('aria-label', 'Compare ' + r.name);
+        cb.checked = picked.indexOf(r.id) !== -1; cb.disabled = !cb.checked && picked.length >= MAX_PICK;
+        cb.addEventListener('change', function () { togglePick(r.id, cb.checked); });
+        cmp.appendChild(cb); cmp.appendChild(el('span', null, 'Compare'));
+        body.appendChild(cmp);
 
         var foot = el('div', 'mt-auto pt-4');
         if (st === 'available') {
@@ -282,7 +404,12 @@
         form.elements.avail.value = 'all'; form.elements.type.value = 'Any'; $('sort').value = 'number'; render();
       });
       render();
+      updateBar();
+
+      // opened from a link on Home: rooms.html?compare=204,301
+      var fromUrl = (new URLSearchParams(window.location.search).get('compare') || '').split(',').filter(function (id) { return roomById(id); }).slice(0, MAX_PICK);
+      if (fromUrl.length > 1) { picked = fromUrl; render(); updateBar(); openCompare(fromUrl); }
     })();
   </script>
 </body>
-</html>
+</html>   

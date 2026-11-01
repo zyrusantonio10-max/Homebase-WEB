@@ -12,7 +12,7 @@
     - One list, filtered by status. Pending is the default because that is the job. Rows, not cards in a grid, because each request
       is read top to bottom (who, which room, when, message) and answered with one of two buttons.
     - Approve is immediate. Decline asks first, because a student is waiting on it and it cannot be undone from this page.
-    - No invented requests: the list only holds what students really sent (assets/reservations.js).
+    - No invented requests: the list only holds what students really sent (assets/js/reservation.js).
     - Lime is not used here. Radius: pill buttons, 20px rows, 12px filter chips. No shadows, no motion.
     - Not built on purpose: reversing an approval or editing a request. Payment is handled by the dormitory office.
   -->
@@ -73,7 +73,7 @@
 
     <div id="error" hidden role="alert" class="mt-8 rounded-[20px] border border-line p-6">
       <p class="font-display text-xl font-bold tracking-tight">We could not read the requests</p>
-      <p class="mt-2 text-base text-muted">Your browser may be blocking site data. Allow site data for this page, then reload.</p>
+      <p class="mt-2 text-base text-muted">Either your browser is blocking site data, or <code>assets/js/reservation.js</code> did not load. Check that the file is where this page expects it, then reload.</p>
       <button type="button" id="reload" class="btn btn-outline mt-4">Reload this page</button>
     </div>
 
@@ -225,4 +225,4 @@
     })();
   </script>
 </body>
-</html> 
+</html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -16,7 +16,7 @@
     Reasons (R-31):
     - Layout: pill navbar on top, no sidebar (your decision). Row 1 = best match (wide, dark green, the focal point) + profile.
       Row 2 = saved rooms (wide) + recent comparisons (narrow). The widths change on purpose so the rows do not repeat.
-    - Palette: only the colors in assets/tw-config.js. Forest for the focal card and primary actions, tint for the quiet profile card,
+    - Palette: only the colors in assets/js/tw-config.js. Forest for the focal card and primary actions, tint for the quiet profile card,
       white for lists. Lime is used ONLY on the lit window and the button inside the match card (one accent, one card).
     - Identity motif: the dorm with one lit window from the landing page. Empty state = all windows dark ("waiting for a match").
       When a match exists, one window lights up. Same idea as the landing page, so the two pages belong together.
@@ -233,7 +233,7 @@
 
         <div data-state="error" hidden class="mt-4" role="alert">
           <p class="text-base font-semibold text-danger">We could not read your request.</p>
-          <p class="note mt-1">Allow site data for this page in your browser, then reload.</p>
+          <p id="res-error-text" class="note mt-1">Allow site data for this page in your browser, then reload.</p>
         </div>
 
         <div data-state="empty" hidden class="mt-4">
@@ -276,7 +276,7 @@
           </div>
 
           <div data-state="empty" hidden class="mt-4">
-            <p class="note">You have not compared rooms yet. Rooms you compare show up here.</p>
+            <p class="note">You have not compared rooms yet. Tick Compare on two or three rooms in Explore Rooms and they show up here.</p>
           </div>
 
           <ul data-state="list" hidden id="cmp-list" class="mt-4 space-y-2"></ul>
@@ -293,8 +293,8 @@
           homebase_currentUser   { id, name, email, role }                   written by index.html at login
           homebase_topMatch      { name: "Room 204", score: 0-100, price: 4500 }   written by My Matches
           homebase_savedRooms    [ { id: "204", name: "Room 204", price: 4500 } ]  written by Explore Rooms
-          homebase_reservations  see assets/reservations.js (requests; Home shows the student's latest one)
-          homebase_comparisons   [ { rooms: ["Room 204", "Room 310"], date: "2026-10-25T08:00:00Z" } ]
+          homebase_reservations  see assets/js/reservation.js (requests; Home shows the student's latest one)
+          homebase_comparisons   [ { rooms: ["Room 204", "Room 301"], ids: ["204", "301"], date: "2026-10-25T08:00:00Z" } ]  written by Explore Rooms
         price and date are optional. If a key is missing, the card shows its empty state.
       */
       var KEYS = {
@@ -336,6 +336,12 @@
       var u = read(KEYS.user);
       var user = u.ok ? u.value : null;
       if (!user || !user.email) { window.location.replace('index.html'); return; }
+
+      // Scope user-specific storage keys so accounts on the same browser keep separate data
+      var uid = user.id ? ('_' + user.id) : '';
+      KEYS.top = 'homebase_topMatch' + uid;
+      KEYS.saved = 'homebase_savedRooms' + uid;
+      KEYS.cmp = 'homebase_comparisons' + uid;
 
       var fullName = String(user.name || user.email);
       var firstName = fullName.split(/\s+/)[0];
@@ -449,8 +455,16 @@
         items.slice(0, 5).forEach(function (c) {
           var li = document.createElement('li');
           li.className = 'rounded-xl border border-line px-4 py-2';
-          var title = document.createElement('p');
-          title.className = 'font-semibold';
+          var title;
+          if (Array.isArray(c.ids) && c.ids.length > 1) {
+            title = document.createElement('a');
+            title.href = 'rooms.html?compare=' + encodeURIComponent(c.ids.join(','));
+            title.className = 'inline-flex min-h-[44px] items-center rounded font-semibold text-forest underline underline-offset-4 outline-none hover:text-forest-deep focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2';
+            title.setAttribute('aria-label', 'Compare ' + c.rooms.join(' and ') + ' again');
+          } else {
+            title = document.createElement('p');
+            title.className = 'font-semibold';
+          }
           title.textContent = c.rooms.join(' vs ');
           li.appendChild(title);
           var d = c.date ? new Date(c.date) : null;
@@ -484,7 +498,14 @@
         return li;
       }
       function renderReservation() {
-        if (!window.HB || !HB.load().ok) { setState('reservation', 'error'); return; }
+        if (!window.HB) {
+          $('res-error-text').textContent = 'A page file did not load: assets/js/reservation.js. Check that it is where this page expects it, then reload.';
+          setState('reservation', 'error'); return;
+        }
+        if (!HB.load().ok) {
+          $('res-error-text').textContent = 'Allow site data for this page in your browser, then reload.';
+          setState('reservation', 'error'); return;
+        }
         var mine = HB.forUser(user.id);
         if (!mine.length) { setState('reservation', 'empty'); return; }
         var r = mine[0];
@@ -566,4 +587,4 @@
     })();
   </script>
 </body>
-</html>
+</html>           

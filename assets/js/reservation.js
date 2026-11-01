@@ -142,7 +142,9 @@
 
       document.getElementById('hb-req-title').textContent = 'Request ' + room.name;
       document.getElementById('hb-req-sub').textContent = 'Floor ' + room.floor + ', ' + room.type + ' room, \u20B1' + room.price.toLocaleString('en-PH') + ' per month';
-      date.min = today; date.value = ''; date.removeAttribute('aria-invalid');
+      var lim = new Date(d.getTime() + 365 * 86400000);
+      var maxDay = lim.getFullYear() + '-' + pad(lim.getMonth() + 1) + '-' + pad(lim.getDate());
+      date.min = today; date.max = maxDay; date.value = ''; date.removeAttribute('aria-invalid');
       dateErr.classList.add('hidden'); formErr.classList.add('hidden');
       document.getElementById('hb-req-msg').value = '';
 
@@ -150,9 +152,9 @@
       form.onsubmit = function (e) {
         e.preventDefault();
         dateErr.classList.add('hidden'); formErr.classList.add('hidden'); date.removeAttribute('aria-invalid');
-        if (!date.value || date.value < today) {
+        if (!date.value || date.value < today || date.value > maxDay) {
           date.setAttribute('aria-invalid', 'true');
-          dateErr.textContent = !date.value ? 'Choose your move-in date.' : 'Choose today or a later date.';
+          dateErr.textContent = !date.value ? 'Choose your move-in date.' : (date.value < today ? 'Choose today or a later date.' : 'Choose a date within the next year.');
           dateErr.classList.remove('hidden'); date.focus(); return;
         }
         var res = HB.create(user, room, date.value, document.getElementById('hb-req-msg').value);

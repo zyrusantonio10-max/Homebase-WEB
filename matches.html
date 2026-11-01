@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -16,7 +16,7 @@
       because rank 1 matters more than rank 7 and should not look identical.
     - Lime: only on the button inside the #1 card and the lit window, same rule as home.html.
     - Score is explained on the page (details box), not hidden. Rules are in the script, search "SCORING".
-    - Numbers all come from assets/rooms.js, which is SAMPLE data and is labeled as such on the page (R-38).
+    - Numbers all come from assets/js/rooms.js, which is SAMPLE data and is labeled as such on the page (R-38).
     - Commute and safety are not criteria (your decision).
     - No motion except hover transitions (MOTION 1).
 
@@ -147,7 +147,7 @@
 
         <div data-state="error" hidden role="alert" class="rounded-[20px] border border-line p-6">
           <p class="font-display text-xl font-bold tracking-tight">We could not load the rooms</p>
-          <p class="mt-2 text-base text-muted">The room list did not load. Check that <code>assets/rooms.js</code> sits next to this page, then reload.</p>
+          <p class="mt-2 text-base text-muted">A page file did not load. Check that <code>assets/js/rooms.js</code> and <code>assets/js/reservation.js</code> are where this page expects them, then reload.</p>
           <button type="button" data-reload class="btn btn-outline mt-4">Reload this page</button>
         </div>
 
@@ -190,6 +190,10 @@
 
       // ---- navbar ----
       var user = (read(K.user).value) || {};
+      var uid = user.id ? ('_' + user.id) : '';
+      K.prefs = 'homebase_preferences' + uid;
+      K.top = 'homebase_topMatch' + uid;
+      K.saved = 'homebase_savedRooms' + uid;
       var fullName = String(user.name || user.email || '');
       $('nav-initial').textContent = fullName.charAt(0).toUpperCase();
       $('nav-name').textContent = fullName.split(/\s+/)[0];
@@ -204,7 +208,7 @@
 
       // ---- data ----
       var ROOMS = window.HOMEBASE_ROOMS, AMENITIES = window.HOMEBASE_AMENITIES;
-      if (!Array.isArray(ROOMS) || !Array.isArray(AMENITIES)) { setState('error'); return; }
+      if (!Array.isArray(ROOMS) || !Array.isArray(AMENITIES) || !window.HB) { setState('error'); return; }
 
       AMENITIES.forEach(function (a, i) {
         var label = el('label', 'relative block cursor-pointer');
