@@ -26,6 +26,7 @@
     - Motion: the lit window switches on once at load; disabled under prefers-reduced-motion.
     - Logo: text wordmark plus a placeholder mark built from the motif. Replace with the real logo when there is one (R-23).
     - After login: students go to home.html, landlords go to landlord.html.
+    - Register is for students only. There is one dormitory, so the landlord is one account made by the system (see OFFICE in the script).
     - Not built: "Forgot password?". There is no backend to send a reset yet, so a link would do nothing (R-26).
       Add it in the PHP + MySQL phase.
   -->
@@ -298,20 +299,6 @@
       <form id="form-register" novalidate class="mt-5 space-y-3">
         <div id="register-error" role="alert" class="err hidden !mt-0 rounded-xl border border-danger/30 bg-[#FEF3F2] px-3.5 py-3"></div>
 
-        <fieldset>
-          <legend class="label">I am a</legend>
-          <div class="grid grid-cols-2 gap-2">
-            <label class="relative block cursor-pointer">
-              <input class="peer sr-only" type="radio" name="role" value="student" checked>
-              <span class="flex min-h-[48px] items-center justify-center rounded-xl border border-line px-3 text-center text-base font-medium text-ink transition-colors hover:border-[#8FA397] peer-checked:border-forest peer-checked:bg-forest peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-forest peer-focus-visible:ring-offset-2">Student</span>
-            </label>
-            <label class="relative block cursor-pointer">
-              <input class="peer sr-only" type="radio" name="role" value="landlord">
-              <span class="flex min-h-[48px] items-center justify-center rounded-xl border border-line px-3 text-center text-base font-medium text-ink transition-colors hover:border-[#8FA397] peer-checked:border-forest peer-checked:bg-forest peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-forest peer-focus-visible:ring-offset-2">Landlord</span>
-            </label>
-          </div>
-        </fieldset>
-
         <div>
           <div class="relative">
             <input class="field peer" id="reg-name" name="name" type="text" autocomplete="name" placeholder=" " aria-describedby="reg-name-err" required>
@@ -356,10 +343,68 @@
     </div>
   </dialog>
 
-  <script src="assets/js/auth.js"></script>
   <script>
     (function () {
+      var USERS_KEY = 'homebase_users';
+      var CURRENT_KEY = 'homebase_currentUser';
+
       var $ = function (id) { return document.getElementById(id); };
+
+      // Where each role lands after logging in.
+      function homeFor(role) { return role === 'landlord' ? 'landlord.html' : 'home.html'; }
+
+      // ---- storage (guarded: private mode or blocked storage must not crash the page) ----
+      function read(key, fallback) {
+        try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+        catch (e) { return fallback; }
+      }
+      function write(key, value) {
+        try { localStorage.setItem(key, JSON.stringify(value)); return true; }
+        catch (e) { return false; }
+      }
+      function clear(key) { try { localStorage.removeItem(key); } catch (e) {} }
+
+      // The dormitory office (landlord) account. There is only one dormitory, so the landlord cannot register here:
+      // this one account is created by the system. Demo password: ariate-office-2026
+      // To change it, replace the hash below with sha256 of "homebase:" + your new password.
+      var OFFICE = {
+        id: 'demo-manager',
+        name: 'Ariate Dorm Manager',
+        email: 'manager@ariatedorm.com',
+        role: 'landlord',
+        password: 'sha256:6bf5236866a055acff4d82abcbe24eb25b5c899124843489658fc7dbc9ff235a'
+      };
+
+      // Seed the demo student if nothing is stored yet
+      if (!read(USERS_KEY, null)) {
+        write(USERS_KEY, [
+          {
+            id: 'demo-student',
+            name: 'Alex Santos',
+            email: 'alex@unc.edu.ph',
+            role: 'student',
+            password: 'sha256:2a6747e1b382015051cf9d7d23f72ed87ffa924d52b234b2b7e8e803c6f42188'
+          }
+        ]);
+      }
+
+      // Always keep the office account present and current, even in browsers that saved an older version of it
+      (function () {
+        var users = read(USERS_KEY, []);
+        var i = users.map(function (u) { return u.id; }).indexOf(OFFICE.id);
+        if (i === -1) users.push(OFFICE); else users[i] = OFFICE;
+        write(USERS_KEY, users);
+      })();
+
+      // Prototype only: hashing in the browser is not real security. Move this to the server in the PHP/MySQL phase.
+      function hashPassword(pw) {
+        if (window.crypto && crypto.subtle && window.TextEncoder) {
+          return crypto.subtle.digest('SHA-256', new TextEncoder().encode('homebase:' + pw)).then(function (buf) {
+            return 'sha256:' + Array.prototype.map.call(new Uint8Array(buf), function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+          });
+        }
+        return Promise.resolve('plain:' + pw);
+      }
 
       // ---- dialogs ----
       var regDialog = $('register-dialog');
@@ -415,7 +460,7 @@
 
       // ---- session view ----
       function renderSession() {
-        var user = HB_AUTH.getUser();
+        var user = read(CURRENT_KEY, null);
         var signedIn = !!(user && user.email);
         $('auth-view').hidden = signedIn;
         $('session-view').hidden = !signedIn;
@@ -426,7 +471,7 @@
           $('session-text').textContent = isLandlord
             ? 'Review the room requests students sent to Ariate Dormitory and approve or decline each one.'
             : 'Explore Ariate Dormitory rooms, set your budget and needs, and see how well each room fits you.';
-          $('session-link').setAttribute('href', HB_AUTH.homeFor(user.role));
+          $('session-link').setAttribute('href', homeFor(user.role));
           $('session-link-text').textContent = isLandlord ? 'Go to Reservation Requests' : 'Go to Student Dashboard';
         }
         return signedIn;
@@ -458,20 +503,22 @@
 
         var btn = $('login-submit');
         setBusy(btn, true, 'Log in', 'Logging in...');
-        HB_AUTH.login(email, pw).then(function (res) {
-          if (!res.ok) {
-            setFormError('login-error', res.error);
+        hashPassword(pw).then(function (hash) {
+          var users = read(USERS_KEY, []);
+          var match = users.filter(function (u) { return u.email === email && u.password === hash; })[0];
+          if (!match) {
+            setFormError('login-error', 'That email and password do not match. Check both and try again, or create an account.');
             $('login-password').focus();
+            return;
+          }
+          if (!write(CURRENT_KEY, { id: match.id, name: match.name, email: match.email, role: match.role })) {
+            setFormError('login-error', 'Your browser is blocking local storage, so we cannot keep you logged in. Allow site data and try again.');
             return;
           }
           $('form-login').reset();
           renderSession();
-          window.location.href = HB_AUTH.homeFor(res.user.role);
-        }).catch(function () {
-          setFormError('login-error', 'An error occurred logging in. Please try again.');
-        }).then(function () {
-          setBusy(btn, false, 'Log in', 'Logging in...');
-        });
+          window.location.href = homeFor(match.role);
+        }).then(function () { setBusy(btn, false, 'Log in', 'Logging in...'); });
       });
 
       // ---- register ----
@@ -482,7 +529,7 @@
         var name = $('reg-name').value.trim();
         var email = $('reg-email').value.trim().toLowerCase();
         var pw = $('reg-password').value;
-        var role = form.elements.role.value === 'landlord' ? 'landlord' : 'student';
+        var role = 'student'; // only students register; the landlord (office) account is created by the system
 
         setFieldError('reg-name', !name ? 'Enter your full name.' : '');
         setFieldError('reg-email', !email ? 'Enter your email.' : (!EMAIL_RE.test(email) ? 'That email does not look right.' : ''));
@@ -492,29 +539,29 @@
 
         var btn = $('register-submit');
         setBusy(btn, true, 'Create my account', 'Creating account...');
-        HB_AUTH.register(name, email, pw, role).then(function (res) {
-          if (!res.ok) {
-            if (res.field === 'email') {
-              setFieldError('reg-email', res.error);
-              $('reg-email').focus();
-            } else {
-              setFormError('register-error', res.error);
-            }
+        hashPassword(pw).then(function (hash) {
+          var users = read(USERS_KEY, []);
+          if (users.some(function (u) { return u.email === email; })) {
+            setFieldError('reg-email', 'An account with this email already exists. Close this window and log in instead.');
+            $('reg-email').focus();
             return;
           }
+          var user = { id: String(Date.now()), name: name, email: email, role: role, password: hash };
+          users.push(user);
+          if (!write(USERS_KEY, users)) {
+            setFormError('register-error', 'Your browser is blocking local storage, so we cannot save your account. Allow site data and try again.');
+            return;
+          }
+          write(CURRENT_KEY, { id: user.id, name: user.name, email: user.email, role: user.role });
           closeDialog(regDialog);
           renderSession();
-          window.location.href = HB_AUTH.homeFor(res.user.role);
-        }).catch(function () {
-          setFormError('register-error', 'An error occurred creating your account. Please try again.');
-        }).then(function () {
-          setBusy(btn, false, 'Create my account', 'Creating account...');
-        });
+          window.location.href = homeFor(user.role);
+        }).then(function () { setBusy(btn, false, 'Create my account', 'Creating account...'); });
       });
 
       // ---- logout ----
       $('logout').addEventListener('click', function () {
-        HB_AUTH.logout(false);
+        clear(CURRENT_KEY);
         renderSession();
         clearLoginErrors();
         $('login-email').focus();
