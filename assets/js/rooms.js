@@ -1,16 +1,15 @@
 /*
   SAMPLE DATA. These rooms, prices and availability are placeholders, not the real Ariate Dormitory list.
-  My Matches and Explore Rooms both read this one file, so edit it here and both pages update.
-  Later (PHP + MySQL phase): replace this file with a fetch() to your PHP page that returns the same shape.
+  Later (PHP + MySQL phase): the room list comes from the database instead, in the same shape as below.
 
   Each room: { id, name, floor, type: "Single" | "Double" | "Quad", price (per month, in pesos), amenities: [...], available: true | false }
 
-  Pictures: each room shows assets/images/room-<id>.svg, a generated ILLUSTRATION (not a photo).
-  To use a real photo, put it in assets/images/ and add  image: 'assets/images/room-101.jpg'  to that room. Explore Rooms uses it automatically.
-*/
-// Where the room pictures live. Change this one line if you move the images folder.
-window.HOMEBASE_IMAGE_DIR = 'assets/images/';
+  This file is only the STARTING list. When the landlord adds, edits or removes a room, the real list is kept in the browser
+  (see HB.getRooms in reservation.js) and this file is not used for rooms any more. It still holds the amenity choices below.
 
+  Pictures: every room is drawn automatically from its type and amenities (an illustration, not a photo).
+  To use a real photo instead, put it in assets/images/ and add  image: 'assets/images/room-101.jpg'  to that room.
+*/
 window.HOMEBASE_AMENITIES = ['Wi-Fi', 'Air conditioning', 'Study desk', 'Private bathroom', 'Laundry access', 'Kitchenette'];
 
 window.HOMEBASE_ROOMS = [

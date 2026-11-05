@@ -22,8 +22,16 @@
     - Radius: pill for buttons, 20px cards, 12px chips and fields. No shadows, no glow. No motion beyond hover colors.
   -->
 
-  <script src="assets/js/auth.js"></script>
-  <script>HB_AUTH.requireAuth('student');</script>
+  <script>
+    // Guard: must be logged in. Landlords go to landlord.html.
+    (function () {
+      try {
+        var u = JSON.parse(localStorage.getItem('homebase_currentUser') || 'null');
+        if (!u || !u.email) window.location.replace('index.html');
+        else if (u.role === 'landlord') window.location.replace('landlord.html');
+      } catch (e) { window.location.replace('index.html'); }
+    })();
+  </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -151,12 +159,7 @@
   <script src="assets/js/compare.js"></script>
   <script>
     (function () {
-      var user = HB_AUTH.getUser() || {};
-      var K = {
-        user: HB_AUTH.CURRENT_KEY,
-        saved: HB_AUTH.userKey('homebase_savedRooms'),
-        cmp: HB_AUTH.userKey('homebase_comparisons')
-      };
+      var K = { user: 'homebase_currentUser', saved: 'homebase_savedRooms', cmp: 'homebase_comparisons' };
       var $ = function (id) { return document.getElementById(id); };
 
       function read(key) { try { var r = localStorage.getItem(key); return { ok: true, value: r ? JSON.parse(r) : null }; } catch (e) { return { ok: false, value: null }; } }
@@ -167,10 +170,11 @@
       function setState(s) { document.querySelectorAll('#results [data-state]').forEach(function (n) { n.hidden = n.getAttribute('data-state') !== s; }); }
 
       // ---- navbar ----
+      var user = (read(K.user).value) || {};
       var fullName = String(user.name || user.email || '');
       $('nav-initial').textContent = fullName.charAt(0).toUpperCase();
       $('nav-name').textContent = fullName.split(/\s+/)[0];
-      HB_AUTH.bindLogout();
+      document.querySelectorAll('[data-logout]').forEach(function (b) { b.addEventListener('click', function () { drop(K.user); window.location.href = 'index.html'; }); });
       document.querySelectorAll('[data-reload]').forEach(function (b) { b.addEventListener('click', function () { window.location.reload(); }); });
       var menuBtn = $('menu-btn'), menu = $('menu');
       function setMenu(o) { menu.hidden = !o; menuBtn.setAttribute('aria-expanded', String(o)); $('menu-label').textContent = o ? 'Close' : 'Menu'; }
@@ -178,7 +182,7 @@
       document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !menu.hidden) { setMenu(false); menuBtn.focus(); } });
 
       // ---- data ----
-      var ROOMS = window.HOMEBASE_ROOMS;
+      var ROOMS = window.HB ? HB.getRooms() : null;
       if (!Array.isArray(ROOMS) || !window.HB) { setState('error'); return; }
 
       // ---- saved rooms (same list Home and My Matches use) ----
@@ -211,7 +215,7 @@
 
         var frame = el('div', 'aspect-[8/5] bg-track');
         var img = el('img', 'h-full w-full object-cover');
-        img.src = r.image || ((window.HOMEBASE_IMAGE_DIR || 'assets/images/') + 'room-' + r.id + '.svg');
+        img.src = HB.roomImage(r);
         img.alt = r.name + ', ' + r.type.toLowerCase() + ' room on floor ' + r.floor + ' (illustration)';
         img.width = 640; img.height = 400; img.loading = 'lazy'; img.decoding = 'async';
         img.addEventListener('error', function () {
@@ -305,4 +309,4 @@
     })();
   </script>
 </body>
-</html>
+</html> 

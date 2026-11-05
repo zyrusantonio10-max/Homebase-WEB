@@ -5,6 +5,9 @@
   Storage keys:
     homebase_users        List of registered user accounts: [{ id, name, email, role, password }]
     homebase_currentUser Currently active user session: { id, name, email, role }
+        landlord account: manager@ariatedorm.com 
+        password        : ariate-office-2026
+
 */
 (function (global) {
   'use strict';

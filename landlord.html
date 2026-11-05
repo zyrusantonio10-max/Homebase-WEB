@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Reservation requests | Homebase</title>
+  <title>Dashboard | Homebase</title>
   <meta name="description" content="Review and answer student room requests for Ariate Dormitory.">
 
   <!--
@@ -17,8 +17,16 @@
     - Not built on purpose: reversing an approval or editing a request. Payment is handled by the dormitory office.
   -->
 
-  <script src="assets/js/auth.js"></script>
-  <script>HB_AUTH.requireAuth('landlord');</script>
+  <script>
+    // Guard: landlords only. Students go to home.html.
+    (function () {
+      try {
+        var u = JSON.parse(localStorage.getItem('homebase_currentUser') || 'null');
+        if (!u || !u.email) window.location.replace('index.html');
+        else if (u.role !== 'landlord') window.location.replace('home.html');
+      } catch (e) { window.location.replace('index.html'); }
+    })();
+  </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,6 +40,7 @@
       .btn { @apply inline-flex min-h-[44px] items-center justify-center rounded-full border border-transparent bg-forest px-5 py-2.5 text-base font-semibold text-white no-underline transition-colors hover:bg-forest-deep outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2; }
       .btn-outline { @apply border-forest bg-white text-forest hover:bg-tint; }
       .btn-danger { @apply border-danger bg-white text-danger hover:bg-[#FEF3F2] focus-visible:ring-danger; }
+      .nav-link { @apply inline-flex min-h-[44px] items-center rounded-full px-4 text-base font-medium text-ink no-underline transition-colors outline-none hover:bg-track focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 aria-[current=page]:bg-forest aria-[current=page]:text-white; }
       .choice { @apply flex min-h-[44px] items-center justify-center rounded-xl border border-line bg-white px-4 text-center text-base font-medium text-ink transition-colors hover:border-[#8FA397] peer-checked:border-forest peer-checked:bg-forest peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-forest peer-focus-visible:ring-offset-2; }
     }
   </style>
@@ -42,22 +51,35 @@
 
   <header class="px-4 pb-2 pt-4 sm:px-6">
     <nav aria-label="Main" class="mx-auto flex max-w-6xl items-center justify-between gap-3 rounded-full border border-line bg-white py-2 pl-4 pr-2">
-      <span class="inline-flex min-h-[44px] items-center gap-2.5 font-display text-xl font-bold tracking-tight">
+      <a href="landlord.html" aria-label="Homebase dashboard" class="inline-flex min-h-[44px] items-center gap-2.5 rounded-full font-display text-xl font-bold tracking-tight text-ink no-underline outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">
         <svg viewBox="0 0 32 32" class="h-9 w-9 shrink-0" aria-hidden="true">
           <rect width="32" height="32" rx="8" fill="#0B4A2F"/><rect x="7" y="8" width="7" height="8" rx="1.5" fill="#083A25"/><rect x="18" y="8" width="7" height="8" rx="1.5" fill="#C6F24E"/><rect x="7" y="19" width="7" height="8" rx="1.5" fill="#083A25"/><rect x="18" y="19" width="7" height="8" rx="1.5" fill="#083A25"/>
         </svg>
-        <span>Homebase</span>
-      </span>
+        <span class="hidden sm:inline">Homebase</span>
+      </a>
+      <ul class="flex items-center gap-1">
+        <li><a class="nav-link" href="landlord.html" aria-current="page">Dashboard</a></li>
+        <li><a class="nav-link" href="landlord-rooms.html">Rooms</a></li>
+      </ul>
       <div class="flex items-center gap-3">
-        <span id="nav-name" class="hidden max-w-[12rem] truncate text-sm font-medium sm:block"></span>
-        <button type="button" id="logout" data-logout class="btn btn-outline">Log out</button>
+        <span id="nav-name" class="hidden max-w-[12rem] truncate text-sm font-medium lg:block"></span>
+        <button type="button" id="logout" class="btn btn-outline">Log out</button>
       </div>
     </nav>
   </header>
 
   <main class="mx-auto max-w-4xl px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
-    <h1 class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">Reservation requests</h1>
-    <p class="mt-2 max-w-xl text-base text-muted">Students ask for a room here. Approve or decline each request, set how many days they have to pay, then mark the payment when the office receives it.</p>
+    <h1 class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">Dashboard</h1>
+    <p class="mt-2 max-w-xl text-base text-muted">Where Ariate Dormitory stands today, and the room requests waiting for your answer.</p>
+
+    <section id="glance-box" hidden aria-labelledby="glance-title" class="mt-6 rounded-[20px] border border-line bg-tint p-5 sm:p-6">
+      <h2 id="glance-title" class="sr-only">At a glance</h2>
+      <dl id="glance" class="grid gap-x-6 gap-y-4 sm:grid-cols-3 lg:grid-cols-6"></dl>
+      <a href="landlord-rooms.html" class="mt-4 inline-flex min-h-[44px] items-center rounded font-semibold text-forest underline underline-offset-4 outline-none hover:text-forest-deep focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">Manage rooms</a>
+    </section>
+
+    <h2 class="mt-10 font-display text-2xl font-bold tracking-tight">Reservation requests</h2>
+    <p class="mt-1 max-w-xl text-base text-muted">Approve or decline each request, set how many days the student has to pay, then mark the payment when the office receives it.</p>
 
     <p id="page-error" role="alert" class="mt-4 hidden text-base font-semibold text-danger"></p>
 
@@ -86,6 +108,7 @@
     </div>
   </main>
 
+  <script src="assets/js/rooms.js"></script>
   <script src="assets/js/reservation.js"></script>
   <script>
     (function () {
@@ -97,9 +120,10 @@
         return isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
       }
 
-      var user = HB_AUTH.getUser() || {};
+      var user = {};
+      try { user = JSON.parse(localStorage.getItem('homebase_currentUser') || '{}') || {}; } catch (e) {}
       $('nav-name').textContent = String(user.name || user.email || '');
-      HB_AUTH.bindLogout();
+      $('logout').addEventListener('click', function () { try { localStorage.removeItem('homebase_currentUser'); } catch (e) {} window.location.href = 'index.html'; });
       $('reload').addEventListener('click', function () { window.location.reload(); });
 
       $('loading').hidden = true;
@@ -201,8 +225,27 @@
         });
       }
 
+      // ---- at a glance: rooms by state, and requests waiting ----
+      function renderGlance(list) {
+        var rooms = HB.getRooms(), c = { available: 0, busy: 0, occupied: 0, taken: 0 };
+        rooms.forEach(function (r) {
+          var st = HB.roomState(r, '__office__');
+          if (st === 'available') c.available++; else if (st === 'held' || st === 'reserved') c.busy++; else if (st === 'occupied') c.occupied++; else c.taken++;
+        });
+        var pending = list.filter(function (r) { return r.status === 'pending'; }).length;
+        var items = [['Requests to answer', pending, true], ['Rooms in total', rooms.length], ['Available', c.available], ['Held or reserved', c.busy], ['Occupied', c.occupied], ['Taken', c.taken]];
+        var dl = $('glance'); dl.textContent = '';
+        items.forEach(function (it) {
+          var d = el('div'); d.appendChild(el('dt', 'text-sm font-medium text-muted', it[0]));
+          d.appendChild(el('dd', 'font-display text-2xl font-bold tracking-tight ' + (it[2] ? 'text-forest' : 'text-ink'), String(it[1])));
+          dl.appendChild(d);
+        });
+        $('glance-box').hidden = false;
+      }
+
       function render() {
         var list = all();
+        renderGlance(list);
         if (!list.length) { $('empty').hidden = false; $('board').hidden = true; return; }
         $('empty').hidden = true; $('board').hidden = false;
         renderChips(list);
