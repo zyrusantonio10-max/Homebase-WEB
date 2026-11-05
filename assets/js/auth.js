@@ -1,13 +1,13 @@
 /*
   Homebase Authentication & Session Management
-  Shared across all pages: index.html, home.html, landlord.html, matches.html, rooms.html, floorplan.html.
+  Shared across all pages: index.html, home.html, landlord.html, matches.html, rooms.html, floorplan.html, profile.html.
 
   Storage keys:
     homebase_users        List of registered user accounts: [{ id, name, email, role, password }]
     homebase_currentUser Currently active user session: { id, name, email, role }
         landlord account: manager@ariatedorm.com 
         password        : ariate-office-2026
-
+    homebase_profile_<id> User profile details: { photo, phone, bio, course, yearLevel, emergencyName, emergencyPhone, emergencyRel, sleepSchedule, studyHabit, social, ... }
 */
 (function (global) {
   'use strict';
@@ -85,6 +85,7 @@
   var HB_AUTH = {
     USERS_KEY: USERS_KEY,
     CURRENT_KEY: CURRENT_KEY,
+    hashPassword: hashPassword,
 
     // Retrieve active logged in user or null
     getUser: function () {
@@ -99,9 +100,13 @@
     homeFor: homeFor,
 
     // Returns a key scoped to the logged-in user: e.g. "homebase_savedRooms_demo-student"
-    userKey: function (baseKey) {
-      var u = HB_AUTH.getUser();
-      return (u && u.id) ? (baseKey + '_' + u.id) : baseKey;
+    userKey: function (baseKey, explicitUserId) {
+      var uid = explicitUserId;
+      if (!uid) {
+        var u = HB_AUTH.getUser();
+        uid = (u && u.id) ? u.id : '';
+      }
+      return uid ? (baseKey + '_' + uid) : baseKey;
     },
 
     // Session guard: Call in <head> or at top of script to protect private pages
@@ -203,9 +208,40 @@
           HB_AUTH.logout(redirectUrl);
         });
       });
+    },
+
+    // Get extra profile data
+    getProfile: function (userId) {
+      var u = userId ? { id: userId } : HB_AUTH.getUser();
+      if (!u || !u.id) return {};
+      return readStorage('homebase_profile_' + u.id, {});
+    },
+
+    // Save extra profile data
+    saveProfile: function (data, userId) {
+      var u = userId ? { id: userId } : HB_AUTH.getUser();
+      if (!u || !u.id) return false;
+      return writeStorage('homebase_profile_' + u.id, data || {});
+    },
+
+    // Render avatar into element (either image if photo set, or initial)
+    renderAvatar: function (el, user) {
+      if (!el) return;
+      var u = user || HB_AUTH.getUser();
+      if (!u) return;
+      var prof = HB_AUTH.getProfile(u.id);
+      var name = String(u.name || u.email || '');
+      var initial = name.charAt(0).toUpperCase();
+
+      if (prof && prof.photo) {
+        el.innerHTML = '<img src="' + prof.photo + '" alt="' + name + '" class="h-full w-full object-cover rounded-full">';
+        el.classList.add('overflow-hidden');
+      } else {
+        el.textContent = initial;
+        el.classList.remove('overflow-hidden');
+      }
     }
   };
 
   global.HB_AUTH = HB_AUTH;
 })(window);
-

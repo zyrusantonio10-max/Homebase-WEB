@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -100,10 +100,10 @@
       </ul>
 
       <div class="flex items-center gap-2">
-        <span class="hidden items-center gap-2 pr-1 md:flex">
-          <span id="nav-initial" class="grid h-9 w-9 place-items-center rounded-full bg-forest font-display text-sm font-semibold text-white" aria-hidden="true"></span>
+        <a href="profile.html" class="hidden items-center gap-2 pr-1 md:flex rounded-full py-1 pl-1 pr-2 hover:bg-track transition-colors outline-none focus-visible:ring-2 focus-visible:ring-forest" title="My Profile" aria-label="My Profile">
+          <span id="nav-initial" class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-forest font-display text-sm font-semibold text-white overflow-hidden" aria-hidden="true"></span>
           <span id="nav-name" class="max-w-[9rem] truncate text-sm font-medium text-ink"></span>
-        </span>
+        </a>
         <button type="button" data-logout class="btn btn-outline hidden md:inline-flex">Log out</button>
         <button type="button" id="menu-btn" aria-expanded="false" aria-controls="menu"
           class="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-forest bg-white px-4 text-base font-semibold text-forest outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 md:hidden">
@@ -119,6 +119,7 @@
         <li><a class="nav-link w-full" href="matches.html">My Matches</a></li>
         <li><a class="nav-link w-full" href="rooms.html">Explore Rooms</a></li>
         <li><a class="nav-link w-full" href="floorplan.html">Floor Plan</a></li>
+        <li><a class="nav-link w-full" href="profile.html">My Profile</a></li>
       </ul>
       <div class="mt-2 border-t border-line pt-2">
         <button type="button" data-logout class="btn btn-outline w-full">Log out</button>
@@ -207,13 +208,17 @@
 
         <!-- PROFILE -->
         <section aria-labelledby="profile-title" class="rounded-[20px] border border-line bg-tint p-6">
-          <h2 id="profile-title" class="card-title">Your profile</h2>
+          <div class="flex items-center justify-between">
+            <h2 id="profile-title" class="card-title">Your profile</h2>
+            <a href="profile.html" class="inline-flex items-center text-sm font-semibold text-forest underline underline-offset-4 hover:text-forest-deep">Edit profile</a>
+          </div>
           <div class="mt-4 flex items-center gap-4">
-            <!-- placeholder avatar: initial only, no photos yet -->
-            <span id="profile-initial" class="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-forest font-display text-xl font-semibold text-white" aria-hidden="true"></span>
+            <a href="profile.html" title="Edit your profile" class="group block rounded-full focus-visible:ring-2 focus-visible:ring-forest outline-none">
+              <span id="profile-initial" class="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-forest font-display text-xl font-semibold text-white overflow-hidden" aria-hidden="true"></span>
+            </a>
             <div class="min-w-0">
               <p id="profile-name" class="truncate font-display text-lg font-semibold tracking-tight"></p>
-              <p class="text-sm text-muted">Student</p>
+              <p id="profile-sub" class="text-sm text-muted">Student</p>
             </div>
           </div>
           <dl class="mt-5 space-y-3 text-base">
@@ -226,7 +231,10 @@
               <dd>Ariate Dormitory</dd>
             </div>
           </dl>
-          <button type="button" id="open-rules" class="textlink mt-3">Read the house rules</button>
+          <div class="mt-4 flex flex-wrap items-center gap-3">
+            <a href="profile.html" class="btn btn-outline text-sm !min-h-[38px] !px-4">Manage Profile</a>
+            <button type="button" id="open-rules" class="textlink !min-h-[38px] text-sm">House rules</button>
+          </div>
         </section>
       </div>
 
@@ -392,9 +400,15 @@
 
       // ---- profile ----
       $('first-name').textContent = firstName;
-      $('profile-initial').textContent = initial;
       $('profile-name').textContent = fullName;
       $('profile-email').textContent = String(user.email);
+      var prof = HB_AUTH.getProfile(user.id);
+      if (prof && prof.course) {
+        var subEl = $('profile-sub');
+        if (subEl) subEl.textContent = prof.course;
+      }
+      HB_AUTH.renderAvatar($('nav-initial'), user);
+      HB_AUTH.renderAvatar($('profile-initial'), user);
 
       // ---- best match ----
       function renderTop() {
