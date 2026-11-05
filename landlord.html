@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -196,6 +196,165 @@
         return acts;
       }
 
+      // ---- resident detailed dossier modal ----
+      function openResidentModal(r, prof) {
+        var dlg = document.getElementById('hb-resident-modal');
+        if (!dlg) {
+          dlg = document.createElement('dialog');
+          dlg.id = 'hb-resident-modal';
+          dlg.setAttribute('aria-labelledby', 'hb-res-title');
+          dlg.className = 'max-h-[90vh] w-[calc(100vw-2rem)] max-w-lg overflow-y-auto rounded-[24px] border border-line bg-white p-0 text-ink shadow-2xl backdrop:bg-ink/50';
+          dlg.innerHTML =
+            '<div class="p-6 sm:p-7">' +
+              '<div class="flex items-start justify-between gap-4">' +
+                '<div class="flex items-center gap-3.5">' +
+                  '<div id="hb-res-avatar" class="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-forest text-2xl font-bold text-white shadow-sm overflow-hidden"></div>' +
+                  '<div>' +
+                    '<h3 id="hb-res-title" class="font-display text-xl font-bold tracking-tight"></h3>' +
+                    '<p id="hb-res-course" class="text-sm text-muted"></p>' +
+                  '</div>' +
+                '</div>' +
+                '<button type="button" id="hb-res-close-x" class="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line text-muted hover:border-forest hover:text-ink transition-colors" aria-label="Close">&times;</button>' +
+              '</div>' +
+
+              '<!-- Contact Info Card -->' +
+              '<div class="mt-5 rounded-2xl border border-line bg-tint/60 p-4">' +
+                '<h4 class="text-xs font-semibold uppercase tracking-wider text-muted mb-2.5">Student Contact</h4>' +
+                '<div class="grid gap-2 text-sm sm:grid-cols-2">' +
+                  '<div><span class="text-xs text-muted block">Email:</span><a id="hb-res-email" href="#" class="font-medium text-forest hover:underline break-words"></a></div>' +
+                  '<div><span class="text-xs text-muted block">Phone:</span><a id="hb-res-phone" href="#" class="font-medium text-forest hover:underline"></a></div>' +
+                  '<div id="hb-res-social-box" class="sm:col-span-2 hidden"><span class="text-xs text-muted block">Social / Messenger:</span><span id="hb-res-social" class="font-medium text-ink break-words"></span></div>' +
+                '</div>' +
+              '</div>' +
+
+              '<!-- Emergency Contact Box -->' +
+              '<div class="mt-4 rounded-2xl border border-forest/20 bg-tint p-4">' +
+                '<div class="flex items-center gap-2 mb-2">' +
+                  '<span class="text-base" aria-hidden="true">&#9888;&#65039;</span>' +
+                  '<h4 class="text-xs font-semibold uppercase tracking-wider text-forest-deep">Emergency Contact Details</h4>' +
+                '</div>' +
+                '<div id="hb-res-emer-content" class="grid gap-2 text-sm sm:grid-cols-2"></div>' +
+              '</div>' +
+
+              '<!-- Bio -->' +
+              '<div id="hb-res-bio-box" class="mt-4 hidden">' +
+                '<h4 class="text-xs font-semibold uppercase tracking-wider text-muted mb-1">Student Bio</h4>' +
+                '<p id="hb-res-bio" class="text-sm leading-relaxed text-ink bg-tint/40 p-3 rounded-xl border border-line/60"></p>' +
+              '</div>' +
+
+              '<!-- Lifestyle & Living Habits -->' +
+              '<div class="mt-5">' +
+                '<h4 class="text-xs font-semibold uppercase tracking-wider text-muted">Dorm Living & Lifestyle Profile</h4>' +
+                '<div class="mt-2.5 grid gap-2.5">' +
+                  '<div class="flex items-center gap-3 rounded-xl border border-line bg-white p-3 text-sm">' +
+                    '<span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-tint text-base" aria-hidden="true">&#127769;</span>' +
+                    '<div><p class="text-xs text-muted">Sleep Schedule</p><p id="hb-res-sleep" class="font-semibold text-ink"></p></div>' +
+                  '</div>' +
+                  '<div class="flex items-center gap-3 rounded-xl border border-line bg-white p-3 text-sm">' +
+                    '<span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-tint text-base" aria-hidden="true">&#128218;</span>' +
+                    '<div><p class="text-xs text-muted">Study Habits</p><p id="hb-res-study" class="font-semibold text-ink"></p></div>' +
+                  '</div>' +
+                  '<div class="flex items-center gap-3 rounded-xl border border-line bg-white p-3 text-sm">' +
+                    '<span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-tint text-base" aria-hidden="true">&#10024;</span>' +
+                    '<div><p class="text-xs text-muted">Cleanliness</p><p id="hb-res-clean" class="font-semibold text-ink"></p></div>' +
+                  '</div>' +
+                '</div>' +
+              '</div>' +
+
+              '<!-- Reservation Request Context -->' +
+              '<div class="mt-5 rounded-2xl border border-line bg-white p-4 text-sm">' +
+                '<h4 class="text-xs font-semibold uppercase tracking-wider text-muted mb-2">Request Overview</h4>' +
+                '<div class="grid gap-1.5 text-xs text-muted">' +
+                  '<p><strong class="text-ink">Room:</strong> <span id="hb-res-room"></span></p>' +
+                  '<p><strong class="text-ink">Move-in Date:</strong> <span id="hb-res-movein"></span></p>' +
+                  '<p><strong class="text-ink">House Rules:</strong> <span id="hb-res-rules"></span></p>' +
+                  '<div id="hb-res-msg-box" class="mt-1 pt-1 border-t border-line/60 hidden"><strong class="text-ink block mb-0.5">Message from student:</strong><span id="hb-res-msg" class="text-ink text-xs italic"></span></div>' +
+                '</div>' +
+              '</div>' +
+
+              '<div class="mt-6 flex justify-end pt-4 border-t border-line">' +
+                '<button type="button" id="hb-res-close-btn" class="btn btn-outline text-sm">Close Dossier</button>' +
+              '</div>' +
+            '</div>';
+          document.body.appendChild(dlg);
+
+          dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close(); });
+          document.getElementById('hb-res-close-x').addEventListener('click', function () { dlg.close(); });
+          document.getElementById('hb-res-close-btn').addEventListener('click', function () { dlg.close(); });
+        }
+
+        var studentName = prof.name || r.studentName || 'Student';
+        var studentEmail = prof.email || r.studentEmail || '';
+        var av = document.getElementById('hb-res-avatar');
+        if (prof.photo) {
+          av.innerHTML = '<img src="' + prof.photo + '" alt="' + studentName + '" class="h-full w-full object-cover rounded-full">';
+          av.classList.add('overflow-hidden');
+        } else {
+          av.textContent = studentName.charAt(0).toUpperCase();
+          av.classList.remove('overflow-hidden');
+        }
+
+        document.getElementById('hb-res-title').textContent = studentName;
+        document.getElementById('hb-res-course').textContent = (prof.course ? ((prof.yearLevel ? prof.yearLevel + ' ' : '') + prof.course) : 'Ariate Dorm Student Applicant');
+
+        var emailLink = document.getElementById('hb-res-email');
+        emailLink.textContent = studentEmail || 'Not provided';
+        emailLink.href = studentEmail ? ('mailto:' + studentEmail) : '#';
+
+        var phoneLink = document.getElementById('hb-res-phone');
+        phoneLink.textContent = prof.phone || 'Not provided';
+        phoneLink.href = prof.phone ? ('tel:' + prof.phone) : '#';
+
+        var socialBox = document.getElementById('hb-res-social-box');
+        if (prof.social && prof.social.trim()) {
+          document.getElementById('hb-res-social').textContent = prof.social.trim();
+          socialBox.classList.remove('hidden');
+        } else {
+          socialBox.classList.add('hidden');
+        }
+
+        // Emergency contact content
+        var emerBox = document.getElementById('hb-res-emer-content');
+        emerBox.textContent = '';
+        if (prof.emergencyName || prof.emergencyPhone) {
+          var d1 = el('div');
+          d1.innerHTML = '<span class="text-xs text-muted block">Contact Name:</span><span class="font-semibold text-ink">' + (prof.emergencyName || 'Not specified') + (prof.emergencyRel ? ' (' + prof.emergencyRel + ')' : '') + '</span>';
+          var d2 = el('div');
+          d2.innerHTML = '<span class="text-xs text-muted block">Emergency Phone:</span>' + (prof.emergencyPhone ? ('<a href="tel:' + prof.emergencyPhone + '" class="font-semibold text-forest underline">' + prof.emergencyPhone + '</a>') : '<span class="text-muted">Not provided</span>');
+          emerBox.appendChild(d1);
+          emerBox.appendChild(d2);
+        } else {
+          emerBox.innerHTML = '<p class="text-xs text-muted italic sm:col-span-2">The student has not yet entered their emergency contact in their profile.</p>';
+        }
+
+        var bioBox = document.getElementById('hb-res-bio-box');
+        if (prof.bio && prof.bio.trim()) {
+          document.getElementById('hb-res-bio').textContent = prof.bio.trim();
+          bioBox.classList.remove('hidden');
+        } else {
+          bioBox.classList.add('hidden');
+        }
+
+        var fmtL = (window.HB_AUTH && HB_AUTH.formatLifestyle) ? HB_AUTH.formatLifestyle : function(t, v) { return v || 'Not specified'; };
+        document.getElementById('hb-res-sleep').textContent = fmtL('sleep', prof.sleepSchedule);
+        document.getElementById('hb-res-study').textContent = fmtL('study', prof.studyHabit);
+        document.getElementById('hb-res-clean').textContent = fmtL('clean', prof.cleanliness);
+
+        document.getElementById('hb-res-room').textContent = r.roomName + ' (Floor ' + r.floor + ', ' + r.type + ') - ' + peso(r.price) + '/month';
+        document.getElementById('hb-res-movein').textContent = fmt(r.moveIn) || 'Not specified';
+        document.getElementById('hb-res-rules').textContent = r.rulesAcceptedAt ? ('Agreed on ' + fmt(r.rulesAcceptedAt)) : 'Not recorded';
+
+        var msgBox = document.getElementById('hb-res-msg-box');
+        if (r.message && r.message.trim()) {
+          document.getElementById('hb-res-msg').textContent = '"' + r.message.trim() + '"';
+          msgBox.classList.remove('hidden');
+        } else {
+          msgBox.classList.add('hidden');
+        }
+
+        if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
+      }
+
       function row(r) {
         var li = el('li', 'rounded-[20px] border border-line bg-white p-5 sm:p-6');
         var top = el('div', 'flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1');
@@ -204,8 +363,58 @@
         li.appendChild(top);
         li.appendChild(el('p', 'mt-1 text-base text-muted', 'Floor ' + r.floor + ', ' + r.type + ' room, ' + peso(r.price) + ' per month'));
 
+        // Retrieve student's extra profile info from HB_AUTH
+        var prof = (window.HB_AUTH && HB_AUTH.getProfile) ? HB_AUTH.getProfile(r.userId) : {};
+        var studentDisplayName = prof.name || r.studentName || 'Student';
+        var studentPhone = prof.phone || '';
+        var academic = (prof.course || '') + (prof.yearLevel ? ' (' + prof.yearLevel + ')' : '');
+
+        // Student Overview Card with Profile details and View Full Profile button
+        var sCard = el('div', 'mt-4 rounded-2xl border border-line bg-tint p-4 sm:p-5');
+        var sHead = el('div', 'flex flex-wrap items-center justify-between gap-3');
+
+        var sLeft = el('div', 'flex items-center gap-3.5');
+        var sAv = el('div', 'grid h-12 w-12 shrink-0 place-items-center rounded-full bg-forest text-lg font-bold text-white shadow-sm overflow-hidden');
+        if (prof.photo) {
+          sAv.innerHTML = '<img src="' + prof.photo + '" alt="' + studentDisplayName + '" class="h-full w-full object-cover rounded-full">';
+        } else {
+          sAv.textContent = studentDisplayName.charAt(0).toUpperCase();
+        }
+        sLeft.appendChild(sAv);
+
+        var sText = el('div');
+        var sNameRow = el('div', 'flex flex-wrap items-center gap-2');
+        sNameRow.appendChild(el('h4', 'font-display text-base font-bold text-ink', studentDisplayName));
+        sNameRow.appendChild(el('span', 'rounded-full bg-forest/10 px-2 py-0.5 text-xs font-semibold text-forest', 'Resident Applicant'));
+        sText.appendChild(sNameRow);
+        sText.appendChild(el('p', 'text-sm text-muted', r.studentEmail + (studentPhone ? ' \u2022 ' + studentPhone : '')));
+        if (academic) {
+          sText.appendChild(el('p', 'text-xs font-medium text-ink/80', academic));
+        }
+        sLeft.appendChild(sText);
+        sHead.appendChild(sLeft);
+
+        var viewBtn = el('button', 'btn btn-outline text-sm py-2 px-4 inline-flex items-center gap-1.5 shadow-sm', 'View Full Profile');
+        viewBtn.type = 'button';
+        viewBtn.setAttribute('aria-label', 'View full profile for ' + studentDisplayName);
+        viewBtn.addEventListener('click', function () {
+          openResidentModal(r, prof);
+        });
+        sHead.appendChild(viewBtn);
+        sCard.appendChild(sHead);
+
+        // Emergency contact highlight preview
+        var emerRow = el('div', 'mt-3 pt-3 border-t border-line/60 flex flex-wrap items-center justify-between gap-2 text-xs');
+        if (prof.emergencyName || prof.emergencyPhone) {
+          emerRow.innerHTML = '<span class="text-muted">Emergency Contact:</span> <span class="font-semibold text-ink">' + (prof.emergencyName || 'Named contact') + (prof.emergencyRel ? ' (' + prof.emergencyRel + ')' : '') + ' \u2022 ' + (prof.emergencyPhone ? ('<a href="tel:' + prof.emergencyPhone + '" class="text-forest underline">' + prof.emergencyPhone + '</a>') : 'No phone') + '</span>';
+        } else {
+          emerRow.innerHTML = '<span class="text-muted">Emergency Contact:</span> <span class="text-muted italic">Not yet provided by student</span>';
+        }
+        sCard.appendChild(emerRow);
+        li.appendChild(sCard);
+
         var dl = el('dl', 'mt-4 grid gap-3 text-base sm:grid-cols-3');
-        var facts = [['Student', r.studentName + ' (' + r.studentEmail + ')'], ['Move-in date', fmt(r.moveIn)], ['Requested on', fmt(r.createdAt)]];
+        var facts = [['Move-in date', fmt(r.moveIn)], ['Requested on', fmt(r.createdAt)]];
         if (r.rulesAcceptedAt) facts.push(['House rules', 'Agreed on ' + fmt(r.rulesAcceptedAt)]);
         if (r.status === 'approved' && r.paymentDueAt) facts.push(['Payment due', fmt(r.paymentDueAt) + ' (' + r.paymentDays + ' days)']);
         if (r.status === 'expired' && r.paymentDueAt) facts.push(['Payment was due', fmt(r.paymentDueAt)]);
@@ -214,7 +423,7 @@
         facts.forEach(function (p) { var d = el('div'); d.appendChild(el('dt', 'text-sm font-medium text-muted', p[0])); d.appendChild(el('dd', 'break-words', p[1])); dl.appendChild(d); });
         li.appendChild(dl);
         if (r.message) {
-          var m = el('div', 'mt-3'); m.appendChild(el('p', 'text-sm font-medium text-muted', 'Message'));
+          var m = el('div', 'mt-3'); m.appendChild(el('p', 'text-sm font-medium text-muted', 'Message from student'));
           m.appendChild(el('p', 'break-words text-base', r.message)); li.appendChild(m);
         }
         var a = actions(r); if (a) li.appendChild(a);

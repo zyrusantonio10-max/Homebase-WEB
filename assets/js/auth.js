@@ -1,4 +1,4 @@
-/*
+﻿/*
   Homebase Authentication & Session Management
   Shared across all pages: index.html, home.html, landlord.html, matches.html, rooms.html, floorplan.html, profile.html.
 
@@ -210,11 +210,35 @@
       });
     },
 
-    // Get extra profile data
+    // Get extra profile data enriched with user identity
     getProfile: function (userId) {
-      var u = userId ? { id: userId } : HB_AUTH.getUser();
-      if (!u || !u.id) return {};
-      return readStorage('homebase_profile_' + u.id, {});
+      var uid = userId;
+      if (!uid) {
+        var u = HB_AUTH.getUser();
+        uid = (u && u.id) ? u.id : null;
+      }
+      if (!uid) return {};
+      var prof = readStorage('homebase_profile_' + uid, {}) || {};
+
+      // Merge with user record from homebase_users
+      var users = readStorage(USERS_KEY, []);
+      var match = null;
+      for (var i = 0; i < users.length; i++) {
+        if (users[i].id === uid) { match = users[i]; break; }
+      }
+      if (match) {
+        if (!prof.name) prof.name = match.name;
+        if (!prof.email) prof.email = match.email;
+        if (!prof.role) prof.role = match.role;
+      } else {
+        var cur = readStorage(CURRENT_KEY, null);
+        if (cur && cur.id === uid) {
+          if (!prof.name) prof.name = cur.name;
+          if (!prof.email) prof.email = cur.email;
+          if (!prof.role) prof.role = cur.role;
+        }
+      }
+      return prof;
     },
 
     // Save extra profile data
@@ -224,13 +248,39 @@
       return writeStorage('homebase_profile_' + u.id, data || {});
     },
 
+    // Format lifestyle choices into readable text
+    formatLifestyle: function (type, val) {
+      if (!val) return 'Not specified';
+      var MAP = {
+        sleep: {
+          'early': 'Early bird (before 11 PM)',
+          'night': 'Night owl (after 1 AM)',
+          'flexible': 'Flexible / Varies'
+        },
+        study: {
+          'quiet': 'Quiet & alone in room',
+          'group': 'Group study / Discussion',
+          'music': 'With background music',
+          'library': 'Prefers library / Cafe'
+        },
+        clean: {
+          'very-neat': 'Very neat (cleans daily)',
+          'moderate': 'Moderate (weekly cleanup)',
+          'relaxed': 'Relaxed / Casual'
+        }
+      };
+      if (MAP[type] && MAP[type][val]) return MAP[type][val];
+      return String(val);
+    },
+
     // Render avatar into element (either image if photo set, or initial)
     renderAvatar: function (el, user) {
       if (!el) return;
       var u = user || HB_AUTH.getUser();
       if (!u) return;
-      var prof = HB_AUTH.getProfile(u.id);
-      var name = String(u.name || u.email || '');
+      var uid = (typeof u === 'object') ? u.id : (typeof u === 'string' ? u : null);
+      var prof = uid ? HB_AUTH.getProfile(uid) : {};
+      var name = String((u && u.name) || prof.name || (u && u.email) || prof.email || 'User');
       var initial = name.charAt(0).toUpperCase();
 
       if (prof && prof.photo) {

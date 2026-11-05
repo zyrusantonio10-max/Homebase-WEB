@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -214,6 +214,97 @@
       // ---- comparing rooms (shared with My Matches, see assets/js/compare.js) ----
       var cmp = HBCompare.mount({ rooms: ROOMS, user: user, hasActive: hasActive });
 
+      // ---- occupant profile modal ----
+      function openOccupantModal(prof, occName, room) {
+        var dlg = document.getElementById('hb-occupant-modal');
+        if (!dlg) {
+          dlg = document.createElement('dialog');
+          dlg.id = 'hb-occupant-modal';
+          dlg.setAttribute('aria-labelledby', 'hb-occ-title');
+          dlg.className = 'max-h-[90vh] w-[calc(100vw-2rem)] max-w-md overflow-y-auto rounded-[24px] border border-line bg-white p-0 text-ink shadow-2xl backdrop:bg-ink/50';
+          dlg.innerHTML =
+            '<div class="p-6 sm:p-7">' +
+              '<div class="flex items-start justify-between gap-4">' +
+                '<div class="flex items-center gap-3.5">' +
+                  '<div id="hb-occ-avatar" class="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-forest text-2xl font-bold text-white shadow-sm overflow-hidden"></div>' +
+                  '<div>' +
+                    '<h3 id="hb-occ-name" class="font-display text-xl font-bold tracking-tight"></h3>' +
+                    '<p id="hb-occ-subtitle" class="text-sm text-muted"></p>' +
+                  '</div>' +
+                '</div>' +
+                '<button type="button" id="hb-occ-close-x" class="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line text-muted hover:border-forest hover:text-ink transition-colors" aria-label="Close">&times;</button>' +
+              '</div>' +
+
+              '<div class="mt-4 flex items-center justify-between rounded-xl border border-line bg-tint px-3.5 py-2.5 text-xs">' +
+                '<span class="font-medium text-forest">Occupant in <strong id="hb-occ-room"></strong></span>' +
+                '<span class="rounded-full bg-forest/10 px-2 py-0.5 font-semibold text-forest">Current Resident</span>' +
+              '</div>' +
+
+              '<div id="hb-occ-bio-wrap" class="mt-4 hidden">' +
+                '<h4 class="text-xs font-semibold uppercase tracking-wider text-muted">About</h4>' +
+                '<p id="hb-occ-bio" class="mt-1 text-sm leading-relaxed text-ink bg-tint/60 p-3 rounded-xl border border-line/60"></p>' +
+              '</div>' +
+
+              '<div class="mt-5">' +
+                '<h4 class="text-xs font-semibold uppercase tracking-wider text-muted">Dorm Living & Lifestyle</h4>' +
+                '<p class="mt-0.5 text-xs text-muted">Living habits shared for roommate compatibility.</p>' +
+                '<div class="mt-3 grid gap-2.5">' +
+                  '<div class="flex items-center gap-3 rounded-xl border border-line bg-white p-3 text-sm">' +
+                    '<span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-tint text-base" aria-hidden="true">&#127769;</span>' +
+                    '<div><p class="text-xs text-muted">Sleep Schedule</p><p id="hb-occ-sleep" class="font-semibold text-ink"></p></div>' +
+                  '</div>' +
+                  '<div class="flex items-center gap-3 rounded-xl border border-line bg-white p-3 text-sm">' +
+                    '<span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-tint text-base" aria-hidden="true">&#128218;</span>' +
+                    '<div><p class="text-xs text-muted">Study Habits</p><p id="hb-occ-study" class="font-semibold text-ink"></p></div>' +
+                  '</div>' +
+                  '<div class="flex items-center gap-3 rounded-xl border border-line bg-white p-3 text-sm">' +
+                    '<span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-tint text-base" aria-hidden="true">&#10024;</span>' +
+                    '<div><p class="text-xs text-muted">Cleanliness</p><p id="hb-occ-clean" class="font-semibold text-ink"></p></div>' +
+                  '</div>' +
+                '</div>' +
+              '</div>' +
+
+              '<div class="mt-6 flex justify-end pt-4 border-t border-line">' +
+                '<button type="button" id="hb-occ-close-btn" class="btn btn-outline text-sm">Close</button>' +
+              '</div>' +
+            '</div>';
+          document.body.appendChild(dlg);
+
+          dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close(); });
+          document.getElementById('hb-occ-close-x').addEventListener('click', function () { dlg.close(); });
+          document.getElementById('hb-occ-close-btn').addEventListener('click', function () { dlg.close(); });
+        }
+
+        var av = document.getElementById('hb-occ-avatar');
+        if (prof.photo) {
+          av.innerHTML = '<img src="' + prof.photo + '" alt="' + occName + '" class="h-full w-full object-cover rounded-full">';
+          av.classList.add('overflow-hidden');
+        } else {
+          av.textContent = occName.charAt(0).toUpperCase();
+          av.classList.remove('overflow-hidden');
+        }
+
+        document.getElementById('hb-occ-name').textContent = occName;
+        var sub = (prof.yearLevel ? prof.yearLevel + ' ' : '') + (prof.course || 'Ariate Dorm Resident');
+        document.getElementById('hb-occ-subtitle').textContent = sub;
+        document.getElementById('hb-occ-room').textContent = room ? (room.name + ' (' + room.type + ')') : 'Room';
+
+        var bioWrap = document.getElementById('hb-occ-bio-wrap');
+        if (prof.bio && prof.bio.trim()) {
+          document.getElementById('hb-occ-bio').textContent = prof.bio.trim();
+          bioWrap.classList.remove('hidden');
+        } else {
+          bioWrap.classList.add('hidden');
+        }
+
+        var fmtL = (window.HB_AUTH && HB_AUTH.formatLifestyle) ? HB_AUTH.formatLifestyle : function(t, v) { return v || 'Not specified'; };
+        document.getElementById('hb-occ-sleep').textContent = fmtL('sleep', prof.sleepSchedule);
+        document.getElementById('hb-occ-study').textContent = fmtL('study', prof.studyHabit);
+        document.getElementById('hb-occ-clean').textContent = fmtL('clean', prof.cleanliness);
+
+        if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
+      }
+
       // ---- one room card ----
       function card(r, saved) {
         var li = el('li', 'flex flex-col overflow-hidden rounded-[20px] border border-line bg-white');
@@ -242,6 +333,52 @@
         var chips = el('ul', 'mt-3 flex flex-wrap gap-1.5');
         r.amenities.forEach(function (a) { chips.appendChild(el('li', 'rounded-lg border border-line bg-tint px-2.5 py-1 text-sm', a)); });
         body.appendChild(chips);
+        // ---- occupant preview (clickable avatar pills) ----
+        var occs = HB.load().list.filter(function (res) {
+          return res.roomId === r.id && (res.status === 'confirmed' || res.status === 'approved');
+        });
+        if (occs.length) {
+          var occBox = el('div', 'mt-3.5 pt-3 border-t border-line/60');
+          var occLabel = el('p', 'text-xs font-semibold uppercase tracking-wider text-muted mb-2', 'Room Occupants (' + occs.length + ')');
+          occBox.appendChild(occLabel);
+
+          var occList = el('div', 'flex flex-wrap gap-2');
+          occs.forEach(function (res) {
+            var prof = (window.HB_AUTH && HB_AUTH.getProfile) ? HB_AUTH.getProfile(res.userId) : {};
+            var occName = prof.name || res.studentName || 'Resident';
+            var occCourse = prof.course ? ((prof.yearLevel ? prof.yearLevel + ' ' : '') + prof.course) : '';
+
+            var pill = el('button', 'inline-flex items-center gap-2 rounded-full border border-line bg-tint pl-1.5 pr-3 py-1 text-xs font-medium text-ink transition-all hover:border-forest hover:bg-white focus-visible:ring-2 focus-visible:ring-forest outline-none text-left cursor-pointer group shadow-sm');
+            pill.type = 'button';
+            pill.setAttribute('aria-label', 'View profile and lifestyle habits of ' + occName);
+            pill.setAttribute('title', 'Click to view ' + occName + '\'s lifestyle & profile');
+
+            var av = el('span', 'grid h-6 w-6 shrink-0 place-items-center rounded-full bg-forest text-[11px] font-semibold text-white overflow-hidden');
+            if (prof.photo) {
+              var im = el('img', 'h-full w-full object-cover rounded-full');
+              im.src = prof.photo;
+              im.alt = occName;
+              av.appendChild(im);
+            } else {
+              av.textContent = occName.charAt(0).toUpperCase();
+            }
+            pill.appendChild(av);
+
+            var textSpan = el('span', 'truncate max-w-[120px] font-medium text-ink', occName);
+            pill.appendChild(textSpan);
+
+            var arrowSpan = el('span', 'text-muted group-hover:text-forest transition-colors text-[11px]', '\u2192');
+            pill.appendChild(arrowSpan);
+
+            pill.addEventListener('click', function () {
+              openOccupantModal(prof, occName, r);
+            });
+
+            occList.appendChild(pill);
+          });
+          occBox.appendChild(occList);
+          body.appendChild(occBox);
+        }
 
         body.appendChild(cmp.checkbox(r, { cls: 'mt-3' }));
 
