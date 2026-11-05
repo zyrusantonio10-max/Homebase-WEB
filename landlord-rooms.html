@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rooms | Homebase</title>
+  <meta name="description" content="Add, edit and remove the rooms students can see at Ariate Dormitory.">
+
+  <!--
+    Design Read: the landlord's room list for Ariate Dormitory: "what rooms do I have, and what state are they in?"
+    Same forest + lime language as the other pages, dial ENERGY 2 / RHYTHM 2 / MOTION 1.
+    - One list, one row per room, so a landlord can scan down floors. Each row says its state in words and offers only
+      the actions that make sense for that state.
+    - Add and Edit share one dialog. The room number is the room's identity, so it can be set once and not edited later.
+    - A room with an active student request cannot be deleted or switched to taken: it follows the request until it ends.
+    - Delete and Reset ask first. Nothing here is fake: the list is the real room list students see on their pages.
+    - Radius: pill buttons, 20px rows, 12px fields. No shadows, no motion beyond hover colors.
+    - Not built: uploading real photos (pictures are drawn from type and amenities), custom amenities, price history.
+  -->
+
+  <script>
+    // Guard: landlords only. Students go to home.html.
+    (function () {
+      try {
+        var u = JSON.parse(localStorage.getItem('homebase_currentUser') || 'null');
+        if (!u || !u.email) window.location.replace('index.html');
+        else if (u.role !== 'landlord') window.location.replace('home.html');
+      } catch (e) { window.location.replace('index.html'); }
+    })();
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/js/tw-config.js"></script>
+
+  <style type="text/tailwindcss">
+    @layer components {
+      .btn { @apply inline-flex min-h-[44px] items-center justify-center rounded-full border border-transparent bg-forest px-5 py-2.5 text-base font-semibold text-white no-underline transition-colors hover:bg-forest-deep outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 disabled:opacity-70; }
+      .btn-outline { @apply border-forest bg-white text-forest hover:bg-tint; }
+      .btn-danger { @apply border-danger bg-white text-danger hover:bg-[#FEF3F2] focus-visible:ring-danger; }
+      .nav-link { @apply inline-flex min-h-[44px] items-center rounded-full px-4 text-base font-medium text-ink no-underline transition-colors outline-none hover:bg-track focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 aria-[current=page]:bg-forest aria-[current=page]:text-white; }
+      .label { @apply mb-1.5 block text-sm font-medium text-ink; }
+      .field { @apply block h-12 w-full rounded-xl border border-line bg-white px-3.5 text-base text-ink outline-none transition-colors hover:border-[#8FA397] focus-visible:border-forest focus-visible:ring-2 focus-visible:ring-forest/30 aria-[invalid=true]:border-danger read-only:bg-track read-only:text-muted; }
+      .choice { @apply flex min-h-[44px] items-center justify-center rounded-xl border border-line bg-white px-3 text-center text-base font-medium text-ink transition-colors hover:border-[#8FA397] peer-checked:border-forest peer-checked:bg-forest peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-forest peer-focus-visible:ring-offset-2 peer-disabled:opacity-60; }
+      .err { @apply mt-1.5 text-sm font-medium text-danger; }
+    }
+  </style>
+  <style>[hidden] { display: none !important; }</style>
+</head>
+
+<body class="min-h-screen bg-white font-body text-ink antialiased">
+
+  <header class="px-4 pb-2 pt-4 sm:px-6">
+    <nav aria-label="Main" class="mx-auto flex max-w-6xl items-center justify-between gap-3 rounded-full border border-line bg-white py-2 pl-4 pr-2">
+      <a href="landlord.html" aria-label="Homebase dashboard" class="inline-flex min-h-[44px] items-center gap-2.5 rounded-full font-display text-xl font-bold tracking-tight text-ink no-underline outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">
+        <svg viewBox="0 0 32 32" class="h-9 w-9 shrink-0" aria-hidden="true">
+          <rect width="32" height="32" rx="8" fill="#0B4A2F"/><rect x="7" y="8" width="7" height="8" rx="1.5" fill="#083A25"/><rect x="18" y="8" width="7" height="8" rx="1.5" fill="#C6F24E"/><rect x="7" y="19" width="7" height="8" rx="1.5" fill="#083A25"/><rect x="18" y="19" width="7" height="8" rx="1.5" fill="#083A25"/>
+        </svg>
+        <span class="hidden sm:inline">Homebase</span>
+      </a>
+      <ul class="flex items-center gap-1">
+        <li><a class="nav-link" href="landlord.html">Dashboard</a></li>
+        <li><a class="nav-link" href="landlord-rooms.html" aria-current="page">Rooms</a></li>
+      </ul>
+      <div class="flex items-center gap-3">
+        <span id="nav-name" class="hidden max-w-[12rem] truncate text-sm font-medium lg:block"></span>
+        <button type="button" id="logout" class="btn btn-outline">Log out</button>
+      </div>
+    </nav>
+  </header>
+
+  <main class="mx-auto max-w-4xl px-4 pb-20 pt-6 sm:px-6 sm:pt-8">
+    <h1 class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">Rooms</h1>
+    <p class="mt-2 max-w-xl text-base text-muted">Add, edit and remove the rooms students see. Changes show on the student pages right away.</p>
+
+    <p id="sample-note" hidden class="mt-4 rounded-xl border border-line bg-tint px-4 py-3 text-base">These are the sample rooms. The first change you save turns this into your real room list.</p>
+    <p id="notice" role="status" hidden class="mt-4 rounded-xl border border-forest/30 bg-tint px-4 py-3 text-base font-medium text-forest-deep"></p>
+    <p id="page-error" role="alert" hidden class="mt-4 text-base font-semibold text-danger"></p>
+
+    <div id="loading" class="mt-8"><p class="text-base text-muted" role="status">Loading rooms...</p></div>
+
+    <div id="error" hidden role="alert" class="mt-8 rounded-[20px] border border-line p-6">
+      <p class="font-display text-xl font-bold tracking-tight">We could not read the rooms</p>
+      <p class="mt-2 text-base text-muted">Either your browser is blocking site data, or <code>assets/js/reservation.js</code> did not load. Check that the file is where this page expects it, then reload.</p>
+      <button type="button" id="reload" class="btn btn-outline mt-4">Reload this page</button>
+    </div>
+
+    <div id="board" hidden>
+      <div class="mt-6 flex flex-wrap items-end justify-between gap-4">
+        <div class="w-full sm:w-56">
+          <label class="label" for="floor-filter">Show</label>
+          <select id="floor-filter" class="field"></select>
+        </div>
+        <button type="button" id="add-room" class="btn">Add a room</button>
+      </div>
+
+      <div id="empty" hidden class="mt-6 rounded-[20px] border border-line p-6 sm:p-8">
+        <p class="font-display text-2xl font-bold tracking-tight">No rooms yet</p>
+        <p class="mt-2 max-w-md text-base text-muted">Students cannot request anything until there is at least one room. Add your first room.</p>
+      </div>
+
+      <p id="count" class="mt-6 text-base text-muted" aria-live="polite"></p>
+      <ul id="list" class="mt-3 space-y-4"></ul>
+
+      <div class="mt-10 border-t border-line pt-6">
+        <p class="text-sm text-muted">Starting over? This replaces your room list with the 12 sample rooms. Student requests are kept.</p>
+        <div id="reset-row" class="mt-2 flex flex-wrap items-center gap-2"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ADD / EDIT -->
+  <dialog id="room-dialog" aria-labelledby="room-title" class="max-h-[90vh] w-[calc(100vw-2rem)] max-w-[480px] overflow-y-auto rounded-2xl border border-line bg-white p-0 text-ink shadow-xl backdrop:bg-ink/50">
+    <div class="p-6">
+      <h2 id="room-title" class="font-display text-xl font-bold tracking-tight"></h2>
+      <form id="room-form" novalidate class="mt-5 space-y-4">
+        <p id="form-error" role="alert" hidden class="rounded-xl border border-danger/30 bg-[#FEF3F2] px-3.5 py-3 text-sm font-medium text-danger"></p>
+
+        <div>
+          <label class="label" for="f-id">Room number</label>
+          <input class="field" id="f-id" type="text" maxlength="8" autocomplete="off" aria-describedby="f-id-hint f-id-err" required>
+          <p id="f-id-hint" class="mt-1.5 text-sm text-muted"></p>
+          <p id="f-id-err" class="err" hidden></p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="label" for="f-floor">Floor</label>
+            <input class="field" id="f-floor" type="number" inputmode="numeric" min="1" max="20" step="1" aria-describedby="f-floor-err" required>
+            <p id="f-floor-err" class="err" hidden></p>
+          </div>
+          <div>
+            <label class="label" for="f-type">Room type</label>
+            <select class="field" id="f-type"><option>Single</option><option>Double</option><option>Quad</option></select>
+          </div>
+        </div>
+
+        <div>
+          <label class="label" for="f-price">Price per month (pesos)</label>
+          <input class="field" id="f-price" type="number" inputmode="numeric" min="1" step="1" aria-describedby="f-price-err" required>
+          <p id="f-price-err" class="err" hidden></p>
+        </div>
+
+        <fieldset>
+          <legend class="label">Amenities</legend>
+          <div id="f-amenities" class="grid grid-cols-2 gap-2"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend class="label">Can students rent it now?</legend>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="avail" value="yes" checked><span class="choice">Available</span></label>
+            <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="avail" value="no"><span class="choice">Taken</span></label>
+          </div>
+          <p id="avail-note" hidden class="mt-1.5 text-sm text-muted">This room has an active request, so it follows that request until it ends.</p>
+        </fieldset>
+
+        <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button type="button" id="room-cancel" class="btn btn-outline">Cancel</button>
+          <button type="submit" id="room-save" class="btn">Save room</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <script src="assets/js/rooms.js"></script>
+  <script src="assets/js/reservation.js"></script>
+  <script>
+    (function () {
+      var $ = function (id) { return document.getElementById(id); };
+      function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+      function peso(n) { return '\u20B1' + Number(n).toLocaleString('en-PH'); }
+
+      var user = {};
+      try { user = JSON.parse(localStorage.getItem('homebase_currentUser') || '{}') || {}; } catch (e) {}
+      $('nav-name').textContent = String(user.name || user.email || '');
+      $('logout').addEventListener('click', function () { try { localStorage.removeItem('homebase_currentUser'); } catch (e) {} window.location.href = 'index.html'; });
+      $('reload').addEventListener('click', function () { window.location.reload(); });
+
+      $('loading').hidden = true;
+      if (!window.HB || !HB.load().ok) { $('error').hidden = false; return; }
+      $('board').hidden = false;
+
+      var AMENITIES = window.HOMEBASE_AMENITIES || [];
+      var TYPES = ['Single', 'Double', 'Quad'];
+      var rooms = HB.getRooms();
+      var floorFilter = 'all';
+      var ui = { kind: null, id: null };     // inline question that is open: "delete"
+      var editingId = null;                  // null while adding
+      var resetAsking = false;
+
+      // ---------- helpers ----------
+      function sortRooms() {
+        rooms.sort(function (a, b) { return (a.floor - b.floor) || String(a.id).localeCompare(String(b.id), undefined, { numeric: true }); });
+      }
+      function activeRes(id) { return HB.load().list.filter(function (r) { return r.roomId === id && HB.isActive(r); })[0]; }
+      function notice(text) { var n = $('notice'); n.textContent = text; n.hidden = !text; }
+      function fail(text) { var e = $('page-error'); e.textContent = text || ''; e.hidden = !text; }
+      function persist(next, okText) {
+        if (!HB.saveRooms(next)) { fail('We could not save that. Allow site data for this page in your browser and try again.'); return false; }
+        fail(''); rooms = next; sortRooms(); notice(okText); render(); return true;
+      }
+
+      // ---------- list ----------
+      function row(r) {
+        var res = activeRes(r.id), st = HB.roomState(r, '__office__');
+        var statusText = { available: 'Available', taken: 'Taken', held: 'Held for ' + (res && res.studentName) + ' (request pending)',
+                           reserved: 'Reserved for ' + (res && res.studentName) + ' (waiting for payment)', occupied: 'Occupied by ' + (res && res.studentName) }[st];
+        var li = el('li', 'rounded-[20px] border border-line bg-white p-4 sm:p-5');
+        var grid = el('div', 'grid gap-4 sm:grid-cols-[120px_1fr]');
+
+        var img = el('img', 'aspect-[8/5] w-full rounded-xl bg-track object-cover');
+        img.src = HB.roomImage(r); img.alt = ''; img.width = 640; img.height = 400; img.loading = 'lazy'; img.decoding = 'async';
+        grid.appendChild(img);
+
+        var body = el('div', 'min-w-0');
+        var head = el('div', 'flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1');
+        head.appendChild(el('p', 'font-display text-xl font-bold tracking-tight', r.name));
+        head.appendChild(el('p', 'text-sm font-semibold ' + (st === 'available' ? 'text-forest' : 'text-muted'), statusText));
+        body.appendChild(head);
+        body.appendChild(el('p', 'mt-1 text-base text-muted', 'Floor ' + r.floor + ', ' + r.type + ' room, ' + peso(r.price) + ' per month'));
+        var chips = el('ul', 'mt-2 flex flex-wrap gap-1.5');
+        if (r.amenities.length) r.amenities.forEach(function (a) { chips.appendChild(el('li', 'rounded-lg border border-line bg-tint px-2.5 py-1 text-sm', a)); });
+        else chips.appendChild(el('li', 'text-sm text-muted', 'No amenities listed'));
+        body.appendChild(chips);
+
+        var acts = el('div', 'mt-4 flex flex-wrap items-center gap-2');
+        if (ui.kind === 'delete' && ui.id === r.id) {
+          acts.appendChild(el('p', 'mr-2 text-base font-medium', 'Delete ' + r.name + '? Students will no longer see it.'));
+          acts.appendChild(button('Yes, delete', 'btn-danger', function () {
+            ui = { kind: null, id: null };
+            persist(rooms.filter(function (x) { return x.id !== r.id; }), 'Deleted ' + r.name + '.');
+          }));
+          acts.appendChild(button('Keep it', 'btn-outline', function () { ui = { kind: null, id: null }; render(); }));
+        } else {
+          acts.appendChild(button('Edit', 'btn-outline', function () { openForm(r); }, 'Edit ' + r.name));
+          if (st === 'available' || st === 'taken') {
+            acts.appendChild(button(st === 'available' ? 'Mark as taken' : 'Mark as available', 'btn-outline', function () {
+              persist(rooms.map(function (x) { return x.id === r.id ? Object.assign({}, x, { available: !x.available }) : x; }),
+                r.name + ' is now ' + (st === 'available' ? 'taken' : 'available') + '.');
+            }, (st === 'available' ? 'Mark ' : 'Mark ') + r.name + (st === 'available' ? ' as taken' : ' as available')));
+          }
+          if (res) {
+            acts.appendChild(el('p', 'text-sm text-muted', 'Has an active request, so it cannot be deleted yet.'));
+          } else {
+            acts.appendChild(button('Delete', 'btn-danger', function () { ui = { kind: 'delete', id: r.id }; render(); }, 'Delete ' + r.name));
+          }
+        }
+        body.appendChild(acts);
+        grid.appendChild(body); li.appendChild(grid);
+        return li;
+      }
+      function button(text, cls, fn, aria) {
+        var b = el('button', 'btn ' + cls, text); b.type = 'button';
+        if (aria) b.setAttribute('aria-label', aria);
+        b.addEventListener('click', fn); return b;
+      }
+
+      function renderFilter() {
+        var floors = [];
+        rooms.forEach(function (r) { if (floors.indexOf(r.floor) === -1) floors.push(r.floor); });
+        floors.sort(function (a, b) { return a - b; });
+        if (floorFilter !== 'all' && floors.indexOf(Number(floorFilter)) === -1) floorFilter = 'all';
+        var sel = $('floor-filter'); sel.textContent = '';
+        [['all', 'All floors']].concat(floors.map(function (f) { return [String(f), 'Floor ' + f]; })).forEach(function (o) {
+          var opt = el('option', null, o[1]); opt.value = o[0]; opt.selected = o[0] === floorFilter; sel.appendChild(opt);
+        });
+      }
+
+      function renderReset() {
+        var box = $('reset-row'); box.textContent = '';
+        if (resetAsking) {
+          box.appendChild(el('p', 'mr-2 text-base font-medium', 'Replace all your rooms with the sample rooms?'));
+          box.appendChild(button('Yes, reset', 'btn-danger', function () {
+            resetAsking = false;
+            if (!HB.resetRooms()) { fail('We could not reset the rooms. Allow site data for this page in your browser and try again.'); return; }
+            fail(''); rooms = HB.getRooms(); sortRooms(); notice('Rooms reset to the sample list.'); render();
+          }));
+          box.appendChild(button('Keep my rooms', 'btn-outline', function () { resetAsking = false; render(); }));
+        } else {
+          box.appendChild(button('Reset to the sample rooms', 'btn-outline', function () { resetAsking = true; render(); }));
+        }
+      }
+
+      function render() {
+        $('sample-note').hidden = !HB.usingSampleRooms();
+        renderFilter(); renderReset();
+        var shown = floorFilter === 'all' ? rooms : rooms.filter(function (r) { return r.floor === Number(floorFilter); });
+        $('empty').hidden = rooms.length > 0;
+        $('count').textContent = rooms.length ? 'Showing ' + shown.length + ' of ' + rooms.length + ' rooms.' : '';
+        var ul = $('list'); ul.textContent = '';
+        shown.forEach(function (r) { ul.appendChild(row(r)); });
+      }
+      $('floor-filter').addEventListener('change', function (e) { floorFilter = e.target.value; ui = { kind: null, id: null }; render(); });
+
+      // ---------- add / edit ----------
+      var dlg = $('room-dialog'), form = $('room-form');
+      AMENITIES.forEach(function (a, i) {
+        var label = el('label', 'relative block cursor-pointer');
+        var input = el('input', 'peer sr-only'); input.type = 'checkbox'; input.name = 'amenity'; input.value = a; input.id = 'am-' + i;
+        label.appendChild(input); label.appendChild(el('span', 'choice justify-start', a));
+        $('f-amenities').appendChild(label);
+      });
+
+      function fieldErr(id, msg) {
+        var input = $(id), p = $(id + '-err');
+        if (msg) { input.setAttribute('aria-invalid', 'true'); p.textContent = msg; p.hidden = false; }
+        else { input.removeAttribute('aria-invalid'); p.textContent = ''; p.hidden = true; }
+      }
+      function clearErrors() { ['f-id', 'f-floor', 'f-price'].forEach(function (id) { fieldErr(id, ''); }); $('form-error').hidden = true; }
+
+      function openForm(room) {
+        editingId = room ? room.id : null; clearErrors();
+        $('room-title').textContent = room ? 'Edit ' + room.name : 'Add a room';
+        $('f-id').value = room ? room.id : ''; $('f-id').readOnly = !!room;
+        $('f-id-hint').textContent = room ? 'The room number cannot be changed.' : 'Letters, numbers or dashes, up to 8 characters. For example 205.';
+        $('f-floor').value = room ? room.floor : ''; $('f-type').value = room ? room.type : 'Single'; $('f-price').value = room ? room.price : '';
+        form.querySelectorAll('input[name=amenity]').forEach(function (c) { c.checked = !!room && room.amenities.indexOf(c.value) !== -1; });
+        var locked = !!room && !!activeRes(room.id);
+        form.querySelectorAll('input[name=avail]').forEach(function (r) { r.disabled = locked; });
+        form.elements.avail.value = room && !room.available ? 'no' : 'yes';
+        $('avail-note').hidden = !locked;
+        dlg.showModal(); (room ? $('f-floor') : $('f-id')).focus();
+      }
+      $('add-room').addEventListener('click', function () { openForm(null); });
+      $('room-cancel').addEventListener('click', function () { dlg.close(); });
+      dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close(); });
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault(); clearErrors();
+        var id = $('f-id').value.trim(), floor = Number($('f-floor').value), price = Number($('f-price').value);
+        if (!id) fieldErr('f-id', 'Enter the room number.');
+        else if (!/^[A-Za-z0-9-]{1,8}$/.test(id)) fieldErr('f-id', 'Use only letters, numbers or dashes, up to 8 characters.');
+        else if (editingId === null && rooms.some(function (r) { return String(r.id).toLowerCase() === id.toLowerCase(); })) fieldErr('f-id', 'A room with this number already exists.');
+        if (!isFinite(floor) || floor < 1 || floor > 20 || Math.floor(floor) !== floor) fieldErr('f-floor', 'Enter a floor from 1 to 20.');
+        if (!isFinite(price) || price < 1 || price > 1000000 || Math.floor(price) !== price) fieldErr('f-price', 'Enter the monthly price as a whole number, like 4500.');
+        var bad = ['f-id', 'f-floor', 'f-price'].filter(function (x) { return $(x).getAttribute('aria-invalid') === 'true'; })[0];
+        if (bad) { $(bad).focus(); return; }
+
+        var amenities = []; form.querySelectorAll('input[name=amenity]:checked').forEach(function (c) { amenities.push(c.value); });
+        var type = TYPES.indexOf($('f-type').value) !== -1 ? $('f-type').value : 'Single';
+        var available = form.elements.avail.value !== 'no';
+        var next;
+        if (editingId === null) {
+          next = rooms.concat([{ id: id, name: 'Room ' + id, floor: floor, type: type, price: price, amenities: amenities, available: available }]);
+        } else {
+          next = rooms.map(function (r) {
+            if (r.id !== editingId) return r;
+            var keepAvail = activeRes(r.id) ? r.available : available;
+            return Object.assign({}, r, { floor: floor, type: type, price: price, amenities: amenities, available: keepAvail });
+          });
+        }
+        var label = editingId === null ? 'Room ' + id : 'Room ' + editingId;
+        dlg.close();
+        persist(next, (editingId === null ? 'Added ' : 'Saved ') + label + '.');
+      });
+
+      sortRooms(); render();
+    })();
+  </script>
+</body>
+</html>

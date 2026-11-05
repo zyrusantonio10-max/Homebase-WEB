@@ -16,6 +16,7 @@
 */
 (function () {
   var KEY = 'homebase_reservations';
+  var ROOMS_KEY = 'homebase_rooms';
 
   // The house rules posted at Ariate Dormitory (kept close to the sign's own wording).
   var RULES = [
@@ -56,8 +57,54 @@
   function isActive(r) { return r.status === 'pending' || r.status === 'approved' || r.status === 'confirmed'; }
   function nowIso() { return new Date().toISOString(); }
 
+  // A small picture of a room, drawn from its type and amenities (an illustration, not a photo).
+  function roomArt(room) {
+    var F = '#0B4A2F', D = '#083A25', B = '#0E5435', L = '#C6F24E', am = room.amenities || [];
+    function bed(x, y, w) {
+      return '<rect x="' + x + '" y="' + (y + 28) + '" width="' + w + '" height="28" fill="' + D + '"/>' +
+             '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="32" rx="6" fill="' + B + '"/>' +
+             '<rect x="' + (x + 8) + '" y="' + (y - 6) + '" width="34" height="14" rx="5" fill="#fff" stroke="#CBD5CF"/>';
+    }
+    var o = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400">' +
+      '<rect width="640" height="400" fill="#E8EEEA"/>' +
+      '<rect y="300" width="640" height="100" fill="' + F + '"/><rect y="296" width="640" height="8" fill="' + D + '"/>' +
+      '<rect x="200" y="330" width="240" height="40" rx="10" fill="' + B + '"/>' +
+      '<rect x="250" y="50" width="140" height="120" rx="4" fill="' + F + '"/>';
+    [[258, 58], [322, 58], [258, 112], [322, 112]].forEach(function (pt, i) {
+      o += '<rect x="' + pt[0] + '" y="' + pt[1] + '" width="60" height="50" rx="2" fill="' + (room.available && i === 1 ? L : D) + '"/>';
+    });
+    if (am.indexOf('Air conditioning') !== -1) o += '<rect x="100" y="40" width="110" height="34" rx="8" fill="#fff" stroke="#CBD5CF"/><path d="M114 58h82M114 65h82" stroke="#CBD5CF" stroke-width="2"/>';
+    if (am.indexOf('Private bathroom') !== -1) o += '<rect x="402" y="100" width="48" height="200" fill="#CFE3D6" stroke="' + F + '" stroke-width="2"/><circle cx="438" cy="205" r="3.5" fill="' + F + '"/>';
+    if (am.indexOf('Study desk') !== -1) o += '<rect x="245" y="235" width="150" height="10" fill="' + D + '"/><rect x="253" y="245" width="8" height="55" fill="' + D + '"/><rect x="379" y="245" width="8" height="55" fill="' + D + '"/>' +
+      '<rect x="293" y="190" width="54" height="40" rx="4" fill="' + D + '"/><rect x="298" y="195" width="44" height="30" rx="2" fill="' + B + '"/>';
+    if (room.type === 'Single') o += bed(60, 244, 150);
+    else if (room.type === 'Double') o += bed(40, 244, 150) + bed(450, 244, 150);
+    else [40, 470].forEach(function (x) {
+      o += '<rect x="' + x + '" y="186" width="8" height="114" fill="' + D + '"/><rect x="' + (x + 122) + '" y="186" width="8" height="114" fill="' + D + '"/>' + bed(x + 8, 244, 114) + bed(x + 8, 190, 114);
+    });
+    return o + '</svg>';
+  }
+
   var HB = {
     load: load,
+
+    // ---- the room list ----
+    // Starts as the sample rooms in assets/js/rooms.js. Once the landlord saves a change, the list lives in the browser
+    // under "homebase_rooms" and every page reads it from here. (PHP + MySQL phase: this becomes a fetch to the server.)
+    getRooms: function () {
+      try {
+        var raw = localStorage.getItem(ROOMS_KEY);
+        if (raw) { var v = JSON.parse(raw); if (Array.isArray(v)) return v; }
+      } catch (e) {}
+      return JSON.parse(JSON.stringify(window.HOMEBASE_ROOMS || []));
+    },
+    usingSampleRooms: function () { try { return !localStorage.getItem(ROOMS_KEY); } catch (e) { return true; } },
+    saveRooms: function (list) { try { localStorage.setItem(ROOMS_KEY, JSON.stringify(list)); return true; } catch (e) { return false; } },
+    resetRooms: function () { try { localStorage.removeItem(ROOMS_KEY); return true; } catch (e) { return false; } },
+
+    // a real photo if the room has an "image" path, otherwise the drawn illustration
+    roomImage: function (room) { return room.image || ('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(roomArt(room))); },
+
     isActive: isActive,
 
     // newest first

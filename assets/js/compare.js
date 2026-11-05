@@ -12,16 +12,13 @@
   Home lists them and links back to rooms.html?compare=103,202.
 */
 (function () {
-  var MAX = 3;
-  function storageKey() {
-    return (window.HB_AUTH && window.HB_AUTH.userKey) ? window.HB_AUTH.userKey('homebase_comparisons') : 'homebase_comparisons';
-  }
+  var MAX = 3, KEY = 'homebase_comparisons';
   var STATUS = { available: 'Available', held: 'Held (request pending)', reserved: 'Reserved', occupied: 'Occupied', taken: 'Taken', yours: 'Your request' };
 
   function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
   function peso(n) { return '\u20B1' + Number(n).toLocaleString('en-PH'); }
-  function readList() { try { var r = localStorage.getItem(storageKey()), v = r ? JSON.parse(r) : []; return Array.isArray(v) ? v : []; } catch (e) { return []; } }
-  function writeList(v) { try { localStorage.setItem(storageKey(), JSON.stringify(v)); return true; } catch (e) { return false; } }
+  function readList() { try { var r = localStorage.getItem(KEY), v = r ? JSON.parse(r) : []; return Array.isArray(v) ? v : []; } catch (e) { return []; } }
+  function writeList(v) { try { localStorage.setItem(KEY, JSON.stringify(v)); return true; } catch (e) { return false; } }
 
   window.HBCompare = {
     mount: function (cfg) {
@@ -91,13 +88,12 @@
 
       function buildTable(list) {
         var t = document.getElementById('cmp-table'); t.textContent = '';
-        var dir = window.HOMEBASE_IMAGE_DIR || 'assets/images/';
         var head = el('thead'), hr = el('tr');
         var corner = el('th', 'w-32 p-3'); corner.appendChild(el('span', 'sr-only', 'Feature')); hr.appendChild(corner);
         list.forEach(function (r) {
           var th = el('th', 'min-w-[150px] p-3 align-top'); th.scope = 'col';
           var img = el('img', 'aspect-[8/5] w-full rounded-lg bg-track object-cover');
-          img.src = r.image || (dir + 'room-' + r.id + '.svg'); img.alt = r.name + ' (illustration)'; img.width = 640; img.height = 400; img.decoding = 'async';
+          img.src = HB.roomImage(r); img.alt = r.name + ' (illustration)'; img.width = 640; img.height = 400; img.decoding = 'async';
           th.appendChild(img); th.appendChild(el('span', 'mt-2 block font-display text-lg font-semibold tracking-tight', r.name));
           hr.appendChild(th);
         });
