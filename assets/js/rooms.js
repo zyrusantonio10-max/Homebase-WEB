@@ -2,7 +2,9 @@
   SAMPLE DATA. These rooms, prices and availability are placeholders, not the real Ariate Dormitory list.
   Later (PHP + MySQL phase): the room list comes from the database instead, in the same shape as below.
 
-  Each room: { id, name, floor, type: "Single" | "Double" | "Quad", price (per month, in pesos), amenities: [...], available: true | false }
+  Each room: { id, name, floor, type: "Single" | "Double" | "Quad", price (per person per month, in pesos), amenities: [...], available: true | false,
+          bedsTaken (optional: beds already taken outside Homebase) }
+  Beds: Single 1, Double 2, Quad 4. Students can keep requesting a shared room until its last bed is taken.
 
   This file is only the STARTING list. When the landlord adds, edits or removes a room, the real list is kept in the browser
   (see HB.getRooms in reservation.js) and this file is not used for rooms any more. It still holds the amenity choices below.

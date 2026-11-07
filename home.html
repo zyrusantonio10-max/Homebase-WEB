@@ -269,7 +269,7 @@
         </div>
 
         <div data-state="empty" hidden class="mt-4">
-          <p class="note max-w-lg">You have not requested a room yet. Find a room and press Request this room. The dormitory office answers your request, and the room is held for you while you wait.</p>
+          <p class="note max-w-lg">You have not requested a room yet. Find a room and press Request this room. The dormitory office answers your request, and your spot is held while you wait.</p>
           <a href="rooms.html" class="btn mt-4">Explore rooms</a>
         </div>
 
@@ -402,13 +402,18 @@
       $('first-name').textContent = firstName;
       $('profile-name').textContent = fullName;
       $('profile-email').textContent = String(user.email);
-      var prof = HB_AUTH.getProfile(user.id);
+      var prof = (window.HB_AUTH && HB_AUTH.getProfile) ? HB_AUTH.getProfile(user.id) : {};
       if (prof && prof.course) {
         var subEl = $('profile-sub');
         if (subEl) subEl.textContent = prof.course;
       }
-      HB_AUTH.renderAvatar($('nav-initial'), user);
-      HB_AUTH.renderAvatar($('profile-initial'), user);
+      if (window.HB_AUTH && HB_AUTH.renderAvatar) {
+        HB_AUTH.renderAvatar($('nav-initial'), user);
+        HB_AUTH.renderAvatar($('profile-initial'), user);
+      } else {
+        $('nav-initial').textContent = initial;
+        $('profile-initial').textContent = initial;
+      }
 
       // ---- best match ----
       function renderTop() {
@@ -545,7 +550,7 @@
         var label = { pending: 'Pending', approved: 'Approved, payment due', confirmed: 'Confirmed', declined: 'Declined', cancelled: 'Cancelled', expired: 'Expired', ended: 'Stay ended' }[r.status] || r.status;
         head.appendChild(mk('p', 'text-base font-semibold ' + (r.status === 'approved' || r.status === 'confirmed' ? 'text-forest' : r.status === 'pending' ? 'text-ink' : 'text-muted'), label));
         box.appendChild(head);
-        box.appendChild(mk('p', 'mt-1 text-base text-muted', 'Floor ' + r.floor + ', ' + r.type + ' room, ' + peso(r.price)));
+        box.appendChild(mk('p', 'mt-1 text-base text-muted', 'Floor ' + r.floor + ', ' + r.type + ' room, ' + HB.priceLabel(r)));
 
         var dl = mk('dl', 'mt-4 grid gap-3 text-base sm:grid-cols-3');
         var facts = [['Move-in date', fmtDate(r.moveIn)], ['Requested on', fmtDate(r.createdAt)]];
@@ -589,7 +594,7 @@
 
         var panel = mk('div', 'mt-5 rounded-xl border border-line bg-tint p-4');
         if (r.status === 'pending') {
-          panel.appendChild(mk('p', 'text-base', 'The dormitory office is reviewing your request. Your room is held for you while you wait.'));
+          panel.appendChild(mk('p', 'text-base', 'The dormitory office is reviewing your request. Your spot is held for you while you wait.'));
           panel.appendChild(cancelRow('Cancel this request? The room is released.'));
         } else if (r.status === 'approved') {
           panel.appendChild(mk('p', 'font-semibold text-forest-deep', 'Approved. Next step: pay the dormitory office' + (due ? ' by ' + due : '') + '.'));

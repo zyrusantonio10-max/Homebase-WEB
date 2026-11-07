@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -325,14 +325,17 @@
         var body = el('div', 'flex flex-1 flex-col p-5');
         var head = el('div', 'flex items-baseline justify-between gap-3');
         head.appendChild(el('h3', 'font-display text-lg font-semibold tracking-tight', r.name));
-        head.appendChild(el('span', 'shrink-0 text-sm font-semibold ' + (st === 'available' || st === 'yours' ? 'text-forest' : 'text-muted'), { available: 'Available', held: 'Held', reserved: 'Reserved', occupied: 'Occupied', taken: 'Taken', yours: 'Your request' }[st]));
+        head.appendChild(el('span', 'shrink-0 text-sm font-semibold ' + (st === 'available' || st === 'yours' ? 'text-forest' : 'text-muted'), { available: 'Available', full: 'Full', taken: 'Taken', yours: 'Your request' }[st]));
         body.appendChild(head);
         body.appendChild(el('p', 'mt-1 text-base text-muted', 'Floor ' + r.floor + ', ' + r.type + ' room'));
-        body.appendChild(el('p', 'mt-2 font-display text-xl font-bold tracking-tight', peso(r.price) + ' per month'));
+        var bt = HB.bedsText(r);
+        if (bt) body.appendChild(el('p', 'mt-1 text-sm font-medium ' + (st === 'available' || st === 'yours' ? 'text-forest' : 'text-muted'), bt));
+        body.appendChild(el('p', 'mt-2 font-display text-xl font-bold tracking-tight', HB.priceLabel(r)));
 
         var chips = el('ul', 'mt-3 flex flex-wrap gap-1.5');
         r.amenities.forEach(function (a) { chips.appendChild(el('li', 'rounded-lg border border-line bg-tint px-2.5 py-1 text-sm', a)); });
         body.appendChild(chips);
+
         // ---- occupant preview (clickable avatar pills) ----
         var occs = HB.load().list.filter(function (res) {
           return res.roomId === r.id && (res.status === 'confirmed' || res.status === 'approved');
@@ -398,8 +401,8 @@
         } else if (st === 'yours') {
           var a = el('a', 'inline-flex min-h-[44px] items-center font-semibold text-forest underline underline-offset-4', 'See your request on Home');
           a.href = 'home.html#reservation'; foot.appendChild(a);
-        } else if (st === 'held' || st === 'reserved') {
-          foot.appendChild(el('p', 'text-sm text-muted', st === 'held' ? 'Another student has a pending request for this room.' : 'This room is reserved for another student.'));
+        } else if (st === 'full') {
+          foot.appendChild(el('p', 'text-sm text-muted', 'Every bed in this room is taken.'));
         } else {
           foot.appendChild(el('p', 'text-sm text-muted', 'This room is taken, so it cannot be saved.'));
         }
@@ -452,4 +455,4 @@
     })();
   </script>
 </body>
-</html> 
+</html>

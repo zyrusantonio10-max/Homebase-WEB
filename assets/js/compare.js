@@ -13,7 +13,7 @@
 */
 (function () {
   var MAX = 3, KEY = 'homebase_comparisons';
-  var STATUS = { available: 'Available', held: 'Held (request pending)', reserved: 'Reserved', occupied: 'Occupied', taken: 'Taken', yours: 'Your request' };
+  var STATUS = { available: 'Available', full: 'Full (every bed is taken)', taken: 'Taken', yours: 'Your request' };
 
   function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
   function peso(n) { return '\u20B1' + Number(n).toLocaleString('en-PH'); }
@@ -109,9 +109,13 @@
         addRow('Status', function (r) { return { text: STATUS[HB.roomState(r, user.id)] }; });
         addRow('Floor', function (r) { return { text: 'Floor ' + r.floor }; });
         addRow('Room type', function (r) { return { text: r.type }; });
-        addRow('Price per month', function (r) {
+        addRow('Beds free', function (r) {
+          var i = HB.bedsInfo(r, user.id);
+          return { text: i.capacity > 1 ? i.free + ' of ' + i.capacity : (i.free > 0 ? 'Free' : 'Not free') };
+        });
+        addRow('Price', function (r) {
           var lowest = r.price === low && list.some(function (o) { return o.price !== low; });
-          return { text: peso(r.price) + (lowest ? ' (lowest)' : ''), strong: lowest };
+          return { text: HB.priceLabel(r) + (lowest ? ' (lowest)' : ''), strong: lowest };
         });
         (window.HOMEBASE_AMENITIES || []).forEach(function (a) {
           addRow(a, function (r) { return { text: r.amenities.indexOf(a) !== -1 ? 'Yes' : 'No' }; });

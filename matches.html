@@ -141,7 +141,7 @@
             <li><b class="text-ink">Room type, 15 points.</b> All 15 if the type matches, or if you chose Any.</li>
             <li><b class="text-ink">Floor, 15 points.</b> All 15 if the room is on your preferred floor, or if you have no preference.</li>
             <li><b class="text-ink">Labels.</b> Great fit means 85 or more with nothing missing and the right room type and floor. Otherwise 65 or more is a Good fit, 45 to 64 Okay, and below 45 Weak.</li>
-            <li>Rooms that are taken or on hold are never listed.</li>
+            <li>Rooms with no free bed are never listed. A shared room (Double or Quad) stays listed until its last bed is taken.</li>
           </ul>
         </details>
       </aside>
@@ -316,7 +316,7 @@
       function breakdown(s, cls) {
         return el('p', cls, 'Budget ' + s.budgetPts + '/40, amenities ' + s.amenityPts + '/30, room type ' + s.typePts + '/15, floor ' + s.floorPts + '/15');
       }
-      function facts(r) { return 'Floor ' + r.floor + ', ' + r.type + ' room, ' + peso(r.price) + ' per month'; }
+      function facts(r) { var bt = HB.bedsText(r); return 'Floor ' + r.floor + ', ' + r.type + ' room, ' + HB.priceLabel(r) + (bt ? ', ' + bt : ''); }
 
       function renderTop(s) {
         var box = $('top'); box.textContent = '';
@@ -374,7 +374,7 @@
           setState('none'); return;
         }
         var best = res.list[0];
-        $('summary').textContent = res.list.length + ' available room' + (res.list.length === 1 ? ' fits' : 's fit') + ' your budget. ' + res.over + ' available over budget, ' + res.taken + ' taken or on hold.';
+        $('summary').textContent = res.list.length + ' available room' + (res.list.length === 1 ? ' fits' : 's fit') + ' your budget. ' + res.over + ' available over budget, ' + res.taken + ' full or taken.';
         renderTop(best); renderRest(res.list.slice(1));
         if (!write(K.top, { name: best.room.name, score: best.total, label: fitLabel(best), price: best.room.price })) {
           var err = $('page-error'); err.textContent = 'Your matches are shown, but your browser blocked saving them, so Home will not show your best match.'; err.classList.remove('hidden');
