@@ -117,6 +117,17 @@
     },
     activeFor: function (userId) { return HB.forUser(userId).filter(isActive)[0] || null; },
 
+    // history of closed requests and past stays for the office
+    history: function () {
+      var closed = ['declined', 'cancelled', 'expired', 'ended'];
+      return load().list.filter(function (r) { return closed.indexOf(r.status) !== -1; }).sort(function (a, b) {
+        return String(b.endedAt || b.updatedAt || b.createdAt).localeCompare(String(a.endedAt || a.updatedAt || a.createdAt));
+      });
+    },
+    historyForRoom: function (roomId) {
+      return HB.history().filter(function (r) { return r.roomId === roomId; });
+    },
+
     // beds in a room: a Double fits 2 students and a Quad fits 4
     capacity: function (room) { return Number(room.capacity) || { Single: 1, Double: 2, Quad: 4 }[room.type] || 1; },
     bedsInfo: function (room, userId) {
