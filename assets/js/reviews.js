@@ -164,9 +164,10 @@
       return box;
     },
     // a line about one room's reviews
-    roomLine: function (room) {
+    // opts.quiet: show nothing at all when the room has no reviews yet
+    roomLine: function (room, opts) {
       var list = HBR.forRoom(room.id), box = el('div', 'mt-3');
-      if (!list.length) { box.appendChild(el('p', 'text-sm text-muted', 'No reviews of this room yet.')); return box; }
+      if (!list.length) { if (opts && opts.quiet) return null; box.appendChild(el('p', 'text-sm text-muted', 'No reviews of this room yet.')); return box; }
       var o = HBR.summary(list).overall;
       box.appendChild(el('p', 'text-sm text-muted', list.length + ' review' + (list.length === 1 ? '' : 's') + ' of this room, ' + o + ' out of 5 overall.'));
       var b = el('button', 'inline-flex min-h-[44px] items-center rounded font-semibold text-forest underline underline-offset-4 outline-none hover:text-forest-deep focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2', 'Read reviews of ' + room.name);

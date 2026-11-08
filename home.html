@@ -29,7 +29,6 @@
     - Commute and safety are not shown anywhere on this page (your decision: they only appear inside reviews).
 
     TODO (for the other pages and the PHP + MySQL phase):
-    - matches.html, rooms.html and floorplan.html do not exist yet. The navbar links are ready for them.
     - The three storage keys below are the "contract" between this page and the pages you build next.
       When you move to PHP + MySQL, replace the read() calls in the script with fetch() calls and keep the render functions.
   -->
@@ -103,7 +102,6 @@
         <li><a class="nav-link" href="home.html" aria-current="page">Home</a></li>
         <li><a class="nav-link" href="matches.html">My Matches</a></li>
         <li><a class="nav-link" href="rooms.html">Explore Rooms</a></li>
-        <li><a class="nav-link" href="floorplan.html">Floor Plan</a></li>
       </ul>
 
       <div class="flex items-center gap-2">
@@ -125,7 +123,6 @@
         <li><a class="nav-link w-full" href="home.html" aria-current="page">Home</a></li>
         <li><a class="nav-link w-full" href="matches.html">My Matches</a></li>
         <li><a class="nav-link w-full" href="rooms.html">Explore Rooms</a></li>
-        <li><a class="nav-link w-full" href="floorplan.html">Floor Plan</a></li>
       </ul>
       <div class="mt-2 border-t border-line pt-2">
         <button type="button" data-logout class="btn btn-outline w-full">Log out</button>
@@ -149,10 +146,9 @@
       <section id="start" hidden aria-labelledby="start-title" class="mt-8 rounded-[20px] border border-line bg-tint p-6 sm:p-8">
         <h2 id="start-title" class="font-display text-xl font-bold tracking-tight">Where do you want to start?</h2>
         <p class="note mt-1">Choose what suits you. You can switch at any time.</p>
-        <ul class="mt-5 grid gap-3 md:grid-cols-3">
+        <ul class="mt-5 grid gap-3 md:grid-cols-2">
           <li><a href="matches.html" class="block h-full rounded-xl border border-line bg-white p-4 no-underline outline-none transition-colors hover:border-forest focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2"><span class="block font-display text-lg font-semibold tracking-tight text-ink">Match me with a room</span><span class="mt-1 block text-base text-muted">Tell us your budget and needs. We rank the rooms for you.</span></a></li>
           <li><a href="rooms.html" class="block h-full rounded-xl border border-line bg-white p-4 no-underline outline-none transition-colors hover:border-forest focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2"><span class="block font-display text-lg font-semibold tracking-tight text-ink">Browse all rooms</span><span class="mt-1 block text-base text-muted">Look at every room and compare the ones you like.</span></a></li>
-          <li><a href="floorplan.html" class="block h-full rounded-xl border border-line bg-white p-4 no-underline outline-none transition-colors hover:border-forest focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2"><span class="block font-display text-lg font-semibold tracking-tight text-ink">Pick by floor</span><span class="mt-1 block text-base text-muted">See which rooms are free on each floor.</span></a></li>
         </ul>
       </section>
 
