@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -37,7 +37,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
 
-  <script src="assets/js/auth.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="assets/js/tw-config.js"></script>
 
@@ -72,10 +71,10 @@
         <li><a class="nav-link" href="floorplan.html" aria-current="page">Floor Plan</a></li>
       </ul>
       <div class="flex items-center gap-2">
-        <a href="profile.html" class="hidden items-center gap-2 pr-1 md:flex rounded-full py-1 pl-1 pr-2 hover:bg-track transition-colors outline-none focus-visible:ring-2 focus-visible:ring-forest" title="My Profile" aria-label="My Profile">
-          <span id="nav-initial" class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-forest font-display text-sm font-semibold text-white overflow-hidden" aria-hidden="true"></span>
+        <span class="hidden items-center gap-2 pr-1 md:flex">
+          <span id="nav-initial" class="grid h-9 w-9 place-items-center rounded-full bg-forest font-display text-sm font-semibold text-white" aria-hidden="true"></span>
           <span id="nav-name" class="max-w-[9rem] truncate text-sm font-medium"></span>
-        </a>
+        </span>
         <button type="button" data-logout class="btn btn-outline hidden md:inline-flex">Log out</button>
         <button type="button" id="menu-btn" aria-expanded="false" aria-controls="menu" class="inline-flex min-h-[44px] items-center rounded-full border border-forest bg-white px-4 text-base font-semibold text-forest outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 md:hidden"><span id="menu-label">Menu</span></button>
       </div>
@@ -86,7 +85,6 @@
         <li><a class="nav-link w-full" href="matches.html">My Matches</a></li>
         <li><a class="nav-link w-full" href="rooms.html">Explore Rooms</a></li>
         <li><a class="nav-link w-full" href="floorplan.html" aria-current="page">Floor Plan</a></li>
-        <li><a class="nav-link w-full" href="profile.html">My Profile</a></li>
       </ul>
       <div class="mt-2 border-t border-line pt-2"><button type="button" data-logout class="btn btn-outline w-full">Log out</button></div>
     </div>
@@ -145,6 +143,7 @@
 
   <script src="assets/js/rooms.js"></script>
   <script src="assets/js/reservation.js"></script>
+  <script src="assets/js/reviews.js"></script>
   <script>
     (function () {
       var K = { user: 'homebase_currentUser', saved: 'homebase_savedRooms' };
@@ -159,11 +158,7 @@
       // ---- navbar ----
       var user = (read(K.user).value) || {};
       var fullName = String(user.name || user.email || '');
-      if (window.HB_AUTH && HB_AUTH.renderAvatar) {
-        HB_AUTH.renderAvatar($('nav-initial'), user);
-      } else {
-        $('nav-initial').textContent = fullName.charAt(0).toUpperCase();
-      }
+      $('nav-initial').textContent = fullName.charAt(0).toUpperCase();
       $('nav-name').textContent = fullName.split(/\s+/)[0];
       document.querySelectorAll('[data-logout]').forEach(function (b) { b.addEventListener('click', function () { drop(K.user); window.location.href = 'index.html'; }); });
       document.querySelectorAll('[data-reload]').forEach(function (b) { b.addEventListener('click', function () { window.location.reload(); }); });
@@ -197,7 +192,7 @@
       function toggleSave(room, btn) {
         var cur = read(K.saved).value; cur = Array.isArray(cur) ? cur : [];
         var has = cur.some(function (x) { return x.id === room.id; });
-        var next = has ? cur.filter(function (x) { return x.id !== room.id; }) : cur.concat([{ id: room.id, name: room.name, price: room.price }]);
+        var next = has ? cur.filter(function (x) { return x.id !== room.id; }) : cur.concat([{ id: room.id, name: room.name, price: room.price, type: room.type }]);
         var err = $('page-error');
         if (!write(K.saved, next)) { err.textContent = 'We could not save that room. Allow site data for this page in your browser and try again.'; err.classList.remove('hidden'); return; }
         err.classList.add('hidden');
@@ -230,6 +225,7 @@
         var chips = el('ul', 'mt-3 flex flex-wrap gap-1.5');
         r.amenities.forEach(function (a) { chips.appendChild(el('li', 'rounded-lg border border-line bg-white px-2.5 py-1 text-sm', a)); });
         box.appendChild(chips);
+        if (window.HBReviews) box.appendChild(HBReviews.roomLine(r));
 
         var foot = el('div', 'mt-5 space-y-2');
         if (st === 'available') {

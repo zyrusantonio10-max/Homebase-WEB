@@ -1,4 +1,4 @@
-/*
+﻿/*
   Reservation requests: shared by Home, My Matches, Explore Rooms, Floor Plan and the landlord page.
   Stored in localStorage under "homebase_reservations" as a list. Each item has the same columns a MySQL
   "reservations" table would have, so the move to PHP + MySQL later only swaps load() and save():
@@ -117,17 +117,6 @@
     },
     activeFor: function (userId) { return HB.forUser(userId).filter(isActive)[0] || null; },
 
-    // history of closed requests and past stays for the office
-    history: function () {
-      var closed = ['declined', 'cancelled', 'expired', 'ended'];
-      return load().list.filter(function (r) { return closed.indexOf(r.status) !== -1; }).sort(function (a, b) {
-        return String(b.endedAt || b.updatedAt || b.createdAt).localeCompare(String(a.endedAt || a.updatedAt || a.createdAt));
-      });
-    },
-    historyForRoom: function (roomId) {
-      return HB.history().filter(function (r) { return r.roomId === roomId; });
-    },
-
     // beds in a room: a Double fits 2 students and a Quad fits 4
     capacity: function (room) { return Number(room.capacity) || { Single: 1, Double: 2, Quad: 4 }[room.type] || 1; },
     bedsInfo: function (room, userId) {
@@ -157,7 +146,7 @@
       if (HB.activeFor(user.id)) return { ok: false, error: 'You already have an active request. Cancel it on Home before requesting another room.' };
       if (HB.roomState(room, user.id) !== 'available') return { ok: false, error: 'This room is no longer available.' };
       var rec = {
-        id: 'res-' + Date.now(), userId: user.id, studentName: user.name, studentEmail: user.email,
+        id: 'res-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7), userId: user.id, studentName: user.name, studentEmail: user.email,
         roomId: room.id, roomName: room.name, floor: room.floor, type: room.type, price: room.price,
         moveIn: moveIn, message: String(message || '').trim().slice(0, 300),
         status: 'pending', rulesAcceptedAt: nowIso(), createdAt: nowIso(), updatedAt: nowIso()

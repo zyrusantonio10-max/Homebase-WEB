@@ -113,6 +113,11 @@
           var i = HB.bedsInfo(r, user.id);
           return { text: i.capacity > 1 ? i.free + ' of ' + i.capacity : (i.free > 0 ? 'Free' : 'Not free') };
         });
+        addRow('Student reviews', function (r) {
+          if (!window.HBReviews) return { text: 'None yet' };
+          var l = HBReviews.forRoom(r.id);
+          return { text: l.length ? HBReviews.summary(l).overall + ' out of 5 (' + l.length + ')' : 'None yet' };
+        });
         addRow('Price', function (r) {
           var lowest = r.price === low && list.some(function (o) { return o.price !== low; });
           return { text: HB.priceLabel(r) + (lowest ? ' (lowest)' : ''), strong: lowest };
