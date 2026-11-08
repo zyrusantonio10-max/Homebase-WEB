@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -37,7 +37,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
 
-  <script src="assets/js/auth.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="assets/js/tw-config.js"></script>
 
@@ -69,13 +68,12 @@
         <li><a class="nav-link" href="home.html">Home</a></li>
         <li><a class="nav-link" href="matches.html">My Matches</a></li>
         <li><a class="nav-link" href="rooms.html">Explore Rooms</a></li>
-        <li><a class="nav-link" href="floorplan.html" aria-current="page">Floor Plan</a></li>
       </ul>
       <div class="flex items-center gap-2">
-        <a href="profile.html" class="hidden items-center gap-2 pr-1 md:flex rounded-full py-1 pl-1 pr-2 hover:bg-track transition-colors outline-none focus-visible:ring-2 focus-visible:ring-forest" title="My Profile" aria-label="My Profile">
-          <span id="nav-initial" class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-forest font-display text-sm font-semibold text-white overflow-hidden" aria-hidden="true"></span>
+        <span class="hidden items-center gap-2 pr-1 md:flex">
+          <span id="nav-initial" class="grid h-9 w-9 place-items-center rounded-full bg-forest font-display text-sm font-semibold text-white" aria-hidden="true"></span>
           <span id="nav-name" class="max-w-[9rem] truncate text-sm font-medium"></span>
-        </a>
+        </span>
         <button type="button" data-logout class="btn btn-outline hidden md:inline-flex">Log out</button>
         <button type="button" id="menu-btn" aria-expanded="false" aria-controls="menu" class="inline-flex min-h-[44px] items-center rounded-full border border-forest bg-white px-4 text-base font-semibold text-forest outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 md:hidden"><span id="menu-label">Menu</span></button>
       </div>
@@ -85,8 +83,6 @@
         <li><a class="nav-link w-full" href="home.html">Home</a></li>
         <li><a class="nav-link w-full" href="matches.html">My Matches</a></li>
         <li><a class="nav-link w-full" href="rooms.html">Explore Rooms</a></li>
-        <li><a class="nav-link w-full" href="floorplan.html" aria-current="page">Floor Plan</a></li>
-        <li><a class="nav-link w-full" href="profile.html">My Profile</a></li>
       </ul>
       <div class="mt-2 border-t border-line pt-2"><button type="button" data-logout class="btn btn-outline w-full">Log out</button></div>
     </div>
@@ -145,6 +141,7 @@
 
   <script src="assets/js/rooms.js"></script>
   <script src="assets/js/reservation.js"></script>
+  <script src="assets/js/reviews.js"></script>
   <script>
     (function () {
       var K = { user: 'homebase_currentUser', saved: 'homebase_savedRooms' };
@@ -159,11 +156,7 @@
       // ---- navbar ----
       var user = (read(K.user).value) || {};
       var fullName = String(user.name || user.email || '');
-      if (window.HB_AUTH && HB_AUTH.renderAvatar) {
-        HB_AUTH.renderAvatar($('nav-initial'), user);
-      } else {
-        $('nav-initial').textContent = fullName.charAt(0).toUpperCase();
-      }
+      $('nav-initial').textContent = fullName.charAt(0).toUpperCase();
       $('nav-name').textContent = fullName.split(/\s+/)[0];
       document.querySelectorAll('[data-logout]').forEach(function (b) { b.addEventListener('click', function () { drop(K.user); window.location.href = 'index.html'; }); });
       document.querySelectorAll('[data-reload]').forEach(function (b) { b.addEventListener('click', function () { window.location.reload(); }); });
@@ -197,7 +190,7 @@
       function toggleSave(room, btn) {
         var cur = read(K.saved).value; cur = Array.isArray(cur) ? cur : [];
         var has = cur.some(function (x) { return x.id === room.id; });
-        var next = has ? cur.filter(function (x) { return x.id !== room.id; }) : cur.concat([{ id: room.id, name: room.name, price: room.price }]);
+        var next = has ? cur.filter(function (x) { return x.id !== room.id; }) : cur.concat([{ id: room.id, name: room.name, price: room.price, type: room.type }]);
         var err = $('page-error');
         if (!write(K.saved, next)) { err.textContent = 'We could not save that room. Allow site data for this page in your browser and try again.'; err.classList.remove('hidden'); return; }
         err.classList.add('hidden');
@@ -220,14 +213,17 @@
 
         var head = el('div', 'mt-4 flex items-baseline justify-between gap-3');
         head.appendChild(el('p', 'font-display text-2xl font-bold tracking-tight', r.name));
-        head.appendChild(el('span', 'text-sm font-semibold ' + (st === 'available' || st === 'yours' ? 'text-forest' : 'text-muted'), { available: 'Available', held: 'Held', reserved: 'Reserved', occupied: 'Occupied', taken: 'Taken', yours: 'Your request' }[st]));
+        head.appendChild(el('span', 'text-sm font-semibold ' + (st === 'available' || st === 'yours' ? 'text-forest' : 'text-muted'), { available: 'Available', full: 'Full', taken: 'Taken', yours: 'Your request' }[st]));
         box.appendChild(head);
         box.appendChild(el('p', 'mt-1 text-base text-muted', 'Floor ' + r.floor + ', ' + r.type + ' room'));
-        box.appendChild(el('p', 'mt-2 font-display text-xl font-bold tracking-tight', peso(r.price) + ' per month'));
+        var bt = HB.bedsText(r);
+        if (bt) box.appendChild(el('p', 'mt-1 text-sm font-medium ' + (st === 'available' || st === 'yours' ? 'text-forest' : 'text-muted'), bt));
+        box.appendChild(el('p', 'mt-2 font-display text-xl font-bold tracking-tight', HB.priceLabel(r)));
 
         var chips = el('ul', 'mt-3 flex flex-wrap gap-1.5');
         r.amenities.forEach(function (a) { chips.appendChild(el('li', 'rounded-lg border border-line bg-white px-2.5 py-1 text-sm', a)); });
         box.appendChild(chips);
+        if (window.HBReviews) box.appendChild(HBReviews.roomLine(r));
 
         var foot = el('div', 'mt-5 space-y-2');
         if (st === 'available') {
@@ -244,8 +240,8 @@
         } else if (st === 'yours') {
           var a = el('a', 'inline-flex min-h-[44px] items-center font-semibold text-forest underline underline-offset-4', 'See your request on Home');
           a.href = 'home.html#reservation'; foot.appendChild(a);
-        } else if (st === 'held' || st === 'reserved') {
-          foot.appendChild(el('p', 'text-sm text-muted', st === 'held' ? 'Another student has a pending request for this room, so it cannot be saved.' : 'This room is reserved for another student, so it cannot be saved.'));
+        } else if (st === 'full') {
+          foot.appendChild(el('p', 'text-sm text-muted', 'Every bed in this room is taken, so it cannot be saved.'));
         } else {
           foot.appendChild(el('p', 'text-sm text-muted', 'This room is taken, so it cannot be saved.'));
         }
@@ -258,12 +254,13 @@
         var st = HB.roomState(r, user.id);
         var b = el('button', 'tile' + (st === 'available' || st === 'yours' ? '' : ' tile-taken')); b.type = 'button';
         b.setAttribute('aria-pressed', String(state.selected === r.id));
-        b.setAttribute('aria-label', r.name + ', ' + r.type + ', ' + { available: 'available', held: 'held, request pending', reserved: 'reserved', occupied: 'occupied', taken: 'taken', yours: 'your request' }[st]);
+        b.setAttribute('aria-label', r.name + ', ' + r.type + ', ' + { available: 'available', full: 'full', taken: 'taken', yours: 'your request' }[st] + (st === 'available' && HB.bedsText(r) ? ', ' + HB.bedsText(r) : ''));
         var win = el('span', 'absolute right-2 top-2 block h-3 w-3 rounded-sm ' + (st === 'available' || st === 'yours' ? 'bg-lime ring-1 ring-forest' : 'bg-forest-deep'));
         win.setAttribute('aria-hidden', 'true');
         b.appendChild(win);
         b.appendChild(el('span', 'font-display text-lg font-bold leading-none', r.id));
-        b.appendChild(el('span', 'mt-1 text-sm', { available: r.type, held: 'Held', reserved: 'Reserved', occupied: 'Occupied', taken: 'Taken', yours: 'Yours' }[st]));
+        b.appendChild(el('span', 'mt-1 text-sm', { available: r.type, full: 'Full', taken: 'Taken', yours: 'Yours' }[st]));
+        if (st === 'available' && HB.capacity(r) > 1) b.appendChild(el('span', 'text-sm font-semibold', HB.bedsInfo(r, user.id).free + ' left'));
         b.addEventListener('click', function () { state.selected = r.id; renderPlan(); showDetail(r); });
         li.appendChild(b);
         return li;
@@ -287,7 +284,8 @@
       function renderPlan() {
         var list = ROOMS.filter(function (r) { return r.floor === state.floor; }).sort(function (a, b) { return a.id.localeCompare(b.id); });
         var free = list.filter(function (r) { return HB.roomState(r, user.id) === 'available'; }).length;
-        $('floor-summary').textContent = 'Floor ' + state.floor + ': ' + free + ' of ' + list.length + ' rooms available.';
+        var beds = list.reduce(function (n, r) { return n + (r.available ? HB.bedsInfo(r, user.id).free : 0); }, 0);
+        $('floor-summary').textContent = 'Floor ' + state.floor + ': ' + free + ' of ' + list.length + ' rooms have a free bed (' + beds + ' bed' + (beds === 1 ? '' : 's') + ' free in total).';
         var half = Math.ceil(list.length / 2), top = $('row-top'), bottom = $('row-bottom');
         top.textContent = ''; bottom.textContent = '';
         list.forEach(function (r, i) { (i < half ? top : bottom).appendChild(tile(r)); });

@@ -144,9 +144,16 @@
         </div>
 
         <div>
-          <label class="label" for="f-price">Price per month (pesos)</label>
+          <label class="label" for="f-price">Price per person per month (pesos)</label>
           <input class="field" id="f-price" type="number" inputmode="numeric" min="1" step="1" aria-describedby="f-price-err" required>
           <p id="f-price-err" class="err" hidden></p>
+        </div>
+
+        <div id="beds-box" hidden>
+          <label class="label" for="f-beds">Beds already taken outside Homebase</label>
+          <input class="field" id="f-beds" type="number" inputmode="numeric" min="0" step="1" aria-describedby="f-beds-hint f-beds-err">
+          <p id="f-beds-hint" class="mt-1.5 text-sm text-muted">For a shared room where someone already lives. Enter 0 if none. A Double has 2 beds and a Quad has 4.</p>
+          <p id="f-beds-err" class="err" hidden></p>
         </div>
 
         <fieldset>
@@ -204,7 +211,8 @@
       function sortRooms() {
         rooms.sort(function (a, b) { return (a.floor - b.floor) || String(a.id).localeCompare(String(b.id), undefined, { numeric: true }); });
       }
-      function activeRes(id) { return HB.load().list.filter(function (r) { return r.roomId === id && HB.isActive(r); })[0]; }
+      function activeList(id) { return HB.load().list.filter(function (r) { return r.roomId === id && HB.isActive(r); }); }
+      function activeRes(id) { return activeList(id)[0]; }
       function notice(text) { var n = $('notice'); n.textContent = text; n.hidden = !text; }
       function fail(text) { var e = $('page-error'); e.textContent = text || ''; e.hidden = !text; }
       function persist(next, okText) {
@@ -214,9 +222,8 @@
 
       // ---------- list ----------
       function row(r) {
-        var res = activeRes(r.id), st = HB.roomState(r, '__office__');
-        var statusText = { available: 'Available', taken: 'Taken', held: 'Held for ' + (res && res.studentName) + ' (request pending)',
-                           reserved: 'Reserved for ' + (res && res.studentName) + ' (waiting for payment)', occupied: 'Occupied by ' + (res && res.studentName) }[st];
+        var list = activeList(r.id), res = list[0], info = HB.bedsInfo(r, '__office__'), st = HB.roomState(r, '__office__');
+        var statusText = st === 'available' ? (info.capacity > 1 ? info.free + ' of ' + info.capacity + ' beds free' : 'Available') : (st === 'full' ? 'Full' : 'Taken');
         var li = el('li', 'rounded-[20px] border border-line bg-white p-4 sm:p-5');
         var grid = el('div', 'grid gap-4 sm:grid-cols-[120px_1fr]');
 
@@ -229,11 +236,25 @@
         head.appendChild(el('p', 'font-display text-xl font-bold tracking-tight', r.name));
         head.appendChild(el('p', 'text-sm font-semibold ' + (st === 'available' ? 'text-forest' : 'text-muted'), statusText));
         body.appendChild(head);
-        body.appendChild(el('p', 'mt-1 text-base text-muted', 'Floor ' + r.floor + ', ' + r.type + ' room, ' + peso(r.price) + ' per month'));
+        body.appendChild(el('p', 'mt-1 text-base text-muted', 'Floor ' + r.floor + ', ' + r.type + ' room, ' + HB.priceLabel(r)));
         var chips = el('ul', 'mt-2 flex flex-wrap gap-1.5');
         if (r.amenities.length) r.amenities.forEach(function (a) { chips.appendChild(el('li', 'rounded-lg border border-line bg-tint px-2.5 py-1 text-sm', a)); });
         else chips.appendChild(el('li', 'text-sm text-muted', 'No amenities listed'));
         body.appendChild(chips);
+        if (list.length) {
+          var who = list.map(function (x) { return x.studentName + ' (' + { pending: 'pending', approved: 'approved, waiting for payment', confirmed: 'paid' }[x.status] + ')'; }).join(', ');
+          body.appendChild(el('p', 'mt-2 text-sm text-muted', 'Requests: ' + who));
+        }
+        if (info.outside) body.appendChild(el('p', 'mt-1 text-sm text-muted', info.outside + ' bed' + (info.outside === 1 ? '' : 's') + ' taken outside Homebase.'));
+        var pastStays = HB.historyForRoom ? HB.historyForRoom(r.id).filter(function (x) { return x.status === 'ended'; }) : [];
+        if (pastStays.length) {
+          var pastNames = pastStays.map(function (x) {
+            var d = new Date(x.endedAt);
+            var endedStr = !isNaN(d.getTime()) ? d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : 'past';
+            return x.studentName + ' (ended ' + endedStr + ')';
+          }).join(', ');
+          body.appendChild(el('p', 'mt-1 text-sm text-muted', 'Past stays: ' + pastNames));
+        }
 
         var acts = el('div', 'mt-4 flex flex-wrap items-center gap-2');
         if (ui.kind === 'delete' && ui.id === r.id) {
@@ -245,11 +266,11 @@
           acts.appendChild(button('Keep it', 'btn-outline', function () { ui = { kind: null, id: null }; render(); }));
         } else {
           acts.appendChild(button('Edit', 'btn-outline', function () { openForm(r); }, 'Edit ' + r.name));
-          if (st === 'available' || st === 'taken') {
-            acts.appendChild(button(st === 'available' ? 'Mark as taken' : 'Mark as available', 'btn-outline', function () {
+          if (!list.length) {
+            acts.appendChild(button(r.available ? 'Mark as taken' : 'Mark as available', 'btn-outline', function () {
               persist(rooms.map(function (x) { return x.id === r.id ? Object.assign({}, x, { available: !x.available }) : x; }),
-                r.name + ' is now ' + (st === 'available' ? 'taken' : 'available') + '.');
-            }, (st === 'available' ? 'Mark ' : 'Mark ') + r.name + (st === 'available' ? ' as taken' : ' as available')));
+                r.name + ' is now ' + (r.available ? 'taken' : 'available') + '.');
+            }, 'Mark ' + r.name + (r.available ? ' as taken' : ' as available')));
           }
           if (res) {
             acts.appendChild(el('p', 'text-sm text-muted', 'Has an active request, so it cannot be deleted yet.'));
@@ -318,7 +339,7 @@
         if (msg) { input.setAttribute('aria-invalid', 'true'); p.textContent = msg; p.hidden = false; }
         else { input.removeAttribute('aria-invalid'); p.textContent = ''; p.hidden = true; }
       }
-      function clearErrors() { ['f-id', 'f-floor', 'f-price'].forEach(function (id) { fieldErr(id, ''); }); $('form-error').hidden = true; }
+      function clearErrors() { ['f-id', 'f-floor', 'f-price', 'f-beds'].forEach(function (id) { fieldErr(id, ''); }); $('form-error').hidden = true; }
 
       function openForm(room) {
         editingId = room ? room.id : null; clearErrors();
@@ -326,6 +347,7 @@
         $('f-id').value = room ? room.id : ''; $('f-id').readOnly = !!room;
         $('f-id-hint').textContent = room ? 'The room number cannot be changed.' : 'Letters, numbers or dashes, up to 8 characters. For example 205.';
         $('f-floor').value = room ? room.floor : ''; $('f-type').value = room ? room.type : 'Single'; $('f-price').value = room ? room.price : '';
+        $('f-beds').value = room ? (room.bedsTaken || 0) : 0; syncBeds();
         form.querySelectorAll('input[name=amenity]').forEach(function (c) { c.checked = !!room && room.amenities.indexOf(c.value) !== -1; });
         var locked = !!room && !!activeRes(room.id);
         form.querySelectorAll('input[name=avail]').forEach(function (r) { r.disabled = locked; });
@@ -333,6 +355,8 @@
         $('avail-note').hidden = !locked;
         dlg.showModal(); (room ? $('f-floor') : $('f-id')).focus();
       }
+      function syncBeds() { $('beds-box').hidden = $('f-type').value === 'Single'; }
+      $('f-type').addEventListener('change', syncBeds);
       $('add-room').addEventListener('click', function () { openForm(null); });
       $('room-cancel').addEventListener('click', function () { dlg.close(); });
       dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close(); });
@@ -345,20 +369,31 @@
         else if (editingId === null && rooms.some(function (r) { return String(r.id).toLowerCase() === id.toLowerCase(); })) fieldErr('f-id', 'A room with this number already exists.');
         if (!isFinite(floor) || floor < 1 || floor > 20 || Math.floor(floor) !== floor) fieldErr('f-floor', 'Enter a floor from 1 to 20.');
         if (!isFinite(price) || price < 1 || price > 1000000 || Math.floor(price) !== price) fieldErr('f-price', 'Enter the monthly price as a whole number, like 4500.');
-        var bad = ['f-id', 'f-floor', 'f-price'].filter(function (x) { return $(x).getAttribute('aria-invalid') === 'true'; })[0];
+        var typeSel = TYPES.indexOf($('f-type').value) !== -1 ? $('f-type').value : 'Single';
+        var cap = typeSel === 'Quad' ? 4 : typeSel === 'Double' ? 2 : 1;
+        var beds = typeSel === 'Single' ? 0 : Number($('f-beds').value || 0);
+        var activeCount = editingId === null ? 0 : activeList(editingId).length;
+        if (typeSel === 'Single') {
+          if (activeCount > 1) { $('form-error').textContent = 'This room has ' + activeCount + ' active requests, so it cannot be a Single room.'; $('form-error').hidden = false; return; }
+        } else if (!isFinite(beds) || beds < 0 || Math.floor(beds) !== beds || beds > cap) {
+          fieldErr('f-beds', 'Enter a whole number from 0 to ' + cap + '.');
+        } else if (beds + activeCount > cap) {
+          fieldErr('f-beds', 'Not enough beds: ' + activeCount + ' active request' + (activeCount === 1 ? '' : 's') + ' already hold beds in this room. Use ' + Math.max(0, cap - activeCount) + ' or fewer.');
+        }
+        var bad = ['f-id', 'f-floor', 'f-price', 'f-beds'].filter(function (x) { return $(x).getAttribute('aria-invalid') === 'true'; })[0];
         if (bad) { $(bad).focus(); return; }
 
         var amenities = []; form.querySelectorAll('input[name=amenity]:checked').forEach(function (c) { amenities.push(c.value); });
-        var type = TYPES.indexOf($('f-type').value) !== -1 ? $('f-type').value : 'Single';
+        var type = typeSel;
         var available = form.elements.avail.value !== 'no';
         var next;
         if (editingId === null) {
-          next = rooms.concat([{ id: id, name: 'Room ' + id, floor: floor, type: type, price: price, amenities: amenities, available: available }]);
+          next = rooms.concat([{ id: id, name: 'Room ' + id, floor: floor, type: type, price: price, amenities: amenities, available: available, bedsTaken: beds }]);
         } else {
           next = rooms.map(function (r) {
             if (r.id !== editingId) return r;
             var keepAvail = activeRes(r.id) ? r.available : available;
-            return Object.assign({}, r, { floor: floor, type: type, price: price, amenities: amenities, available: keepAvail });
+            return Object.assign({}, r, { floor: floor, type: type, price: price, amenities: amenities, available: keepAvail, bedsTaken: beds });
           });
         }
         var label = editingId === null ? 'Room ' + id : 'Room ' + editingId;

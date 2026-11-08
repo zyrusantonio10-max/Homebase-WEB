@@ -10,8 +10,7 @@
     homebase_profile_<id> User profile details: { photo, phone, bio, course, yearLevel, emergencyName, emergencyPhone, emergencyRel, sleepSchedule, studyHabit, social, ... }
 */
 (function (global) {
-  'use strict';
-
+  'use strict'; 
   var USERS_KEY = 'homebase_users';
   var CURRENT_KEY = 'homebase_currentUser';
 

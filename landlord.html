@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -80,11 +80,15 @@
     <section id="glance-box" hidden aria-labelledby="glance-title" class="mt-6 rounded-[20px] border border-line bg-tint p-5 sm:p-6">
       <h2 id="glance-title" class="sr-only">At a glance</h2>
       <dl id="glance" class="grid gap-x-6 gap-y-4 sm:grid-cols-3 lg:grid-cols-6"></dl>
-      <a href="landlord-rooms.html" class="mt-4 inline-flex min-h-[44px] items-center rounded font-semibold text-forest underline underline-offset-4 outline-none hover:text-forest-deep focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">Manage rooms</a>
+      <div class="mt-4 flex flex-wrap items-center gap-3">
+        <a href="landlord-rooms.html" class="inline-flex min-h-[44px] items-center rounded font-semibold text-forest underline underline-offset-4 outline-none hover:text-forest-deep focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">Manage rooms</a>
+        <span class="text-muted hidden sm:inline" aria-hidden="true">&#8226;</span>
+        <a href="#history" class="inline-flex min-h-[44px] items-center rounded font-semibold text-forest underline underline-offset-4 outline-none hover:text-forest-deep focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">History of past stays &amp; requests &darr;</a>
+      </div>
     </section>
 
-    <h2 class="mt-10 font-display text-2xl font-bold tracking-tight">Reservation requests</h2>
-    <p class="mt-1 max-w-xl text-base text-muted">Approve or decline each request, set how many days the student has to pay, then mark the payment when the office receives it.</p>
+    <h2 class="mt-10 font-display text-2xl font-bold tracking-tight">Active requests &amp; residents</h2>
+    <p class="mt-1 max-w-xl text-base text-muted">Approve or decline each request, set how many days the student has to pay, mark payments, and manage active stays.</p>
 
     <p id="page-error" role="alert" class="mt-4 hidden text-base font-semibold text-danger"></p>
 
@@ -97,20 +101,55 @@
     </div>
 
     <div id="empty" hidden class="mt-8 rounded-[20px] border border-line p-6 sm:p-8">
-      <p class="font-display text-2xl font-bold tracking-tight">No requests yet</p>
+      <p class="font-display text-2xl font-bold tracking-tight">No active requests or residents</p>
       <p class="mt-2 max-w-md text-base text-muted">When a student requests a room, it shows up here for you to answer.</p>
     </div>
 
     <div id="board" hidden>
       <form id="filters" class="mt-6" onsubmit="return false">
         <fieldset>
-          <legend class="sr-only">Show requests</legend>
+          <legend class="sr-only">Show active requests</legend>
           <div id="chips" class="flex flex-wrap gap-2"></div>
         </fieldset>
       </form>
       <p id="none" hidden class="mt-6 rounded-[20px] border border-line p-6 text-base text-muted"></p>
       <ul id="list" class="mt-6 space-y-4" aria-live="polite"></ul>
     </div>
+
+    <!-- HISTORY OF PAST REQUESTS AND STAYS -->
+    <section id="history" class="mt-14 border-t border-line pt-10">
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h2 class="font-display text-2xl font-bold tracking-tight">History of past requests and stays</h2>
+          <p class="mt-1 max-w-xl text-base text-muted">A permanent office record of completed stays, past requests, and former residents so the office can look back after a stay ends.</p>
+        </div>
+      </div>
+
+      <div class="mt-6 flex flex-wrap items-center justify-between gap-4">
+        <form id="history-filters" onsubmit="return false">
+          <fieldset>
+            <legend class="sr-only">Filter history by status</legend>
+            <div id="history-chips" class="flex flex-wrap gap-2"></div>
+          </fieldset>
+        </form>
+
+        <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          <div class="w-full sm:w-44">
+            <label for="history-room-filter" class="sr-only">Filter by room</label>
+            <select id="history-room-filter" class="field h-11 text-sm">
+              <option value="all">All rooms</option>
+            </select>
+          </div>
+          <div class="w-full sm:w-64">
+            <label for="history-search" class="sr-only">Search history</label>
+            <input type="search" id="history-search" placeholder="Search student or room..." class="field h-11 text-sm">
+          </div>
+        </div>
+      </div>
+
+      <p id="history-none" hidden class="mt-6 rounded-[20px] border border-line p-6 text-base text-muted"></p>
+      <ul id="history-list" class="mt-6 space-y-4" aria-live="polite"></ul>
+    </section>
   </main>
 
   <script src="assets/js/rooms.js"></script>
@@ -123,6 +162,19 @@
       function fmt(s) {
         var d = new Date(s && s.length === 10 ? s + 'T00:00:00' : s);
         return isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
+      }
+      function durationText(startIso, endIso) {
+        if (!startIso || !endIso) return '';
+        var d1 = new Date(startIso && startIso.length === 10 ? startIso + 'T00:00:00' : startIso);
+        var d2 = new Date(endIso && endIso.length === 10 ? endIso + 'T00:00:00' : endIso);
+        if (isNaN(d1.getTime()) || isNaN(d2.getTime())) return '';
+        var ms = Math.max(0, d2.getTime() - d1.getTime());
+        var days = Math.round(ms / 86400000);
+        if (days === 0) return 'Same day';
+        if (days < 30) return days + ' day' + (days === 1 ? '' : 's');
+        var months = Math.floor(days / 30);
+        var rem = days % 30;
+        return months + ' month' + (months === 1 ? '' : 's') + (rem > 0 ? ', ' + rem + ' day' + (rem === 1 ? '' : 's') : '');
       }
 
       var user = {};
@@ -137,13 +189,36 @@
       $('loading').hidden = true;
       if (!window.HB || !HB.load().ok) { $('error').hidden = false; return; }
 
-      var FILTERS = [['pending', 'Pending'], ['approved', 'Awaiting payment'], ['confirmed', 'Confirmed'], ['closed', 'Closed'], ['all', 'All']];
+      var ACTIVE_FILTERS = [
+        ['pending', 'Pending'],
+        ['approved', 'Awaiting payment'],
+        ['confirmed', 'Confirmed residents'],
+        ['all', 'All active']
+      ];
       var CLOSED = ['declined', 'cancelled', 'expired', 'ended'];
-      var LABEL = { pending: 'Pending', approved: 'Awaiting payment', confirmed: 'Confirmed', declined: 'Declined', cancelled: 'Cancelled by student', expired: 'Expired (not paid in time)', ended: 'Stay ended' };
-      var filter = 'pending';
+      var LABEL = {
+        pending: 'Pending',
+        approved: 'Awaiting payment',
+        confirmed: 'Confirmed (Staying)',
+        declined: 'Declined',
+        cancelled: 'Cancelled by student',
+        expired: 'Expired (not paid in time)',
+        ended: 'Stay ended'
+      };
+      var activeFilter = 'pending';
       var ui = { kind: null, id: null, error: '' }; // which inline question is open: "approve", "decline" or "end"
 
-      function group(r) { return CLOSED.indexOf(r.status) !== -1 ? 'closed' : r.status; }
+      var HIST_FILTERS = [
+        ['all', 'All history'],
+        ['ended', 'Completed stays'],
+        ['declined', 'Declined'],
+        ['cancelled', 'Cancelled'],
+        ['expired', 'Expired']
+      ];
+      var histFilter = 'all';
+      var histSearch = '';
+      var histRoom = 'all';
+
       function all() { return HB.load().list.slice().sort(function (a, b) { return String(b.createdAt).localeCompare(String(a.createdAt)); }); }
 
       function done(ok) {
@@ -313,7 +388,6 @@
           socialBox.classList.add('hidden');
         }
 
-        // Emergency contact content
         var emerBox = document.getElementById('hb-res-emer-content');
         emerBox.textContent = '';
         if (prof.emergencyName || prof.emergencyPhone) {
@@ -340,7 +414,7 @@
         document.getElementById('hb-res-study').textContent = fmtL('study', prof.studyHabit);
         document.getElementById('hb-res-clean').textContent = fmtL('clean', prof.cleanliness);
 
-        document.getElementById('hb-res-room').textContent = r.roomName + ' (Floor ' + r.floor + ', ' + r.type + ') - ' + peso(r.price) + '/month';
+        document.getElementById('hb-res-room').textContent = r.roomName + ' (Floor ' + r.floor + ', ' + r.type + ') - ' + HB.priceLabel(r);
         document.getElementById('hb-res-movein').textContent = fmt(r.moveIn) || 'Not specified';
         document.getElementById('hb-res-rules').textContent = r.rulesAcceptedAt ? ('Agreed on ' + fmt(r.rulesAcceptedAt)) : 'Not recorded';
 
@@ -361,7 +435,7 @@
         top.appendChild(el('p', 'font-display text-xl font-bold tracking-tight', r.roomName));
         top.appendChild(el('p', 'text-sm font-semibold ' + (r.status === 'pending' ? 'text-ink' : (r.status === 'approved' || r.status === 'confirmed') ? 'text-forest' : 'text-muted'), LABEL[r.status] || r.status));
         li.appendChild(top);
-        li.appendChild(el('p', 'mt-1 text-base text-muted', 'Floor ' + r.floor + ', ' + r.type + ' room, ' + peso(r.price) + ' per month'));
+        li.appendChild(el('p', 'mt-1 text-base text-muted', 'Floor ' + r.floor + ', ' + r.type + ' room, ' + HB.priceLabel(r)));
 
         // Retrieve student's extra profile info from HB_AUTH
         var prof = (window.HB_AUTH && HB_AUTH.getProfile) ? HB_AUTH.getProfile(r.userId) : {};
@@ -385,7 +459,7 @@
         var sText = el('div');
         var sNameRow = el('div', 'flex flex-wrap items-center gap-2');
         sNameRow.appendChild(el('h4', 'font-display text-base font-bold text-ink', studentDisplayName));
-        sNameRow.appendChild(el('span', 'rounded-full bg-forest/10 px-2 py-0.5 text-xs font-semibold text-forest', 'Resident Applicant'));
+        sNameRow.appendChild(el('span', 'rounded-full bg-forest/10 px-2 py-0.5 text-xs font-semibold text-forest', r.status === 'confirmed' ? 'Active Resident' : 'Resident Applicant'));
         sText.appendChild(sNameRow);
         sText.appendChild(el('p', 'text-sm text-muted', r.studentEmail + (studentPhone ? ' \u2022 ' + studentPhone : '')));
         if (academic) {
@@ -418,39 +492,246 @@
         if (r.rulesAcceptedAt) facts.push(['House rules', 'Agreed on ' + fmt(r.rulesAcceptedAt)]);
         if (r.status === 'approved' && r.paymentDueAt) facts.push(['Payment due', fmt(r.paymentDueAt) + ' (' + r.paymentDays + ' days)']);
         if (r.status === 'expired' && r.paymentDueAt) facts.push(['Payment was due', fmt(r.paymentDueAt)]);
-        if (r.confirmedAt && (r.status === 'confirmed' || r.status === 'ended')) facts.push(['Payment received', fmt(r.confirmedAt)]);
-        if (r.status === 'ended' && r.endedAt) facts.push(['Stay ended', fmt(r.endedAt)]);
+        if (r.confirmedAt && r.status === 'confirmed') facts.push(['Payment received', fmt(r.confirmedAt)]);
         facts.forEach(function (p) { var d = el('div'); d.appendChild(el('dt', 'text-sm font-medium text-muted', p[0])); d.appendChild(el('dd', 'break-words', p[1])); dl.appendChild(d); });
         li.appendChild(dl);
         if (r.message) {
-          var m = el('div', 'mt-3'); m.appendChild(el('p', 'text-sm font-medium text-muted', 'Message from student'));
+          var m = el('div', 'mt-3'); m.appendChild(el('p', 'text-sm font-medium text-muted', 'Message'));
           m.appendChild(el('p', 'break-words text-base', r.message)); li.appendChild(m);
         }
         var a = actions(r); if (a) li.appendChild(a);
         return li;
       }
 
-      function renderChips(list) {
+      // ---- history card for past requests and ended stays ----
+      function historyRow(r) {
+        var li = el('li', 'rounded-[20px] border border-line bg-white p-5 sm:p-6 transition-colors hover:border-[#8FA397]');
+        var top = el('div', 'flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2');
+
+        var titleBox = el('div');
+        titleBox.appendChild(el('p', 'font-display text-xl font-bold tracking-tight', r.roomName));
+        titleBox.appendChild(el('p', 'text-sm text-muted', 'Floor ' + r.floor + ', ' + r.type + ' room, ' + HB.priceLabel(r)));
+        top.appendChild(titleBox);
+
+        // Status badge
+        var badgeCls = 'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ';
+        var badgeText = '';
+        if (r.status === 'ended') {
+          badgeCls += 'bg-forest/10 text-forest';
+          badgeText = '\u2713 Stay Ended';
+        } else if (r.status === 'declined') {
+          badgeCls += 'bg-line/60 text-muted';
+          badgeText = 'Declined';
+        } else if (r.status === 'cancelled') {
+          badgeCls += 'bg-line/60 text-muted';
+          badgeText = 'Cancelled by student';
+        } else if (r.status === 'expired') {
+          badgeCls += 'bg-[#FEF3F2] text-danger border border-danger/20';
+          badgeText = 'Expired (unpaid)';
+        } else {
+          badgeCls += 'bg-tint text-ink';
+          badgeText = r.status;
+        }
+        top.appendChild(el('span', badgeCls, badgeText));
+        li.appendChild(top);
+
+        // Student Overview Card with Profile details and View Full Profile button
+        var prof = (window.HB_AUTH && HB_AUTH.getProfile) ? HB_AUTH.getProfile(r.userId) : {};
+        var studentDisplayName = prof.name || r.studentName || 'Student';
+        var studentPhone = prof.phone || '';
+        var academic = (prof.course || '') + (prof.yearLevel ? ' (' + prof.yearLevel + ')' : '');
+
+        var sCard = el('div', 'mt-4 rounded-2xl border border-line bg-tint/60 p-4 sm:p-5');
+        var sHead = el('div', 'flex flex-wrap items-center justify-between gap-3');
+
+        var sLeft = el('div', 'flex items-center gap-3.5');
+        var sAv = el('div', 'grid h-12 w-12 shrink-0 place-items-center rounded-full bg-forest text-lg font-bold text-white shadow-sm overflow-hidden');
+        if (prof.photo) {
+          sAv.innerHTML = '<img src="' + prof.photo + '" alt="' + studentDisplayName + '" class="h-full w-full object-cover rounded-full">';
+        } else {
+          sAv.textContent = studentDisplayName.charAt(0).toUpperCase();
+        }
+        sLeft.appendChild(sAv);
+
+        var sText = el('div');
+        var sNameRow = el('div', 'flex flex-wrap items-center gap-2');
+        sNameRow.appendChild(el('h4', 'font-display text-base font-bold text-ink', studentDisplayName));
+        sNameRow.appendChild(el('span', 'rounded-full bg-forest/10 px-2 py-0.5 text-xs font-semibold text-forest', r.status === 'ended' ? 'Former Resident' : 'Past Applicant'));
+        sText.appendChild(sNameRow);
+        sText.appendChild(el('p', 'text-sm text-muted', r.studentEmail + (studentPhone ? ' \u2022 ' + studentPhone : '')));
+        if (academic) {
+          sText.appendChild(el('p', 'text-xs font-medium text-ink/80', academic));
+        }
+        sLeft.appendChild(sText);
+        sHead.appendChild(sLeft);
+
+        var viewBtn = el('button', 'btn btn-outline text-sm py-2 px-4 inline-flex items-center gap-1.5 shadow-sm', 'View Full Profile');
+        viewBtn.type = 'button';
+        viewBtn.setAttribute('aria-label', 'View full profile for ' + studentDisplayName);
+        viewBtn.addEventListener('click', function () {
+          openResidentModal(r, prof);
+        });
+        sHead.appendChild(viewBtn);
+        sCard.appendChild(sHead);
+
+        // Emergency contact highlight preview
+        var emerRow = el('div', 'mt-3 pt-3 border-t border-line/60 flex flex-wrap items-center justify-between gap-2 text-xs');
+        if (prof.emergencyName || prof.emergencyPhone) {
+          emerRow.innerHTML = '<span class="text-muted">Emergency Contact on file:</span> <span class="font-semibold text-ink">' + (prof.emergencyName || 'Named contact') + (prof.emergencyRel ? ' (' + prof.emergencyRel + ')' : '') + ' \u2022 ' + (prof.emergencyPhone ? ('<a href="tel:' + prof.emergencyPhone + '" class="text-forest underline">' + prof.emergencyPhone + '</a>') : 'No phone') + '</span>';
+        } else {
+          emerRow.innerHTML = '<span class="text-muted">Emergency Contact on file:</span> <span class="text-muted italic">Not recorded in profile</span>';
+        }
+        sCard.appendChild(emerRow);
+        li.appendChild(sCard);
+
+        // Dates grid
+        var dl = el('dl', 'mt-4 grid gap-3 text-base sm:grid-cols-2 lg:grid-cols-4');
+        var facts = [
+          ['Move-in date', fmt(r.moveIn) || 'Not specified'],
+          ['Requested on', fmt(r.createdAt)]
+        ];
+        if (r.confirmedAt) facts.push(['Payment confirmed', fmt(r.confirmedAt)]);
+        if (r.endedAt) facts.push(['Stay ended on', fmt(r.endedAt)]);
+        if (r.rulesAcceptedAt) facts.push(['House rules', 'Agreed on ' + fmt(r.rulesAcceptedAt)]);
+
+        // Duration of tenure
+        if (r.status === 'ended') {
+          var tenure = durationText(r.moveIn || r.confirmedAt || r.createdAt, r.endedAt);
+          if (tenure) facts.push(['Total stay duration', tenure]);
+        }
+
+        facts.forEach(function (p) {
+          var d = el('div');
+          d.appendChild(el('dt', 'text-sm font-medium text-muted', p[0]));
+          d.appendChild(el('dd', 'break-words font-medium', p[1]));
+          dl.appendChild(d);
+        });
+        li.appendChild(dl);
+
+        // Original student message
+        if (r.message) {
+          var m = el('div', 'mt-3 rounded-xl border border-line/60 bg-tint/30 p-3 text-sm');
+          m.appendChild(el('p', 'text-xs font-semibold text-muted uppercase tracking-wider', 'Message from student:'));
+          m.appendChild(el('p', 'mt-0.5 break-words text-ink italic', '"' + r.message + '"'));
+          li.appendChild(m);
+        }
+
+        return li;
+      }
+
+      function renderChips(activeList) {
         var box = $('chips'); box.textContent = '';
-        FILTERS.forEach(function (f) {
-          var n = f[0] === 'all' ? list.length : list.filter(function (r) { return group(r) === f[0]; }).length;
+        ACTIVE_FILTERS.forEach(function (f) {
+          var n = f[0] === 'all' ? activeList.length : activeList.filter(function (r) { return r.status === f[0]; }).length;
           var label = el('label', 'relative block cursor-pointer');
-          var input = el('input', 'peer sr-only'); input.type = 'radio'; input.name = 'status'; input.value = f[0]; input.checked = filter === f[0];
-          input.addEventListener('change', function () { filter = f[0]; ui = { kind: null, id: null, error: '' }; render(); });
+          var input = el('input', 'peer sr-only'); input.type = 'radio'; input.name = 'status'; input.value = f[0]; input.checked = activeFilter === f[0];
+          input.addEventListener('change', function () { activeFilter = f[0]; ui = { kind: null, id: null, error: '' }; render(); });
           label.appendChild(input); label.appendChild(el('span', 'choice', f[1] + ' (' + n + ')'));
           box.appendChild(label);
         });
       }
 
+      var roomsPopulated = false;
+      function populateHistoryRooms() {
+        if (roomsPopulated) return;
+        var sel = $('history-room-filter');
+        if (!sel) return;
+        var rooms = HB.getRooms();
+        rooms.forEach(function (rm) {
+          var opt = el('option', null, rm.name);
+          opt.value = String(rm.id);
+          sel.appendChild(opt);
+        });
+        roomsPopulated = true;
+        sel.addEventListener('change', function () {
+          histRoom = sel.value;
+          renderHistory(all());
+        });
+        var searchInput = $('history-search');
+        if (searchInput) {
+          searchInput.addEventListener('input', function () {
+            histSearch = searchInput.value.trim().toLowerCase();
+            renderHistory(all());
+          });
+        }
+      }
+
+      function renderHistoryChips(closedItems) {
+        var box = $('history-chips'); if (!box) return;
+        box.textContent = '';
+        HIST_FILTERS.forEach(function (f) {
+          var count = f[0] === 'all' ? closedItems.length : closedItems.filter(function (r) { return r.status === f[0]; }).length;
+          var label = el('label', 'relative block cursor-pointer');
+          var input = el('input', 'peer sr-only');
+          input.type = 'radio'; input.name = 'histStatus'; input.value = f[0]; input.checked = histFilter === f[0];
+          input.addEventListener('change', function () {
+            histFilter = f[0];
+            renderHistory(all());
+          });
+          label.appendChild(input);
+          label.appendChild(el('span', 'choice', f[1] + ' (' + count + ')'));
+          box.appendChild(label);
+        });
+      }
+
+      function renderHistory(list) {
+        populateHistoryRooms();
+        var closedItems = list.filter(function (r) { return CLOSED.indexOf(r.status) !== -1; });
+        renderHistoryChips(closedItems);
+
+        var filtered = closedItems.filter(function (r) {
+          if (histFilter !== 'all' && r.status !== histFilter) return false;
+          if (histRoom !== 'all' && String(r.roomId) !== histRoom) return false;
+          if (histSearch) {
+            var q = histSearch;
+            var matchName = (r.studentName || '').toLowerCase().indexOf(q) !== -1;
+            var matchEmail = (r.studentEmail || '').toLowerCase().indexOf(q) !== -1;
+            var matchRoom = (r.roomName || '').toLowerCase().indexOf(q) !== -1;
+            var matchRoomId = String(r.roomId || '').toLowerCase().indexOf(q) !== -1;
+            if (!matchName && !matchEmail && !matchRoom && !matchRoomId) return false;
+          }
+          return true;
+        });
+
+        var noneEl = $('history-none');
+        if (!closedItems.length) {
+          noneEl.hidden = false;
+          noneEl.textContent = 'No past requests or stays yet. When a stay ends or a request is closed, it will appear here as a permanent office record.';
+        } else if (!filtered.length) {
+          noneEl.hidden = false;
+          noneEl.textContent = 'No past stays or requests match your search or filter.';
+        } else {
+          noneEl.hidden = true;
+        }
+
+        var ul = $('history-list');
+        ul.textContent = '';
+        filtered.forEach(function (r) {
+          ul.appendChild(historyRow(r));
+        });
+      }
+
       // ---- at a glance: rooms by state, and requests waiting ----
       function renderGlance(list) {
-        var rooms = HB.getRooms(), c = { available: 0, busy: 0, occupied: 0, taken: 0 };
+        var rooms = HB.getRooms(), c = { freeBeds: 0, requested: 0, full: 0, taken: 0 };
         rooms.forEach(function (r) {
-          var st = HB.roomState(r, '__office__');
-          if (st === 'available') c.available++; else if (st === 'held' || st === 'reserved') c.busy++; else if (st === 'occupied') c.occupied++; else c.taken++;
+          var info = HB.bedsInfo(r, '__office__');
+          c.requested += info.requested;
+          if (!r.available) { c.taken++; return; }
+          c.freeBeds += info.free;
+          if (info.free === 0) c.full++;
         });
         var pending = list.filter(function (r) { return r.status === 'pending'; }).length;
-        var items = [['Requests to answer', pending, true], ['Rooms in total', rooms.length], ['Available', c.available], ['Held or reserved', c.busy], ['Occupied', c.occupied], ['Taken', c.taken]];
+        var activeRes = list.filter(function (r) { return r.status === 'confirmed'; }).length;
+        var pastStays = list.filter(function (r) { return r.status === 'ended'; }).length;
+        var items = [
+          ['Requests to answer', pending, true],
+          ['Active residents', activeRes],
+          ['Beds free', c.freeBeds],
+          ['Beds requested', c.requested],
+          ['Rooms full', c.full],
+          ['Past stays ended', pastStays]
+        ];
         var dl = $('glance'); dl.textContent = '';
         items.forEach(function (it) {
           var d = el('div'); d.appendChild(el('dt', 'text-sm font-medium text-muted', it[0]));
@@ -463,14 +744,23 @@
       function render() {
         var list = all();
         renderGlance(list);
-        if (!list.length) { $('empty').hidden = false; $('board').hidden = true; return; }
-        $('empty').hidden = true; $('board').hidden = false;
-        renderChips(list);
-        var shown = filter === 'all' ? list : list.filter(function (r) { return group(r) === filter; });
-        $('none').hidden = shown.length > 0;
-        $('none').textContent = 'No ' + (filter === 'all' ? '' : (FILTERS.filter(function (f) { return f[0] === filter; })[0][1].toLowerCase() + ' ')) + 'requests right now.';
-        var ul = $('list'); ul.textContent = '';
-        shown.forEach(function (r) { ul.appendChild(row(r)); });
+
+        var activeList = list.filter(function (r) { return CLOSED.indexOf(r.status) === -1; });
+        if (!activeList.length) {
+          $('empty').hidden = false;
+          $('board').hidden = true;
+        } else {
+          $('empty').hidden = true;
+          $('board').hidden = false;
+          renderChips(activeList);
+          var shown = activeFilter === 'all' ? activeList : activeList.filter(function (r) { return r.status === activeFilter; });
+          $('none').hidden = shown.length > 0;
+          $('none').textContent = 'No ' + (activeFilter === 'all' ? 'active' : (ACTIVE_FILTERS.filter(function (f) { return f[0] === activeFilter; })[0][1].toLowerCase())) + ' requests right now.';
+          var ul = $('list'); ul.textContent = '';
+          shown.forEach(function (r) { ul.appendChild(row(r)); });
+        }
+
+        renderHistory(list);
       }
 
       render();

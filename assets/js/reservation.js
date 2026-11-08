@@ -1,5 +1,5 @@
-/*
-  Reservation requests: shared by Home, My Matches, Explore Rooms, Floor Plan and the landlord page.
+﻿/*
+  Reservation requests: shared by Home, My Matches, Explore Rooms and the landlord pages.
   Stored in localStorage under "homebase_reservations" as a list. Each item has the same columns a MySQL
   "reservations" table would have, so the move to PHP + MySQL later only swaps load() and save():
 
@@ -8,7 +8,10 @@
       paymentDays, paymentDueAt, approvedAt, confirmedAt, endedAt (filled in as the request moves along), createdAt, updatedAt }
 
   Rules: a student can have ONE active request (pending or approved) at a time.
-         A room is "held" while a request is pending, "reserved" once approved (waiting for payment), "occupied" once payment is confirmed.
+         Rooms have beds: Single 1, Double 2, Quad 4. Every active request takes ONE bed, so a shared room stays open for booking
+         until its last bed is taken. (room.bedsTaken is an optional number of beds already taken outside Homebase.)
+         A room is "available" (a bed is free), "full", "taken" (closed by the landlord), or "yours" (you hold a bed in it).
+         Prices are per person per month.
          Life of a request: pending -> approved -> confirmed -> ended. Side exits: declined, cancelled (student), expired (not paid in time).
          The landlord sets the payment window (days) when approving. An approved request that is not marked paid by its deadline becomes "expired".
          The student who asked for it sees it as "yours".
@@ -114,12 +117,27 @@
     },
     activeFor: function (userId) { return HB.forUser(userId).filter(isActive)[0] || null; },
 
-    // "available" | "held" | "taken" | "yours"
-    roomState: function (room, userId) {
-      var hit = load().list.filter(function (r) { return r.roomId === room.id && isActive(r); })[0];
-      if (hit) return hit.userId === userId ? 'yours' : { pending: 'held', approved: 'reserved', confirmed: 'occupied' }[hit.status];
-      return room.available ? 'available' : 'taken';
+    // beds in a room: a Double fits 2 students and a Quad fits 4
+    capacity: function (room) { return Number(room.capacity) || { Single: 1, Double: 2, Quad: 4 }[room.type] || 1; },
+    bedsInfo: function (room, userId) {
+      var cap = HB.capacity(room);
+      var active = load().list.filter(function (r) { return r.roomId === room.id && isActive(r); });
+      var outside = Math.max(0, Math.min(cap, Number(room.bedsTaken) || 0));
+      return {
+        capacity: cap, outside: outside, requested: active.length, active: active,
+        free: room.available ? Math.max(0, cap - outside - active.length) : 0,
+        mine: !!userId && active.some(function (r) { return r.userId === userId; })
+      };
     },
+    // "available" (a bed is free) | "full" | "taken" (closed) | "yours" (you hold a bed here)
+    roomState: function (room, userId) {
+      var i = HB.bedsInfo(room, userId);
+      if (i.mine) return 'yours';
+      if (!room.available) return 'taken';
+      return i.free > 0 ? 'available' : 'full';
+    },
+    bedsText: function (room) { var cap = HB.capacity(room); return cap > 1 ? HB.bedsInfo(room).free + ' of ' + cap + ' beds free' : ''; },
+    priceLabel: function (room) { return '\u20B1' + Number(room.price).toLocaleString('en-PH') + (HB.capacity(room) > 1 ? ' per person per month' : ' per month'); },
 
     create: function (user, room, moveIn, message, rulesAccepted) {
       if (!rulesAccepted) return { ok: false, error: 'Please agree to the house rules first.' };
@@ -128,7 +146,7 @@
       if (HB.activeFor(user.id)) return { ok: false, error: 'You already have an active request. Cancel it on Home before requesting another room.' };
       if (HB.roomState(room, user.id) !== 'available') return { ok: false, error: 'This room is no longer available.' };
       var rec = {
-        id: 'res-' + Date.now(), userId: user.id, studentName: user.name, studentEmail: user.email,
+        id: 'res-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7), userId: user.id, studentName: user.name, studentEmail: user.email,
         roomId: room.id, roomName: room.name, floor: room.floor, type: room.type, price: room.price,
         moveIn: moveIn, message: String(message || '').trim().slice(0, 300),
         status: 'pending', rulesAcceptedAt: nowIso(), createdAt: nowIso(), updatedAt: nowIso()
@@ -219,7 +237,7 @@
               '<div><label class="flex min-h-[44px] cursor-pointer items-start gap-3 text-base"><input id="hb-req-agree" type="checkbox" aria-describedby="hb-req-agree-err" class="mt-1 h-5 w-5 shrink-0 accent-forest">' +
                 '<span>I have read the house rules and agree to follow them.</span></label>' +
                 '<p id="hb-req-agree-err" class="mt-1 hidden text-sm font-medium text-danger"></p></div>' +
-              '<p class="text-sm text-muted">The dormitory office reviews your request. Your room is held while it is pending. Payment and the contract are handled by the office, not on Homebase.</p>' +
+              '<p class="text-sm text-muted">The dormitory office reviews your request. Your spot is held while it is pending. Payment and the contract are handled by the office, not on Homebase.</p>' +
               '<div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">' +
                 '<button type="button" id="hb-req-cancel" class="btn btn-outline">Not now</button>' +
                 '<button type="submit" id="hb-req-send" class="btn">Send request</button>' +
@@ -239,7 +257,7 @@
       var today = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
 
       document.getElementById('hb-req-title').textContent = 'Request ' + room.name;
-      document.getElementById('hb-req-sub').textContent = 'Floor ' + room.floor + ', ' + room.type + ' room, \u20B1' + room.price.toLocaleString('en-PH') + ' per month';
+      document.getElementById('hb-req-sub').textContent = 'Floor ' + room.floor + ', ' + room.type + ' room, ' + HB.priceLabel(room);
       var lim = new Date(d.getTime() + 365 * 86400000);
       var maxDay = lim.getFullYear() + '-' + pad(lim.getMonth() + 1) + '-' + pad(lim.getDate());
       date.min = today; date.max = maxDay; date.value = ''; date.removeAttribute('aria-invalid');

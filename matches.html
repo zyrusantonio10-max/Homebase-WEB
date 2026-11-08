@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -38,7 +38,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
 
-  <script src="assets/js/auth.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="assets/js/tw-config.js"></script>
 
@@ -71,13 +70,12 @@
         <li><a class="nav-link" href="home.html">Home</a></li>
         <li><a class="nav-link" href="matches.html" aria-current="page">My Matches</a></li>
         <li><a class="nav-link" href="rooms.html">Explore Rooms</a></li>
-        <li><a class="nav-link" href="floorplan.html">Floor Plan</a></li>
       </ul>
       <div class="flex items-center gap-2">
-        <a href="profile.html" class="hidden items-center gap-2 pr-1 md:flex rounded-full py-1 pl-1 pr-2 hover:bg-track transition-colors outline-none focus-visible:ring-2 focus-visible:ring-forest" title="My Profile" aria-label="My Profile">
-          <span id="nav-initial" class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-forest font-display text-sm font-semibold text-white overflow-hidden" aria-hidden="true"></span>
+        <span class="hidden items-center gap-2 pr-1 md:flex">
+          <span id="nav-initial" class="grid h-9 w-9 place-items-center rounded-full bg-forest font-display text-sm font-semibold text-white" aria-hidden="true"></span>
           <span id="nav-name" class="max-w-[9rem] truncate text-sm font-medium"></span>
-        </a>
+        </span>
         <button type="button" data-logout class="btn btn-outline hidden md:inline-flex">Log out</button>
         <button type="button" id="menu-btn" aria-expanded="false" aria-controls="menu" class="inline-flex min-h-[44px] items-center rounded-full border border-forest bg-white px-4 text-base font-semibold text-forest outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 md:hidden"><span id="menu-label">Menu</span></button>
       </div>
@@ -87,8 +85,6 @@
         <li><a class="nav-link w-full" href="home.html">Home</a></li>
         <li><a class="nav-link w-full" href="matches.html" aria-current="page">My Matches</a></li>
         <li><a class="nav-link w-full" href="rooms.html">Explore Rooms</a></li>
-        <li><a class="nav-link w-full" href="floorplan.html">Floor Plan</a></li>
-        <li><a class="nav-link w-full" href="profile.html">My Profile</a></li>
       </ul>
       <div class="mt-2 border-t border-line pt-2"><button type="button" data-logout class="btn btn-outline w-full">Log out</button></div>
     </div>
@@ -130,18 +126,31 @@
             <div id="amenity-list" class="grid gap-2"></div>
           </fieldset>
 
+          <fieldset>
+            <legend class="label">What matters most to you?</legend>
+            <div class="grid grid-cols-2 gap-2">
+              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="priority" value="balanced" checked><span class="choice">Balanced</span></label>
+              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="priority" value="budget"><span class="choice">Budget</span></label>
+              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="priority" value="amenities"><span class="choice">Amenities</span></label>
+              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="priority" value="type"><span class="choice">Room type</span></label>
+              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="priority" value="floor"><span class="choice">Floor</span></label>
+            </div>
+            <p class="mt-1.5 text-sm text-muted">Your top choice counts the most in the score.</p>
+          </fieldset>
+
           <button class="btn w-full" type="submit">Find my matches</button>
         </form>
 
         <details class="mt-5 border-t border-line pt-4">
           <summary class="inline-flex min-h-[44px] cursor-pointer items-center rounded font-semibold text-forest outline-none focus-visible:ring-2 focus-visible:ring-forest">How the score works</summary>
           <ul class="mt-2 space-y-2 text-sm text-muted">
-            <li><b class="text-ink">Budget, 40 points.</b> Only rooms at or under your limit are listed. A room at 90% of your limit or less gets all 40. A room closer to your limit gets 25, because there is little cushion.</li>
-            <li><b class="text-ink">Amenities, 30 points.</b> Shared out by how many of your chosen amenities the room has. If you pick none, every room gets 30.</li>
-            <li><b class="text-ink">Room type, 15 points.</b> All 15 if the type matches, or if you chose Any.</li>
-            <li><b class="text-ink">Floor, 15 points.</b> All 15 if the room is on your preferred floor, or if you have no preference.</li>
-            <li><b class="text-ink">Labels.</b> Great fit means 85 or more with nothing missing and the right room type and floor. Otherwise 65 or more is a Good fit, 45 to 64 Okay, and below 45 Weak.</li>
-            <li>Rooms that are taken or on hold are never listed.</li>
+            <li><b class="text-ink">Four parts, 100 points.</b> Budget, amenities, room type and floor.</li>
+            <li><b class="text-ink">Balanced</b> (the default) is budget 40, amenities 30, room type 15 and floor 15. If you pick a top priority, that part counts about 45 points and the others share the rest.</li>
+            <li><b class="text-ink">Budget.</b> A room at 90% of your limit or less earns the full budget points. A room closer to your limit earns about 60%, because there is little cushion. A room over your limit earns none, and is shown in its own section if it costs up to 20% more.</li>
+            <li><b class="text-ink">Amenities.</b> Shared out by how many of your chosen amenities the room has. If you pick none, every room gets full points.</li>
+            <li><b class="text-ink">Room type and floor.</b> Full points if the room matches, or if you chose Any.</li>
+            <li><b class="text-ink">Labels.</b> Great fit means 85 or more with nothing missing, the right room type and floor, and within budget. Otherwise 65 or more is a Good fit, 45 to 64 Okay, and below 45 Weak.</li>
+            <li>Rooms with no free bed are never listed. A shared room (Double or Quad) stays listed until its last bed is taken.</li>
           </ul>
         </details>
       </aside>
@@ -174,6 +183,11 @@
           <p id="summary" class="text-base text-muted"></p>
           <div id="top" class="mt-4"></div>
           <ol id="rest" class="mt-4 space-y-3"></ol>
+          <section id="over-box" hidden class="mt-8">
+            <h2 class="font-display text-xl font-bold tracking-tight">A little over your budget</h2>
+            <p id="over-note" class="mt-1 text-base text-muted"></p>
+            <ol id="over" class="mt-4 space-y-3"></ol>
+          </section>
         </div>
 
         <p class="mt-6 text-sm text-muted">Sample rooms. Prices and availability are placeholders until the real room list is added.</p>
@@ -201,11 +215,7 @@
       // ---- navbar ----
       var user = (read(K.user).value) || {};
       var fullName = String(user.name || user.email || '');
-      if (window.HB_AUTH && HB_AUTH.renderAvatar) {
-        HB_AUTH.renderAvatar($('nav-initial'), user);
-      } else {
-        $('nav-initial').textContent = fullName.charAt(0).toUpperCase();
-      }
+      $('nav-initial').textContent = fullName.charAt(0).toUpperCase();
       $('nav-name').textContent = fullName.split(/\s+/)[0];
       document.querySelectorAll('[data-logout]').forEach(function (b) {
         b.addEventListener('click', function () { drop(K.user); window.location.href = 'index.html'; });
@@ -239,42 +249,61 @@
       });
 
       // ---- SCORING (change the numbers here if your teacher or manager wants different weights) ----
-      function score(room, prefs) {
-        var budgetPts = room.price <= prefs.budget * 0.9 ? 40 : 25;
-        var matched = prefs.amenities.filter(function (a) { return room.amenities.indexOf(a) !== -1; });
-        var missing = prefs.amenities.filter(function (a) { return room.amenities.indexOf(a) === -1; });
-        var amenityPts = prefs.amenities.length ? Math.round(30 * matched.length / prefs.amenities.length) : 30;
-        var typePts = (prefs.type === 'Any' || room.type === prefs.type) ? 15 : 0;
-        var floorPts = (prefs.floor === 'Any' || room.floor === prefs.floor) ? 15 : 0;
-        return { room: room, total: budgetPts + amenityPts + typePts + floorPts, budgetPts: budgetPts, amenityPts: amenityPts, typePts: typePts, floorPts: floorPts, matched: matched, missing: missing };
+      // How much each part counts out of 100. Balanced is the default. The part a student picks as most important
+      // counts about 45 points, and the other parts share the rest in proportion to their usual size.
+      var BASE = { budget: 40, amenities: 30, type: 15, floor: 15 };
+      var PRIORITY_LABEL = { balanced: 'Balanced', budget: 'Budget', amenities: 'Amenities', type: 'Room type', floor: 'Floor' };
+      function weightsFor(priority) {
+        var w = {}, k;
+        if (!BASE[priority]) { for (k in BASE) w[k] = BASE[k]; return w; }
+        var rest = 100 - BASE[priority], used = 0;
+        for (k in BASE) { if (k !== priority) { w[k] = Math.round(BASE[k] * 55 / rest); used += w[k]; } }
+        w[priority] = 100 - used;
+        return w;
       }
 
-      // plain-language label for a score
-      // Great fit needs 85 or more AND no gaps (nothing missing, the right room type, the right floor).
-      function gapCount(s) { return s.missing.length + (s.typePts === 0 ? 1 : 0) + (s.floorPts === 0 ? 1 : 0); }
+      function score(room, prefs) {
+        var w = weightsFor(prefs.priority);
+        var over = room.price > prefs.budget;
+        var matched = prefs.amenities.filter(function (a) { return room.amenities.indexOf(a) !== -1; });
+        var missing = prefs.amenities.filter(function (a) { return room.amenities.indexOf(a) === -1; });
+        var budgetFit = over ? 0 : (room.price <= prefs.budget * 0.9 ? 1 : 0.625);
+        var amenityFit = prefs.amenities.length ? matched.length / prefs.amenities.length : 1;
+        var typeOk = prefs.type === 'Any' || room.type === prefs.type;
+        var floorOk = prefs.floor === 'Any' || room.floor === prefs.floor;
+        var pts = { budget: Math.round(w.budget * budgetFit), amenities: Math.round(w.amenities * amenityFit), type: typeOk ? w.type : 0, floor: floorOk ? w.floor : 0 };
+        return { room: room, total: pts.budget + pts.amenities + pts.type + pts.floor, w: w, pts: pts, over: over, overBy: over ? room.price - prefs.budget : 0,
+                 typeOk: typeOk, floorOk: floorOk, matched: matched, missing: missing };
+      }
+
+      // Great fit needs 85 or more AND no gaps (within budget, nothing missing, the right room type and floor).
+      function gapCount(s) { return s.missing.length + (s.typeOk ? 0 : 1) + (s.floorOk ? 0 : 1) + (s.over ? 1 : 0); }
       function fitLabel(s) { return (s.total >= 85 && gapCount(s) === 0) ? 'Great fit' : s.total >= 65 ? 'Good fit' : s.total >= 45 ? 'Okay fit' : 'Weak fit'; }
 
       // one sentence on why a room scored the way it did
       var current = null;
       function why(s) {
         var p = current, good = [], gaps = [];
-        good.push(s.room.price <= p.budget * 0.9 ? 'comfortably within your budget' : 'within your budget but close to your limit');
+        if (s.over) gaps.push('costs ' + peso(s.overBy) + ' more per month than your budget');
+        else good.push(s.room.price <= p.budget * 0.9 ? 'comfortably within your budget' : 'within your budget but close to your limit');
         if (p.amenities.length) { if (s.missing.length) gaps.push('missing ' + s.missing.join(', ')); else good.push('has every amenity you need'); }
         if (p.type !== 'Any') { if (s.room.type === p.type) good.push('is a ' + p.type + ' room'); else gaps.push('is a ' + s.room.type + ' room, not ' + p.type); }
         if (p.floor !== 'Any') { if (s.room.floor === p.floor) good.push('is on Floor ' + p.floor); else gaps.push('is on Floor ' + s.room.floor + ', not Floor ' + p.floor); }
-        return 'Why: ' + good.join(', ') + '.' + (gaps.length ? ' Gaps: ' + gaps.join(', ') + '.' : '');
+        return 'Why: ' + (good.length ? good.join(', ') + '.' : 'no match yet.') + (gaps.length ? ' Gaps: ' + gaps.join(', ') + '.' : '');
       }
 
       function rank(prefs) {
-        var taken = 0, over = 0, list = [];
+        var taken = 0, far = 0, list = [], over = [];
         ROOMS.forEach(function (r) {
           if (HB.roomState(r, user.id) !== 'available') { taken++; return; }
-          if (r.price > prefs.budget) { over++; return; }
-          list.push(score(r, prefs));
+          if (r.price <= prefs.budget) list.push(score(r, prefs));
+          else if (r.price <= prefs.budget * 1.2) over.push(score(r, prefs));   // a little over: shown in its own section
+          else far++;
         });
         // best score first; on a tie, the room with fewer gaps wins, then the cheaper one
-        list.sort(function (a, b) { return b.total - a.total || gapCount(a) - gapCount(b) || a.room.price - b.room.price; });
-        return { list: list, taken: taken, over: over };
+        function byFit(a, b) { return b.total - a.total || gapCount(a) - gapCount(b) || a.room.price - b.room.price; }
+        list.sort(byFit); over.sort(byFit);
+        return { list: list, over: over, far: far, taken: taken };
       }
 
       // ---- requesting rooms (one active request per student) ----
@@ -294,7 +323,7 @@
       function toggleSave(room, btn) {
         var cur = read(K.saved).value; cur = Array.isArray(cur) ? cur : [];
         var has = cur.some(function (x) { return x.id === room.id; });
-        var next = has ? cur.filter(function (x) { return x.id !== room.id; }) : cur.concat([{ id: room.id, name: room.name, price: room.price }]);
+        var next = has ? cur.filter(function (x) { return x.id !== room.id; }) : cur.concat([{ id: room.id, name: room.name, price: room.price, type: room.type }]);
         var err = $('page-error');
         if (!write(K.saved, next)) { err.textContent = 'We could not save that room. Allow site data for this page in your browser and try again.'; err.classList.remove('hidden'); return; }
         err.classList.add('hidden');
@@ -314,9 +343,9 @@
 
       // ---- rendering ----
       function breakdown(s, cls) {
-        return el('p', cls, 'Budget ' + s.budgetPts + '/40, amenities ' + s.amenityPts + '/30, room type ' + s.typePts + '/15, floor ' + s.floorPts + '/15');
+        return el('p', cls, 'Budget ' + s.pts.budget + '/' + s.w.budget + ', amenities ' + s.pts.amenities + '/' + s.w.amenities + ', room type ' + s.pts.type + '/' + s.w.type + ', floor ' + s.pts.floor + '/' + s.w.floor);
       }
-      function facts(r) { return 'Floor ' + r.floor + ', ' + r.type + ' room, ' + peso(r.price) + ' per month'; }
+      function facts(r) { var bt = HB.bedsText(r); return 'Floor ' + r.floor + ', ' + r.type + ' room, ' + HB.priceLabel(r) + (bt ? ', ' + bt : ''); }
 
       function renderTop(s) {
         var box = $('top'); box.textContent = '';
@@ -343,42 +372,66 @@
         box.appendChild(card);
       }
 
+      // one room as a row. number is its rank in the list (or null for the "a little over budget" section)
+      function rowFor(s, number) {
+        var li = el('li', 'grid items-center gap-3 rounded-[20px] border border-line bg-white p-5 sm:grid-cols-[1fr_auto]');
+        var left = el('div', 'min-w-0');
+        var head = el('p', 'flex flex-wrap items-baseline gap-x-3');
+        head.appendChild(el('span', 'font-display text-lg font-semibold tracking-tight', (number ? number + '. ' : '') + s.room.name));
+        head.appendChild(el('span', 'font-semibold text-forest', fitLabel(s) + ' (' + s.total + '%)'));
+        left.appendChild(head);
+        left.appendChild(el('p', 'mt-1 text-base text-muted', facts(s.room)));
+        if (s.over) left.appendChild(el('p', 'mt-1 text-base font-semibold text-ink', 'Over your budget by ' + peso(s.overBy) + ' per month.'));
+        left.appendChild(el('p', 'mt-1 text-sm text-muted', why(s)));
+        left.appendChild(breakdown(s, 'mt-1 text-sm text-muted'));
+        left.appendChild(cmp.checkbox(s.room, { cls: 'mt-1' }));
+        li.appendChild(left);
+        var btns = el('div', 'flex flex-wrap gap-2');
+        if (!hasActive) btns.appendChild(requestButton(s.room, ''));
+        btns.appendChild(saveButton(s.room, 'btn-outline'));
+        li.appendChild(btns);
+        return li;
+      }
       function renderRest(rest) {
         var ol = $('rest'); ol.textContent = '';
-        rest.forEach(function (s, i) {
-          var li = el('li', 'grid items-center gap-3 rounded-[20px] border border-line bg-white p-5 sm:grid-cols-[1fr_auto]');
-          var left = el('div', 'min-w-0');
-          var head = el('p', 'flex flex-wrap items-baseline gap-x-3');
-          head.appendChild(el('span', 'font-display text-lg font-semibold tracking-tight', (i + 2) + '. ' + s.room.name));
-          head.appendChild(el('span', 'font-semibold text-forest', fitLabel(s) + ' (' + s.total + '%)'));
-          left.appendChild(head);
-          left.appendChild(el('p', 'mt-1 text-base text-muted', facts(s.room)));
-          left.appendChild(el('p', 'mt-1 text-sm text-muted', why(s)));
-          left.appendChild(breakdown(s, 'mt-1 text-sm text-muted'));
-          left.appendChild(cmp.checkbox(s.room, { cls: 'mt-1' }));
-          li.appendChild(left);
-          var btns = el('div', 'flex flex-wrap gap-2');
-          if (!hasActive) btns.appendChild(requestButton(s.room, ''));
-          btns.appendChild(saveButton(s.room, 'btn-outline'));
-          li.appendChild(btns);
-          ol.appendChild(li);
-        });
+        rest.forEach(function (s, i) { ol.appendChild(rowFor(s, i + 2)); });
+      }
+      function renderOver(list) {
+        var ol = $('over'); ol.textContent = '';
+        $('over-box').hidden = list.length === 0;
+        if (!list.length) return;
+        $('over-note').textContent = 'These cost up to 20% more than your limit. Only look if you can stretch.' + (current.moreOver ? ' Showing the best ' + list.length + ' of ' + current.moreOver + '.' : '');
+        list.forEach(function (s) { ol.appendChild(rowFor(s, null)); });
       }
 
       function run(prefs) {
         current = prefs;
         var res = rank(prefs);
-        if (!res.list.length) {
+        if (!res.list.length && !res.over.length) {
           drop(K.top);
-          $('none-detail').textContent = 'No available room costs ' + peso(prefs.budget) + ' or less per month. ' + res.over + ' available room' + (res.over === 1 ? ' is' : 's are') + ' over your budget. Try a higher budget.';
+          $('none-detail').textContent = 'No available room costs ' + peso(prefs.budget) + ' or less per month, and none costs up to 20% more. ' +
+            (res.far ? res.far + ' available room' + (res.far === 1 ? ' costs' : 's cost') + ' even more. ' : '') + 'Try a higher budget.';
           setState('none'); return;
         }
-        var best = res.list[0];
-        $('summary').textContent = res.list.length + ' available room' + (res.list.length === 1 ? ' fits' : 's fit') + ' your budget. ' + res.over + ' available over budget, ' + res.taken + ' taken or on hold.';
-        renderTop(best); renderRest(res.list.slice(1));
-        if (!write(K.top, { name: best.room.name, score: best.total, label: fitLabel(best), price: best.room.price })) {
-          var err = $('page-error'); err.textContent = 'Your matches are shown, but your browser blocked saving them, so Home will not show your best match.'; err.classList.remove('hidden');
+        var shownOver = res.over.slice(0, 5);
+        current.moreOver = res.over.length > 5 ? res.over.length : 0;
+        var prio = PRIORITY_LABEL[prefs.priority] && prefs.priority !== 'balanced' ? ' Your top priority: ' + PRIORITY_LABEL[prefs.priority].toLowerCase() + '.' : '';
+        $('summary').textContent = (res.list.length ? res.list.length + ' available room' + (res.list.length === 1 ? ' fits' : 's fit') + ' your budget. ' : 'No available room fits within your budget. ') +
+          (res.over.length ? res.over.length + ' cost a little more. ' : '') + res.taken + ' full or taken.' + prio;
+        if (res.list.length) {
+          var best = res.list[0];
+          renderTop(best); renderRest(res.list.slice(1));
+          if (!write(K.top, { name: best.room.name, score: best.total, label: fitLabel(best), price: best.room.price })) {
+            var err = $('page-error'); err.textContent = 'Your matches are shown, but your browser blocked saving them, so Home will not show your best match.'; err.classList.remove('hidden');
+          }
+        } else {
+          drop(K.top);
+          var card = el('div', 'rounded-[20px] border border-line bg-white p-6');
+          card.appendChild(el('p', 'font-display text-xl font-bold tracking-tight', 'No available room fits within your budget'));
+          card.appendChild(el('p', 'mt-2 text-base text-muted', 'A few rooms cost a little more. They are listed below.'));
+          $('top').textContent = ''; $('top').appendChild(card); renderRest([]);
         }
+        renderOver(shownOver);
         setState('list');
       }
 
@@ -387,7 +440,7 @@
       function readForm() {
         var checked = []; form.querySelectorAll('input[name=amenity]:checked').forEach(function (c) { checked.push(c.value); });
         var fl = form.elements.floor.value;
-        return { budget: Number($('budget').value), type: form.elements.type.value, floor: fl === 'Any' ? 'Any' : Number(fl), amenities: checked };
+        return { budget: Number($('budget').value), type: form.elements.type.value, floor: fl === 'Any' ? 'Any' : Number(fl), priority: form.elements.priority.value, amenities: checked };
       }
       form.addEventListener('submit', function (e) {
         e.preventDefault();
@@ -411,7 +464,9 @@
         var floorVal = typeof p.floor === 'number' ? p.floor : 'Any';
         var fr = form.querySelector('input[name=floor][value="' + floorVal + '"]'); if (fr) fr.checked = true; else floorVal = 'Any';
         form.querySelectorAll('input[name=amenity]').forEach(function (c) { c.checked = p.amenities.indexOf(c.value) !== -1; });
-        run({ budget: p.budget, type: radio ? p.type : 'Any', floor: floorVal, amenities: p.amenities });
+        var prioVal = p.priority || 'balanced';
+        var pr = form.querySelector('input[name=priority][value="' + prioVal + '"]'); if (pr) pr.checked = true; else prioVal = 'balanced';
+        run({ budget: p.budget, type: radio ? p.type : 'Any', floor: floorVal, priority: prioVal, amenities: p.amenities });
       } else {
         setState('empty');
       }

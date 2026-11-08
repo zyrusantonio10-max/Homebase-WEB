@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -29,13 +29,19 @@
     - Commute and safety are not shown anywhere on this page (your decision: they only appear inside reviews).
 
     TODO (for the other pages and the PHP + MySQL phase):
-    - matches.html, rooms.html and floorplan.html do not exist yet. The navbar links are ready for them.
     - The three storage keys below are the "contract" between this page and the pages you build next.
       When you move to PHP + MySQL, replace the read() calls in the script with fetch() calls and keep the render functions.
   -->
 
-  <script src="assets/js/auth.js"></script>
-  <script>HB_AUTH.requireAuth('student');</script>
+  <script>
+    // Guard: nobody gets in without logging in. Runs before the page draws, so there is no flash of content.
+    (function () {
+      try {
+        var u = JSON.parse(localStorage.getItem('homebase_currentUser') || 'null');
+        if (!u || !u.email) window.location.replace('index.html');
+      } catch (e) { window.location.replace('index.html'); }
+    })();
+  </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -96,14 +102,13 @@
         <li><a class="nav-link" href="home.html" aria-current="page">Home</a></li>
         <li><a class="nav-link" href="matches.html">My Matches</a></li>
         <li><a class="nav-link" href="rooms.html">Explore Rooms</a></li>
-        <li><a class="nav-link" href="floorplan.html">Floor Plan</a></li>
       </ul>
 
       <div class="flex items-center gap-2">
-        <a href="profile.html" class="hidden items-center gap-2 pr-1 md:flex rounded-full py-1 pl-1 pr-2 hover:bg-track transition-colors outline-none focus-visible:ring-2 focus-visible:ring-forest" title="My Profile" aria-label="My Profile">
-          <span id="nav-initial" class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-forest font-display text-sm font-semibold text-white overflow-hidden" aria-hidden="true"></span>
+        <span class="hidden items-center gap-2 pr-1 md:flex">
+          <span id="nav-initial" class="grid h-9 w-9 place-items-center rounded-full bg-forest font-display text-sm font-semibold text-white" aria-hidden="true"></span>
           <span id="nav-name" class="max-w-[9rem] truncate text-sm font-medium text-ink"></span>
-        </a>
+        </span>
         <button type="button" data-logout class="btn btn-outline hidden md:inline-flex">Log out</button>
         <button type="button" id="menu-btn" aria-expanded="false" aria-controls="menu"
           class="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-forest bg-white px-4 text-base font-semibold text-forest outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 md:hidden">
@@ -118,8 +123,6 @@
         <li><a class="nav-link w-full" href="home.html" aria-current="page">Home</a></li>
         <li><a class="nav-link w-full" href="matches.html">My Matches</a></li>
         <li><a class="nav-link w-full" href="rooms.html">Explore Rooms</a></li>
-        <li><a class="nav-link w-full" href="floorplan.html">Floor Plan</a></li>
-        <li><a class="nav-link w-full" href="profile.html">My Profile</a></li>
       </ul>
       <div class="mt-2 border-t border-line pt-2">
         <button type="button" data-logout class="btn btn-outline w-full">Log out</button>
@@ -143,10 +146,9 @@
       <section id="start" hidden aria-labelledby="start-title" class="mt-8 rounded-[20px] border border-line bg-tint p-6 sm:p-8">
         <h2 id="start-title" class="font-display text-xl font-bold tracking-tight">Where do you want to start?</h2>
         <p class="note mt-1">Choose what suits you. You can switch at any time.</p>
-        <ul class="mt-5 grid gap-3 md:grid-cols-3">
+        <ul class="mt-5 grid gap-3 md:grid-cols-2">
           <li><a href="matches.html" class="block h-full rounded-xl border border-line bg-white p-4 no-underline outline-none transition-colors hover:border-forest focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2"><span class="block font-display text-lg font-semibold tracking-tight text-ink">Match me with a room</span><span class="mt-1 block text-base text-muted">Tell us your budget and needs. We rank the rooms for you.</span></a></li>
           <li><a href="rooms.html" class="block h-full rounded-xl border border-line bg-white p-4 no-underline outline-none transition-colors hover:border-forest focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2"><span class="block font-display text-lg font-semibold tracking-tight text-ink">Browse all rooms</span><span class="mt-1 block text-base text-muted">Look at every room and compare the ones you like.</span></a></li>
-          <li><a href="floorplan.html" class="block h-full rounded-xl border border-line bg-white p-4 no-underline outline-none transition-colors hover:border-forest focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2"><span class="block font-display text-lg font-semibold tracking-tight text-ink">Pick by floor</span><span class="mt-1 block text-base text-muted">See which rooms are free on each floor.</span></a></li>
         </ul>
       </section>
 
@@ -208,17 +210,13 @@
 
         <!-- PROFILE -->
         <section aria-labelledby="profile-title" class="rounded-[20px] border border-line bg-tint p-6">
-          <div class="flex items-center justify-between">
-            <h2 id="profile-title" class="card-title">Your profile</h2>
-            <a href="profile.html" class="inline-flex items-center text-sm font-semibold text-forest underline underline-offset-4 hover:text-forest-deep">Edit profile</a>
-          </div>
+          <h2 id="profile-title" class="card-title">Your profile</h2>
           <div class="mt-4 flex items-center gap-4">
-            <a href="profile.html" title="Edit your profile" class="group block rounded-full focus-visible:ring-2 focus-visible:ring-forest outline-none">
-              <span id="profile-initial" class="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-forest font-display text-xl font-semibold text-white overflow-hidden" aria-hidden="true"></span>
-            </a>
+            <!-- placeholder avatar: initial only, no photos yet -->
+            <span id="profile-initial" class="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-forest font-display text-xl font-semibold text-white" aria-hidden="true"></span>
             <div class="min-w-0">
               <p id="profile-name" class="truncate font-display text-lg font-semibold tracking-tight"></p>
-              <p id="profile-sub" class="text-sm text-muted">Student</p>
+              <p class="text-sm text-muted">Student</p>
             </div>
           </div>
           <dl class="mt-5 space-y-3 text-base">
@@ -231,10 +229,7 @@
               <dd>Ariate Dormitory</dd>
             </div>
           </dl>
-          <div class="mt-4 flex flex-wrap items-center gap-3">
-            <a href="profile.html" class="btn btn-outline text-sm !min-h-[38px] !px-4">Manage Profile</a>
-            <button type="button" id="open-rules" class="textlink !min-h-[38px] text-sm">House rules</button>
-          </div>
+          <button type="button" id="open-rules" class="textlink mt-3">Read the house rules</button>
         </section>
       </div>
 
@@ -269,7 +264,7 @@
         </div>
 
         <div data-state="empty" hidden class="mt-4">
-          <p class="note max-w-lg">You have not requested a room yet. Find a room and press Request this room. The dormitory office answers your request, and the room is held for you while you wait.</p>
+          <p class="note max-w-lg">You have not requested a room yet. Find a room and press Request this room. The dormitory office answers your request, and your spot is held while you wait.</p>
           <a href="rooms.html" class="btn mt-4">Explore rooms</a>
         </div>
 
@@ -318,6 +313,7 @@
   </main>
 
   <script src="assets/js/reservation.js"></script>
+  <script src="assets/js/reviews.js"></script>
   <script>
     (function () {
       /*
@@ -329,15 +325,12 @@
           homebase_comparisons   [ { rooms: ["Room 204", "Room 301"], ids: ["204", "301"], date: "2026-10-25T08:00:00Z" } ]  written by Explore Rooms
         price and date are optional. If a key is missing, the card shows its empty state.
       */
-      var user = HB_AUTH.getUser();
-      if (!user) { window.location.replace('index.html'); return; }
-
       var KEYS = {
-        user: HB_AUTH.CURRENT_KEY,
-        top: HB_AUTH.userKey('homebase_topMatch'),
-        saved: HB_AUTH.userKey('homebase_savedRooms'),
-        cmp: HB_AUTH.userKey('homebase_comparisons'),
-        prefs: HB_AUTH.userKey('homebase_preferences')
+        user: 'homebase_currentUser',
+        top: 'homebase_topMatch',
+        saved: 'homebase_savedRooms',
+        cmp: 'homebase_comparisons',
+        prefs: 'homebase_preferences'
       };
 
       var $ = function (id) { return document.getElementById(id); };
@@ -368,6 +361,11 @@
         return (typeof n === 'number' && isFinite(n)) ? '\u20B1' + n.toLocaleString('en-PH') + ' per month' : '';
       }
 
+      // ---- user ----
+      var u = read(KEYS.user);
+      var user = u.ok ? u.value : null;
+      if (!user || !user.email) { window.location.replace('index.html'); return; }
+
       var fullName = String(user.name || user.email);
       var firstName = fullName.split(/\s+/)[0];
       var initial = fullName.charAt(0).toUpperCase();
@@ -375,8 +373,13 @@
       $('nav-initial').textContent = initial;
       $('nav-name').textContent = firstName;
 
-      // ---- logout (works from navbar and mobile menu) ----
-      HB_AUTH.bindLogout();
+      // ---- logout (works from the navbar and the mobile menu) ----
+      document.querySelectorAll('[data-logout]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          try { localStorage.removeItem(KEYS.user); } catch (e) {}
+          window.location.href = 'index.html';
+        });
+      });
 
       document.querySelectorAll('[data-reload]').forEach(function (b) {
         b.addEventListener('click', function () { window.location.reload(); });
@@ -400,15 +403,9 @@
 
       // ---- profile ----
       $('first-name').textContent = firstName;
+      $('profile-initial').textContent = initial;
       $('profile-name').textContent = fullName;
       $('profile-email').textContent = String(user.email);
-      var prof = HB_AUTH.getProfile(user.id);
-      if (prof && prof.course) {
-        var subEl = $('profile-sub');
-        if (subEl) subEl.textContent = prof.course;
-      }
-      HB_AUTH.renderAvatar($('nav-initial'), user);
-      HB_AUTH.renderAvatar($('profile-initial'), user);
 
       // ---- best match ----
       function renderTop() {
@@ -444,7 +441,7 @@
           name.className = 'truncate font-semibold';
           name.textContent = room.name;
           text.appendChild(name);
-          var price = peso(room.price);
+          var price = room.type ? HB.priceLabel(room) : peso(room.price);
           if (price) {
             var p = document.createElement('p');
             p.className = 'text-sm text-muted';
@@ -545,7 +542,7 @@
         var label = { pending: 'Pending', approved: 'Approved, payment due', confirmed: 'Confirmed', declined: 'Declined', cancelled: 'Cancelled', expired: 'Expired', ended: 'Stay ended' }[r.status] || r.status;
         head.appendChild(mk('p', 'text-base font-semibold ' + (r.status === 'approved' || r.status === 'confirmed' ? 'text-forest' : r.status === 'pending' ? 'text-ink' : 'text-muted'), label));
         box.appendChild(head);
-        box.appendChild(mk('p', 'mt-1 text-base text-muted', 'Floor ' + r.floor + ', ' + r.type + ' room, ' + peso(r.price)));
+        box.appendChild(mk('p', 'mt-1 text-base text-muted', 'Floor ' + r.floor + ', ' + r.type + ' room, ' + HB.priceLabel(r)));
 
         var dl = mk('dl', 'mt-4 grid gap-3 text-base sm:grid-cols-3');
         var facts = [['Move-in date', fmtDate(r.moveIn)], ['Requested on', fmtDate(r.createdAt)]];
@@ -589,7 +586,7 @@
 
         var panel = mk('div', 'mt-5 rounded-xl border border-line bg-tint p-4');
         if (r.status === 'pending') {
-          panel.appendChild(mk('p', 'text-base', 'The dormitory office is reviewing your request. Your room is held for you while you wait.'));
+          panel.appendChild(mk('p', 'text-base', 'The dormitory office is reviewing your request. Your spot is held for you while you wait.'));
           panel.appendChild(cancelRow('Cancel this request? The room is released.'));
         } else if (r.status === 'approved') {
           panel.appendChild(mk('p', 'font-semibold text-forest-deep', 'Approved. Next step: pay the dormitory office' + (due ? ' by ' + due : '') + '.'));
@@ -604,6 +601,7 @@
           var a = mk('a', 'btn mt-3', 'Find another room'); a.href = 'rooms.html'; panel.appendChild(a);
         }
         box.appendChild(panel);
+        if (window.HBReviews) { var rb = HBReviews.stayBlock(user, mine, renderReservation); if (rb) box.appendChild(rb); }
         setState('reservation', 'view');
       }
 
@@ -627,8 +625,8 @@
         if (!p || typeof p.budget !== 'number' || !isFinite(p.budget) || !Array.isArray(p.amenities)) { setState('prefs', 'empty'); return; }
         var box = $('prefs-view'); box.textContent = '';
         var mk = function (tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
-        var dl = mk('dl', 'grid gap-4 text-base sm:grid-cols-2 lg:grid-cols-4');
-        [['Monthly budget', peso(p.budget)], ['Room type', p.type || 'Any'], ['Preferred floor', typeof p.floor === 'number' ? 'Floor ' + p.floor : 'No preference'], ['Amenities', p.amenities.length ? p.amenities.join(', ') : 'None chosen']].forEach(function (f) {
+        var dl = mk('dl', 'grid gap-4 text-base sm:grid-cols-2 lg:grid-cols-5');
+        [['Monthly budget', peso(p.budget)], ['Room type', p.type || 'Any'], ['Preferred floor', typeof p.floor === 'number' ? 'Floor ' + p.floor : 'No preference'], ['Amenities', p.amenities.length ? p.amenities.join(', ') : 'None chosen'], ['Matters most', { budget: 'Budget', amenities: 'Amenities', type: 'Room type', floor: 'Floor' }[p.priority] || 'Balanced']].forEach(function (f) {
           var d = mk('div'); d.appendChild(mk('dt', 'text-sm font-medium text-muted', f[0])); d.appendChild(mk('dd', 'break-words', f[1])); dl.appendChild(d);
         });
         box.appendChild(dl);
