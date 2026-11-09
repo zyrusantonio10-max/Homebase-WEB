@@ -1,4 +1,4 @@
-﻿/*
+/*
   Homebase Authentication & Session Management
   Shared across all pages: index.html, home.html, landlord.html, matches.html, rooms.html, floorplan.html, profile.html.
 
@@ -61,6 +61,26 @@
           password: 'sha256:324edabe4fea58d0f91f5f8fc20af8ef9df416b2f14ff262216ae5a6a5617fbc'
         }
       ]);
+    }
+    // Seed default demo profile if not already set
+    if (!readStorage('homebase_profile_demo-student', null)) {
+      writeStorage('homebase_profile_demo-student', {
+        name: 'Alex Santos',
+        email: 'alex@unc.edu.ph',
+        phone: '0917 123 4567',
+        course: 'BS Computer Science',
+        yearLevel: '2nd Year',
+        social: '@alex_santos',
+        bio: '2nd year CS student at UNC. Usually coding or reading. Clean, quiet, and respectful of dorm rules.',
+        sleepSchedule: 'early',
+        studyHabit: 'quiet',
+        cleanliness: 'very-neat',
+        noiseTolerance: 'moderate',
+        guestFrequency: 'rarely',
+        emergencyName: 'Maria Santos',
+        emergencyRel: 'Mother',
+        emergencyPhone: '0918 987 6543'
+      });
     }
   }
   seedDefaultUsers();
@@ -209,42 +229,91 @@
       });
     },
 
+    // Resolve a reliable user identifier (ID or email fallback)
+    getUserId: function (userOrId) {
+      if (typeof userOrId === 'string' && userOrId) return userOrId;
+      if (userOrId && typeof userOrId === 'object') {
+        if (userOrId.id) return String(userOrId.id);
+        if (userOrId.email) return String(userOrId.email);
+      }
+      var cur = HB_AUTH.getUser();
+      if (cur) return cur.id ? String(cur.id) : (cur.email ? String(cur.email) : null);
+      return null;
+    },
+
     // Get extra profile data enriched with user identity
     getProfile: function (userId) {
-      var uid = userId;
-      if (!uid) {
-        var u = HB_AUTH.getUser();
-        uid = (u && u.id) ? u.id : null;
-      }
+      var uid = HB_AUTH.getUserId(userId);
       if (!uid) return {};
-      var prof = readStorage('homebase_profile_' + uid, {}) || {};
 
-      // Merge with user record from homebase_users
+      // Read stored profile by primary ID
+      var prof = readStorage('homebase_profile_' + uid, null);
+
+      // If not found and current user has an email or ID alternate, check alternate key
+      var cur = readStorage(CURRENT_KEY, null);
+      if (!prof && cur) {
+        if (cur.email && cur.email !== uid) {
+          prof = readStorage('homebase_profile_' + cur.email, null);
+        }
+        if (!prof && cur.id && cur.id !== uid) {
+          prof = readStorage('homebase_profile_' + cur.id, null);
+        }
+      }
+      prof = prof || {};
+
+      // Merge with user record from homebase_users or session
       var users = readStorage(USERS_KEY, []);
       var match = null;
       for (var i = 0; i < users.length; i++) {
-        if (users[i].id === uid) { match = users[i]; break; }
-      }
-      if (match) {
-        if (!prof.name) prof.name = match.name;
-        if (!prof.email) prof.email = match.email;
-        if (!prof.role) prof.role = match.role;
-      } else {
-        var cur = readStorage(CURRENT_KEY, null);
-        if (cur && cur.id === uid) {
-          if (!prof.name) prof.name = cur.name;
-          if (!prof.email) prof.email = cur.email;
-          if (!prof.role) prof.role = cur.role;
+        if (String(users[i].id) === String(uid) || String(users[i].email) === String(uid)) {
+          match = users[i];
+          break;
         }
+      }
+      var src = match || (cur && (String(cur.id) === String(uid) || String(cur.email) === String(uid)) ? cur : null);
+      if (src) {
+        if (!prof.name && src.name) prof.name = src.name;
+        if (!prof.email && src.email) prof.email = src.email;
+        if (!prof.role && src.role) prof.role = src.role;
       }
       return prof;
     },
 
-    // Save extra profile data
+    // Save extra profile data and keep session & users synchronized
     saveProfile: function (data, userId) {
-      var u = userId ? { id: userId } : HB_AUTH.getUser();
-      if (!u || !u.id) return false;
-      return writeStorage('homebase_profile_' + u.id, data || {});
+      var uid = HB_AUTH.getUserId(userId);
+      if (!uid) return false;
+
+      var prof = data || {};
+      writeStorage('homebase_profile_' + uid, prof);
+
+      // Also sync to active user session if this is the current user
+      var cur = readStorage(CURRENT_KEY, null);
+      if (cur && (String(cur.id) === String(uid) || String(cur.email) === String(uid))) {
+        if (prof.name) cur.name = prof.name;
+        if (prof.email) cur.email = prof.email;
+        if (prof.photo) cur.photo = prof.photo;
+        writeStorage(CURRENT_KEY, cur);
+
+        // If current user has both id and email, save under both keys to prevent lookup misses
+        if (cur.id && String(cur.id) !== uid) writeStorage('homebase_profile_' + cur.id, prof);
+        if (cur.email && String(cur.email) !== uid) writeStorage('homebase_profile_' + cur.email, prof);
+      }
+
+      // Sync name & email in homebase_users if updated
+      var users = readStorage(USERS_KEY, []);
+      var userUpdated = false;
+      for (var i = 0; i < users.length; i++) {
+        if (String(users[i].id) === String(uid) || String(users[i].email) === String(uid)) {
+          if (prof.name) users[i].name = prof.name;
+          if (prof.email) users[i].email = prof.email;
+          userUpdated = true;
+          break;
+        }
+      }
+      if (userUpdated) writeStorage(USERS_KEY, users);
+
+      return true;
     },
 
     // Format lifestyle choices into readable text
@@ -277,7 +346,7 @@
       if (!el) return;
       var u = user || HB_AUTH.getUser();
       if (!u) return;
-      var uid = (typeof u === 'object') ? u.id : (typeof u === 'string' ? u : null);
+      var uid = HB_AUTH.getUserId(u);
       var prof = uid ? HB_AUTH.getProfile(uid) : {};
       var name = String((u && u.name) || prof.name || (u && u.email) || prof.email || 'User');
       var initial = name.charAt(0).toUpperCase();
