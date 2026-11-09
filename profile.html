@@ -21,6 +21,7 @@
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="assets/js/tw-config.js"></script>
+  <link rel="stylesheet" href="assets/css/components.css">
 
   <style type="text/tailwindcss">
     @layer components {
@@ -35,6 +36,9 @@
       }
       .btn-danger {
         @apply border-danger bg-white text-danger hover:bg-[#FEF3F2] focus-visible:ring-danger;
+      }
+      .btn-logout {
+        @apply border border-danger-line bg-danger-soft text-danger hover:bg-danger hover:text-white hover:border-danger focus-visible:ring-danger;
       }
       .nav-link {
         @apply inline-flex min-h-[44px] items-center rounded-full px-4 text-base font-medium text-ink no-underline transition-colors outline-none
@@ -95,7 +99,7 @@
           <span id="nav-avatar" class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-forest font-display text-sm font-semibold text-white overflow-hidden" aria-hidden="true"></span>
           <span id="nav-name" class="hidden max-w-[8rem] truncate text-sm font-medium text-ink md:inline-block"></span>
         </a>
-        <button type="button" data-logout class="btn btn-outline hidden md:inline-flex">Log out</button>
+        <button type="button" data-logout class="btn btn-logout hidden md:inline-flex">Log out</button>
         <button type="button" id="menu-btn" aria-expanded="false" aria-controls="menu"
           class="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-forest bg-white px-4 text-base font-semibold text-forest outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 md:hidden">
           <span id="menu-label">Menu</span>
@@ -109,7 +113,7 @@
         <!-- Rendered by JS -->
       </ul>
       <div class="mt-2 border-t border-line pt-2">
-        <button type="button" data-logout class="btn btn-outline w-full">Log out</button>
+        <button type="button" data-logout class="btn btn-logout w-full">Log out</button>
       </div>
     </div>
   </header>
@@ -178,8 +182,8 @@
       </div>
     </section>
 
-    <!-- TABS / SECTIONS GRID -->
-    <div class="mt-8 space-y-8">
+    <!-- UNIFIED PROFILE FORM -->
+    <form id="form-profile" novalidate class="mt-8 space-y-8">
 
       <!-- SECTION 2: BASIC PERSONAL INFORMATION -->
       <section aria-labelledby="personal-heading" class="rounded-[20px] border border-line bg-white p-6 sm:p-8">
@@ -191,7 +195,7 @@
           <span class="text-xs font-semibold uppercase tracking-wider text-muted bg-track px-2.5 py-1 rounded-md">Primary</span>
         </div>
 
-        <form id="form-personal" novalidate class="mt-6 space-y-5">
+        <div class="mt-6 space-y-5">
           <div class="grid gap-5 sm:grid-cols-2">
             <div>
               <label class="label" for="f-name">Full Name <span class="text-danger">*</span></label>
@@ -238,7 +242,7 @@
             <div>
               <label class="label" for="f-social">Social / Messenger Handle</label>
               <input class="field" id="f-social" type="text" maxlength="80" placeholder="e.g. @alex.santos or fb.com/alex">
-              <p class="mt-1 text-xs text-muted">Helpful for roomates and dormitory peers.</p>
+              <p class="mt-1 text-xs text-muted">Helpful for roommates and dormitory peers.</p>
             </div>
           </div>
 
@@ -249,22 +253,17 @@
             </div>
             <textarea id="f-bio" rows="3" maxlength="300" class="block w-full rounded-xl border border-line bg-white px-3.5 py-3 text-base text-ink outline-none transition-colors hover:border-[#8FA397] focus-visible:border-forest focus-visible:ring-2 focus-visible:ring-forest/30" placeholder="Introduce yourself, your hobbies, course routines, or dorm lifestyle preferences..."></textarea>
           </div>
-
-          <div class="flex flex-wrap items-center gap-3 pt-3">
-            <button type="submit" class="btn">Save Information</button>
-            <button type="reset" id="btn-reset-personal" class="btn btn-outline">Cancel</button>
-          </div>
-        </form>
+        </div>
       </section>
 
       <!-- SECTION 3: DORM LIFE & ROOMMATE PREFERENCES (For students) -->
       <section id="section-lifestyle" aria-labelledby="lifestyle-heading" class="rounded-[20px] border border-line bg-white p-6 sm:p-8">
         <div class="border-b border-line pb-4">
           <h2 id="lifestyle-heading" class="card-title">Dorm Living & Lifestyle Habits</h2>
-          <p class="note text-sm mt-0.5">Let potential roomates know how you live and study.</p>
+          <p class="note text-sm mt-0.5">Let potential roommates know how you live and study.</p>
         </div>
 
-        <form id="form-lifestyle" class="mt-6 space-y-6">
+        <div class="mt-6 space-y-6">
           <!-- Sleep schedule -->
           <div>
             <span class="label font-semibold">Typical Sleep Schedule</span>
@@ -321,11 +320,7 @@
               </label>
             </div>
           </div>
-
-          <div class="pt-2">
-            <button type="submit" class="btn">Save Lifestyle Habits</button>
-          </div>
-        </form>
+        </div>
       </section>
 
       <!-- SECTION 4: EMERGENCY CONTACT -->
@@ -335,7 +330,7 @@
           <p class="note text-sm mt-0.5">Kept on file by Ariate Dormitory management in case of emergencies or medical concerns.</p>
         </div>
 
-        <form id="form-emergency" class="mt-6 space-y-5">
+        <div class="mt-6 space-y-5">
           <div class="grid gap-5 sm:grid-cols-3">
             <div>
               <label class="label" for="f-emer-name">Contact Person Name</label>
@@ -352,12 +347,25 @@
               <input class="field" id="f-emer-phone" type="tel" maxlength="20" placeholder="0918 987 6543">
             </div>
           </div>
-
-          <div class="pt-2">
-            <button type="submit" class="btn">Update Emergency Contact</button>
-          </div>
-        </form>
+        </div>
       </section>
+
+      <!-- SINGLE UNIFIED SAVE ACTION BAR -->
+      <div class="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-forest/20 bg-tint/80 p-5 shadow-sm">
+        <div>
+          <p class="font-display text-base font-bold text-ink">Save all your profile changes</p>
+          <p class="text-xs text-muted">Updates your personal info, lifestyle preferences, and emergency contact together.</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <span id="save-status" hidden class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 border border-emerald-300 px-3.5 py-1 text-xs font-bold text-emerald-800">
+            <span aria-hidden="true">&#10003;</span> Saved successfully!
+          </span>
+          <button type="submit" id="btn-save-all" class="btn !min-h-[44px] !px-6 shadow-sm">
+            Save All Changes
+          </button>
+        </div>
+      </div>
+    </form>
 
       <!-- SECTION 5: CHANGE PASSWORD -->
       <section aria-labelledby="password-heading" class="rounded-[20px] border border-line bg-white p-6 sm:p-8">
@@ -433,11 +441,13 @@
         navLinks.innerHTML =
           '<li><a class="nav-link" href="landlord.html">Dashboard</a></li>' +
           '<li><a class="nav-link" href="landlord-rooms.html">Rooms</a></li>' +
+          '<li><a class="nav-link" href="landlord-reviews.html">Reviews</a></li>' +
           '<li><a class="nav-link" href="profile.html" aria-current="page">Profile</a></li>';
 
         menuLinks.innerHTML =
           '<li><a class="nav-link w-full" href="landlord.html">Dashboard</a></li>' +
           '<li><a class="nav-link w-full" href="landlord-rooms.html">Rooms</a></li>' +
+          '<li><a class="nav-link w-full" href="landlord-reviews.html">Reviews</a></li>' +
           '<li><a class="nav-link w-full" href="profile.html" aria-current="page">Profile</a></li>';
 
         // Hide student specific blocks
@@ -453,14 +463,12 @@
           '<li><a class="nav-link" href="home.html">Home</a></li>' +
           '<li><a class="nav-link" href="matches.html">My Matches</a></li>' +
           '<li><a class="nav-link" href="rooms.html">Explore Rooms</a></li>' +
-          '<li><a class="nav-link" href="floorplan.html">Floor Plan</a></li>' +
           '<li><a class="nav-link" href="profile.html" aria-current="page">Profile</a></li>';
 
         menuLinks.innerHTML =
           '<li><a class="nav-link w-full" href="home.html">Home</a></li>' +
           '<li><a class="nav-link w-full" href="matches.html">My Matches</a></li>' +
           '<li><a class="nav-link w-full" href="rooms.html">Explore Rooms</a></li>' +
-          '<li><a class="nav-link w-full" href="floorplan.html">Floor Plan</a></li>' +
           '<li><a class="nav-link w-full" href="profile.html" aria-current="page">Profile</a></li>';
       }
 
@@ -494,25 +502,25 @@
         } else {
           alertBanner.className = 'mt-6 rounded-2xl border px-5 py-3.5 text-base font-medium flex items-center justify-between gap-3 border-forest/40 bg-tint text-forest-deep';
         }
-        alertBanner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        // Do not scrollIntoView so user never gets yanked away from what they were editing
         clearTimeout(alertTimer);
-        alertTimer = setTimeout(function () { alertBanner.hidden = true; }, 6000);
+        alertTimer = setTimeout(function () { alertBanner.hidden = true; }, 5000);
       }
       alertClose.addEventListener('click', function () { alertBanner.hidden = true; });
 
       // ---- 3. PROFILE DATA HANDLING ----
       function getStoredProfile() {
-        return HB_AUTH.getProfile(user.id);
+        return HB_AUTH.getProfile(user.id || user.email);
       }
 
       function updateHero() {
         var prof = getStoredProfile();
-        var displayName = user.name || user.email || 'User';
+        var displayName = user.name || prof.name || user.email || 'User';
         var firstWord = displayName.split(/\s+/)[0];
 
         $('nav-name').textContent = firstWord;
         $('hero-name').textContent = displayName;
-        $('hero-email').textContent = user.email;
+        $('hero-email').textContent = user.email || prof.email || '';
         $('hero-role-badge').textContent = isLandlord ? 'Landlord' : 'Student';
         $('hero-sub').textContent = isLandlord ? 'Ariate Dormitory Office' : (prof.course || 'Ariate Dormitory Resident');
 
@@ -527,8 +535,8 @@
         var prof = getStoredProfile();
 
         // Personal
-        $('f-name').value = user.name || '';
-        $('f-email').value = user.email || '';
+        $('f-name').value = user.name || prof.name || '';
+        $('f-email').value = user.email || prof.email || '';
         $('f-phone').value = prof.phone || '';
         $('f-course').value = prof.course || '';
         $('f-year').value = prof.yearLevel || '';
@@ -536,19 +544,23 @@
         $('f-bio').value = prof.bio || '';
         $('bio-counter').textContent = (prof.bio ? prof.bio.length : 0) + ' / 300';
 
-        // Lifestyle
-        if (prof.sleepSchedule) {
-          var r = document.querySelector('input[name="sleep"][value="' + prof.sleepSchedule + '"]');
-          if (r) r.checked = true;
+        // Lifestyle radio selection
+        function selectRadio(name, val) {
+          if (!val) return;
+          var match = document.querySelector('input[name="' + name + '"][value="' + val + '"]');
+          if (match) { match.checked = true; return; }
+          var all = document.querySelectorAll('input[name="' + name + '"]');
+          var lower = String(val).toLowerCase();
+          for (var i = 0; i < all.length; i++) {
+            if (lower.indexOf(all[i].value.toLowerCase()) !== -1 || all[i].value.toLowerCase().indexOf(lower) !== -1) {
+              all[i].checked = true;
+              return;
+            }
+          }
         }
-        if (prof.studyHabit) {
-          var s = document.querySelector('input[name="study"][value="' + prof.studyHabit + '"]');
-          if (s) s.checked = true;
-        }
-        if (prof.cleanliness) {
-          var c = document.querySelector('input[name="clean"][value="' + prof.cleanliness + '"]');
-          if (c) c.checked = true;
-        }
+        selectRadio('sleep', prof.sleepSchedule);
+        selectRadio('study', prof.studyHabit);
+        selectRadio('clean', prof.cleanliness);
 
         // Emergency
         $('f-emer-name').value = prof.emergencyName || '';
@@ -630,8 +642,12 @@
         showAlert('Profile photo removed.');
       });
 
-      // ---- 5. SAVE PERSONAL INFORMATION ----
-      $('form-personal').addEventListener('submit', function (e) {
+      // ---- 5. SINGLE UNIFIED SAVE FOR WHOLE PROFILE ----
+      var formProfile = $('form-profile');
+      var saveStatus = $('save-status');
+      var saveStatusTimer = null;
+
+      formProfile.addEventListener('submit', function (e) {
         e.preventDefault();
 
         // Clear errors
@@ -648,6 +664,7 @@
           $('f-name-err').textContent = 'Please enter your full name.';
           $('f-name-err').hidden = false;
           $('f-name').setAttribute('aria-invalid', 'true');
+          $('f-name').focus();
           valid = false;
         }
 
@@ -656,37 +673,35 @@
           $('f-email-err').textContent = 'Please enter a valid email address.';
           $('f-email-err').hidden = false;
           $('f-email').setAttribute('aria-invalid', 'true');
+          if (valid) $('f-email').focus();
           valid = false;
         }
 
         if (!valid) return;
 
-        // Check email uniqueness across other users
+        // Check email uniqueness across other accounts
         var users = JSON.parse(localStorage.getItem('homebase_users') || '[]');
         var duplicate = users.some(function (u) {
-          return u.email === email && u.id !== user.id;
+          return u.email === email && String(u.id) !== String(user.id);
         });
 
         if (duplicate) {
           $('f-email-err').textContent = 'This email is already in use by another account.';
           $('f-email-err').hidden = false;
           $('f-email').setAttribute('aria-invalid', 'true');
+          $('f-email').focus();
           return;
         }
 
         // 1. Update user in homebase_users list
-        var userFound = false;
         for (var i = 0; i < users.length; i++) {
-          if (users[i].id === user.id) {
+          if (String(users[i].id) === String(user.id) || String(users[i].email) === String(user.email)) {
             users[i].name = name;
             users[i].email = email;
-            userFound = true;
             break;
           }
         }
-        if (userFound) {
-          localStorage.setItem('homebase_users', JSON.stringify(users));
-        }
+        localStorage.setItem('homebase_users', JSON.stringify(users));
 
         // 2. Update active session
         user.name = name;
@@ -695,49 +710,36 @@
 
         // 3. Update extra profile details
         var prof = getStoredProfile();
+        prof.name = name;
+        prof.email = email;
         prof.phone = $('f-phone').value.trim();
         prof.course = $('f-course').value.trim();
         prof.yearLevel = $('f-year').value;
         prof.social = $('f-social').value.trim();
         prof.bio = $('f-bio').value.trim();
-        HB_AUTH.saveProfile(prof, user.id);
-
-        updateHero();
-        showAlert('Personal information saved successfully!');
-      });
-
-      $('btn-reset-personal').addEventListener('click', function () {
-        setTimeout(populateForms, 20);
-      });
-
-      // ---- 6. SAVE LIFESTYLE PREFERENCES ----
-      $('form-lifestyle').addEventListener('submit', function (e) {
-        e.preventDefault();
-        var prof = getStoredProfile();
 
         var sleep = document.querySelector('input[name="sleep"]:checked');
         var study = document.querySelector('input[name="study"]:checked');
         var clean = document.querySelector('input[name="clean"]:checked');
-
         prof.sleepSchedule = sleep ? sleep.value : '';
         prof.studyHabit = study ? study.value : '';
         prof.cleanliness = clean ? clean.value : '';
-
-        HB_AUTH.saveProfile(prof, user.id);
-        showAlert('Dorm lifestyle preferences saved!');
-      });
-
-      // ---- 7. SAVE EMERGENCY CONTACT ----
-      $('form-emergency').addEventListener('submit', function (e) {
-        e.preventDefault();
-        var prof = getStoredProfile();
 
         prof.emergencyName = $('f-emer-name').value.trim();
         prof.emergencyRel = $('f-emer-rel').value.trim();
         prof.emergencyPhone = $('f-emer-phone').value.trim();
 
         HB_AUTH.saveProfile(prof, user.id);
-        showAlert('Emergency contact updated!');
+
+        updateHero();
+
+        // Show status inline right where the user is looking
+        if (saveStatus) {
+          saveStatus.hidden = false;
+          clearTimeout(saveStatusTimer);
+          saveStatusTimer = setTimeout(function () { saveStatus.hidden = true; }, 4000);
+        }
+        showAlert('All profile details updated successfully!');
       });
 
       // ---- 8. CHANGE PASSWORD ----

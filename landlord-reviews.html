@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reviews | Homebase</title>
+  <meta name="description" content="Read student reviews, reply in public, and hide a comment with a visible reason.">
+
+  <!--
+    Design Read: where the office answers student reviews, "which reviews need my reply, and is anything abusive?"
+    Same forest + lime language as the other pages, dial ENERGY 2 / RHYTHM 2 / MOTION 1.
+    The rules (chosen with the project owner), so the office cannot bend the scores:
+    - The office can REPLY in public under any review.
+    - The office can HIDE only a review's comment text, never its ratings, and must pick a reason that students can see.
+      A hidden comment can be restored. If the student edits their comment, it can be looked at again.
+    - Ratings always count, so commute and safety scores cannot be changed from this page.
+    The landlord sees the full comment even when hidden, so the decision can be reviewed.
+    Not built: a neutral second person to check hiding (a real system would have an admin for that).
+  -->
+
+  <script>
+    // Guard: landlords only. Students go to home.html.
+    (function () {
+      try {
+        var u = JSON.parse(localStorage.getItem('homebase_currentUser') || 'null');
+        if (!u || !u.email) window.location.replace('index.html');
+        else if (u.role !== 'landlord') window.location.replace('home.html');
+      } catch (e) { window.location.replace('index.html'); }
+    })();
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+
+  <script src="assets/js/auth.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/js/tw-config.js"></script>
+  <link rel="stylesheet" href="assets/css/components.css">
+
+  <style>[hidden] { display: none !important; }</style>
+</head>
+
+<body class="min-h-screen bg-white font-body text-ink antialiased">
+
+  <header class="px-4 pb-2 pt-4 sm:px-6">
+    <nav aria-label="Main" class="mx-auto flex max-w-6xl items-center justify-between gap-3 rounded-full border border-line bg-white py-2 pl-4 pr-2">
+      <a href="landlord.html" aria-label="Homebase dashboard" class="inline-flex min-h-[44px] items-center gap-2.5 rounded-full font-display text-xl font-bold tracking-tight text-ink no-underline outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">
+        <svg viewBox="0 0 32 32" class="h-9 w-9 shrink-0" aria-hidden="true">
+          <rect width="32" height="32" rx="8" fill="#0B4A2F"/><rect x="7" y="8" width="7" height="8" rx="1.5" fill="#083A25"/><rect x="18" y="8" width="7" height="8" rx="1.5" fill="#C6F24E"/><rect x="7" y="19" width="7" height="8" rx="1.5" fill="#083A25"/><rect x="18" y="19" width="7" height="8" rx="1.5" fill="#083A25"/>
+        </svg>
+        <span class="hidden sm:inline">Homebase</span>
+      </a>
+      <ul class="flex items-center gap-1">
+        <li><a class="nav-link" href="landlord.html">Dashboard</a></li>
+        <li><a class="nav-link" href="landlord-rooms.html">Rooms</a></li>
+        <li><a class="nav-link" href="landlord-reviews.html" aria-current="page">Reviews</a></li>
+        <li><a class="nav-link" href="profile.html">Profile</a></li>
+      </ul>
+      <div class="flex items-center gap-3">
+        <a href="profile.html" class="flex items-center gap-2 rounded-full py-1 pl-1 pr-2 hover:bg-track transition-colors outline-none focus-visible:ring-2 focus-visible:ring-forest" title="My Profile" aria-label="My Profile">
+          <span id="nav-avatar" class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-forest font-display text-sm font-semibold text-white overflow-hidden" aria-hidden="true"></span>
+          <span id="nav-name" class="hidden max-w-[12rem] truncate text-sm font-medium lg:block"></span>
+        </a>
+        <button type="button" id="logout" class="btn btn-logout">Log out</button>
+      </div>
+    </nav>
+  </header>
+
+  <main class="mx-auto max-w-4xl px-4 pb-20 pt-6 sm:px-6 sm:pt-8">
+    <h1 class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">Reviews</h1>
+    <p class="mt-2 max-w-2xl text-base text-muted">You can reply in public under any review. You can hide a comment that breaks the rules, and students will see that it was hidden and why. Ratings can never be hidden or changed, so the scores stay honest.</p>
+
+    <p id="notice" role="status" hidden class="mt-4 rounded-xl border border-forest/30 bg-tint px-4 py-3 text-base font-medium text-forest-deep"></p>
+    <p id="page-error" role="alert" hidden class="mt-4 text-base font-semibold text-danger"></p>
+
+    <div id="loading" class="mt-8"><p class="text-base text-muted" role="status">Loading reviews...</p></div>
+
+    <div id="error" hidden role="alert" class="mt-8 rounded-[20px] border border-line p-6">
+      <p class="font-display text-xl font-bold tracking-tight">We could not read the reviews</p>
+      <p class="mt-2 text-base text-muted">Either your browser is blocking site data, or <code>assets/js/reviews.js</code> or <code>assets/js/reservation.js</code> did not load. Check that the files are where this page expects them, then reload.</p>
+      <button type="button" id="reload" class="btn btn-outline mt-4">Reload this page</button>
+    </div>
+
+    <div id="empty" hidden class="mt-8 rounded-[20px] border border-line p-6 sm:p-8">
+      <p class="font-display text-2xl font-bold tracking-tight">No reviews yet</p>
+      <p class="mt-2 max-w-md text-base text-muted">Students can review once their stay is paid and their move-in date has arrived, or after it ends. Reviews show up here for you to read and answer.</p>
+    </div>
+
+    <div id="board" hidden>
+      <p id="summary" class="mt-6 rounded-[20px] border border-line bg-tint p-5 text-base"></p>
+      <form class="mt-6" onsubmit="return false"><fieldset><legend class="sr-only">Show reviews</legend><div id="chips" class="flex flex-wrap gap-2"></div></fieldset></form>
+      <p id="none" hidden class="mt-6 rounded-[20px] border border-line p-6 text-base text-muted"></p>
+      <ul id="list" class="mt-6 space-y-4" aria-live="polite"></ul>
+    </div>
+  </main>
+
+  <script src="assets/js/reservation.js"></script>
+  <script src="assets/js/reviews.js"></script>
+  <script>
+    (function () {
+      var $ = function (id) { return document.getElementById(id); };
+      function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+      function fmt(s) { var d = new Date(s); return isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' }); }
+      function plural(n, w) { return n + ' ' + w + (n === 1 ? '' : 's'); }
+
+      var user = {};
+      try { user = JSON.parse(localStorage.getItem('homebase_currentUser') || '{}') || {}; } catch (e) {}
+      $('nav-name').textContent = String(user.name || user.email || '');
+      if (window.HB_AUTH && HB_AUTH.renderAvatar) {
+        HB_AUTH.renderAvatar($('nav-avatar'), user);
+      } else {
+        $('nav-avatar').textContent = (user.name || user.email || 'M').charAt(0).toUpperCase();
+      }
+      $('logout').addEventListener('click', function () { try { localStorage.removeItem('homebase_currentUser'); } catch (e) {} window.location.href = 'index.html'; });
+      $('reload').addEventListener('click', function () { window.location.reload(); });
+
+      $('loading').hidden = true;
+      if (!window.HB || !window.HBReviews) { $('error').hidden = false; return; }
+
+      var R = HBReviews;
+      var FILTERS = [['all', 'All'], ['noreply', 'No reply yet'], ['hidden', 'Comment hidden']];
+      var filter = 'all';
+      var ui = { kind: null, id: null, error: '' };   // inline question that is open: "reply" or "hide"
+
+      function notice(t) { var n = $('notice'); n.textContent = t || ''; n.hidden = !t; }
+      function fail(t) { var e = $('page-error'); e.textContent = t || ''; e.hidden = !t; }
+      function done(ok, text) {
+        if (!ok) { fail('We could not save that. Allow site data for this page in your browser and try again.'); return; }
+        fail(''); notice(text); ui = { kind: null, id: null, error: '' }; render();
+      }
+      function open(kind, id) { ui = { kind: kind, id: id, error: '' }; notice(''); render(); }
+      function button(text, cls, fn, aria) {
+        var b = el('button', 'btn ' + cls, text); b.type = 'button';
+        if (aria) b.setAttribute('aria-label', aria);
+        b.addEventListener('click', fn); return b;
+      }
+
+      function actions(r) {
+        var box = el('div', 'mt-4 space-y-3');
+        var asking = ui.id === r.id ? ui.kind : null;
+
+        // ----- reply -----
+        if (asking === 'reply') {
+          var wrap = el('div');
+          var lab = el('label', 'mb-1.5 block text-sm font-medium', 'Your public reply'); lab.setAttribute('for', 'reply-' + r.id);
+          var ta = el('textarea', 'field'); ta.id = 'reply-' + r.id; ta.rows = 3; ta.maxLength = 500; ta.value = r.reply ? r.reply.text : '';
+          wrap.appendChild(lab); wrap.appendChild(ta);
+          if (ui.error) { var e = el('p', 'mt-1.5 text-sm font-medium text-danger', ui.error); e.setAttribute('role', 'alert'); wrap.appendChild(e); }
+          var row = el('div', 'mt-3 flex flex-wrap gap-2');
+          row.appendChild(button('Post reply', '', function () {
+            if (!ta.value.trim()) { ui.error = 'Write a reply first.'; render(); return; }
+            done(R.reply(r.id, ta.value), 'Reply posted.');
+          }, 'Post reply to ' + r.authorName));
+          row.appendChild(button('Back', 'btn-outline', function () { open(null, null); }));
+          wrap.appendChild(row); box.appendChild(wrap);
+        }
+
+        // ----- hide comment -----
+        if (asking === 'hide') {
+          var w2 = el('div');
+          var l2 = el('label', 'mb-1.5 block text-sm font-medium', 'Why is this comment hidden? Students will see this reason.'); l2.setAttribute('for', 'reason-' + r.id);
+          var sel = el('select', 'field'); sel.id = 'reason-' + r.id;
+          R.HIDE_REASONS.forEach(function (t) { sel.appendChild(el('option', null, t)); });
+          w2.appendChild(l2); w2.appendChild(sel);
+          var row2 = el('div', 'mt-3 flex flex-wrap gap-2');
+          row2.appendChild(button('Hide comment', 'btn-danger', function () { done(R.hide(r.id, sel.value), 'Comment hidden. The ratings still count.'); }, 'Hide the comment by ' + r.authorName));
+          row2.appendChild(button('Back', 'btn-outline', function () { open(null, null); }));
+          w2.appendChild(row2); box.appendChild(w2);
+        }
+
+        if (!asking) {
+          var acts = el('div', 'flex flex-wrap gap-2');
+          acts.appendChild(button(r.reply ? 'Edit reply' : 'Reply', 'btn-outline', function () { open('reply', r.id); }, (r.reply ? 'Edit your reply to ' : 'Reply to ') + r.authorName));
+          if (r.reply) acts.appendChild(button('Delete reply', 'btn-outline', function () { done(R.removeReply(r.id), 'Reply deleted.'); }, 'Delete your reply to ' + r.authorName));
+          if (r.comment && !r.hidden) acts.appendChild(button('Hide comment', 'btn-danger', function () { open('hide', r.id); }, 'Hide the comment by ' + r.authorName));
+          if (r.hidden) acts.appendChild(button('Restore comment', 'btn-outline', function () { done(R.restore(r.id), 'Comment restored.'); }, 'Restore the comment by ' + r.authorName));
+          box.appendChild(acts);
+        }
+        return box;
+      }
+
+      function row(r) {
+        var li = el('li', 'rounded-[20px] border border-line bg-white p-5 sm:p-6');
+        var top = el('div', 'flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1');
+        top.appendChild(el('p', 'font-display text-lg font-semibold tracking-tight', r.authorName + ' stayed in ' + r.roomName));
+        top.appendChild(el('p', 'text-sm text-muted', fmt(r.createdAt)));
+        li.appendChild(top);
+        li.appendChild(el('p', 'mt-2 text-base', R.CATS.map(function (c) { return c[1] + ' ' + r.ratings[c[0]] + '/5'; }).join(', ')));
+        if (r.comment) {
+          li.appendChild(el('p', 'mt-2 break-words text-base', r.comment));
+          if (r.hidden) li.appendChild(el('p', 'mt-2 text-sm font-semibold text-danger', 'Hidden from students on ' + fmt(r.hidden.at) + '. Reason: ' + r.hidden.reason + '.'));
+        } else {
+          li.appendChild(el('p', 'mt-2 text-sm text-muted', 'No comment, ratings only.'));
+        }
+        if (r.reply && r.reply.text) {
+          var rp = el('div', 'mt-3 rounded-lg bg-tint p-3');
+          rp.appendChild(el('p', 'text-sm font-semibold', 'Your reply, ' + fmt(r.reply.at)));
+          rp.appendChild(el('p', 'mt-1 break-words text-base', r.reply.text));
+          li.appendChild(rp);
+        }
+        li.appendChild(actions(r));
+        return li;
+      }
+
+      function render() {
+        var all = R.list();
+        if (!all.length) { $('empty').hidden = false; $('board').hidden = true; return; }
+        $('empty').hidden = true; $('board').hidden = false;
+        var s = R.summary(all);
+        $('summary').textContent = s.overall + ' out of 5 overall, from ' + plural(s.count, 'review') + '. Commute ' + s.commute + '/5, safety ' + s.safety + '/5, cleanliness ' + s.cleanliness + '/5. ' +
+          all.filter(function (r) { return !r.reply; }).length + ' without a reply.';
+        var chips = $('chips'); chips.textContent = '';
+        FILTERS.forEach(function (f) {
+          var n = all.filter(function (r) { return f[0] === 'all' ? true : f[0] === 'noreply' ? !r.reply : !!r.hidden; }).length;
+          var label = el('label', 'relative block cursor-pointer');
+          var input = el('input', 'peer sr-only'); input.type = 'radio'; input.name = 'f'; input.value = f[0]; input.checked = filter === f[0];
+          input.addEventListener('change', function () { filter = f[0]; ui = { kind: null, id: null, error: '' }; render(); });
+          label.appendChild(input); label.appendChild(el('span', 'choice', f[1] + ' (' + n + ')')); chips.appendChild(label);
+        });
+        var shown = all.filter(function (r) { return filter === 'all' ? true : filter === 'noreply' ? !r.reply : !!r.hidden; });
+        $('none').hidden = shown.length > 0;
+        $('none').textContent = filter === 'noreply' ? 'Every review has a reply.' : 'No hidden comments.';
+        var ul = $('list'); ul.textContent = '';
+        shown.forEach(function (r) { ul.appendChild(row(r)); });
+      }
+
+      render();
+    })();
+  </script>
+</body>
+</html>

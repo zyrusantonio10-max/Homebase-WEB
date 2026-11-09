@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -37,19 +37,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
 
+  <script src="assets/js/auth.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="assets/js/tw-config.js"></script>
+  <link rel="stylesheet" href="assets/css/components.css">
 
-  <style type="text/tailwindcss">
-    @layer components {
-      .btn { @apply inline-flex min-h-[44px] items-center justify-center rounded-full border border-transparent bg-forest px-5 py-2.5 text-base font-semibold text-white no-underline transition-colors hover:bg-forest-deep outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2; }
-      .btn-outline { @apply border-forest bg-white text-forest hover:bg-tint; }
-      .nav-link { @apply inline-flex min-h-[44px] items-center rounded-full px-4 text-base font-medium text-ink no-underline transition-colors outline-none hover:bg-track focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 aria-[current=page]:bg-forest aria-[current=page]:text-white; }
-      .label { @apply mb-1.5 block text-sm font-medium text-ink; }
-      .field { @apply block h-12 w-full rounded-xl border border-line bg-white px-3.5 text-base text-ink outline-none transition-colors hover:border-[#8FA397] focus-visible:border-forest focus-visible:ring-2 focus-visible:ring-forest/30; }
-      .choice { @apply flex min-h-[44px] items-center justify-center rounded-xl border border-line bg-white px-4 text-center text-base font-medium text-ink transition-colors hover:border-[#8FA397] peer-checked:border-forest peer-checked:bg-forest peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-forest peer-focus-visible:ring-offset-2; }
-    }
-  </style>
   <style>[hidden] { display: none !important; }</style>
 </head>
 
@@ -69,11 +61,11 @@
         <li><a class="nav-link" href="rooms.html" aria-current="page">Explore Rooms</a></li>
       </ul>
       <div class="flex items-center gap-2">
-        <span class="hidden items-center gap-2 pr-1 md:flex">
-          <span id="nav-initial" class="grid h-9 w-9 place-items-center rounded-full bg-forest font-display text-sm font-semibold text-white" aria-hidden="true"></span>
+        <a href="profile.html" class="hidden items-center gap-2 pr-1 md:flex rounded-full py-1 pl-1 pr-2 hover:bg-track transition-colors outline-none focus-visible:ring-2 focus-visible:ring-forest" title="My Profile" aria-label="My Profile">
+          <span id="nav-initial" class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-forest font-display text-sm font-semibold text-white overflow-hidden" aria-hidden="true"></span>
           <span id="nav-name" class="max-w-[9rem] truncate text-sm font-medium"></span>
-        </span>
-        <button type="button" data-logout class="btn btn-outline hidden md:inline-flex">Log out</button>
+        </a>
+        <button type="button" data-logout class="btn btn-logout hidden md:inline-flex">Log out</button>
         <button type="button" id="menu-btn" aria-expanded="false" aria-controls="menu" class="inline-flex min-h-[44px] items-center rounded-full border border-forest bg-white px-4 text-base font-semibold text-forest outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 md:hidden"><span id="menu-label">Menu</span></button>
       </div>
     </nav>
@@ -82,14 +74,15 @@
         <li><a class="nav-link w-full" href="home.html">Home</a></li>
         <li><a class="nav-link w-full" href="matches.html">My Matches</a></li>
         <li><a class="nav-link w-full" href="rooms.html" aria-current="page">Explore Rooms</a></li>
+        <li><a class="nav-link w-full" href="profile.html">My Profile</a></li>
       </ul>
-      <div class="mt-2 border-t border-line pt-2"><button type="button" data-logout class="btn btn-outline w-full">Log out</button></div>
+      <div class="mt-2 border-t border-line pt-2"><button type="button" data-logout class="btn btn-logout w-full">Log out</button></div>
     </div>
   </header>
 
   <main class="mx-auto max-w-6xl px-4 pb-28 pt-6 sm:px-6 sm:pt-8">
     <h1 class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">Explore Rooms</h1>
-    <p class="mt-2 max-w-xl text-base text-muted">Every room at Ariate Dormitory, available or taken. Tick Compare on two or three rooms to see them side by side.</p>
+    <p class="mt-2 max-w-xl text-base text-muted">Every room at Ariate Dormitory, available or taken. Click a room to see everything about it. Tick Compare on two or three rooms to see them side by side.</p>
     <div id="reviews-strip" class="mt-6"></div>
 
     <!-- FILTERS: apply as soon as you change them -->
@@ -172,7 +165,11 @@
       // ---- navbar ----
       var user = (read(K.user).value) || {};
       var fullName = String(user.name || user.email || '');
-      $('nav-initial').textContent = fullName.charAt(0).toUpperCase();
+      if (window.HB_AUTH && HB_AUTH.renderAvatar) {
+        HB_AUTH.renderAvatar($('nav-initial'), user);
+      } else {
+        $('nav-initial').textContent = fullName.charAt(0).toUpperCase();
+      }
       $('nav-name').textContent = fullName.split(/\s+/)[0];
       document.querySelectorAll('[data-logout]').forEach(function (b) { b.addEventListener('click', function () { drop(K.user); window.location.href = 'index.html'; }); });
       document.querySelectorAll('[data-reload]').forEach(function (b) { b.addEventListener('click', function () { window.location.reload(); }); });
@@ -209,6 +206,164 @@
       var cmp = HBCompare.mount({ rooms: ROOMS, user: user, hasActive: hasActive });
       if (window.HBReviews) $('reviews-strip').appendChild(HBReviews.summaryBox());
 
+      // ---- occupant profile modal ----
+      function openOccupantModal(prof, occName, room) {
+        var dlg = document.getElementById('hb-occupant-modal');
+        if (!dlg) {
+          dlg = document.createElement('dialog');
+          dlg.id = 'hb-occupant-modal';
+          dlg.setAttribute('aria-labelledby', 'hb-occ-title');
+          dlg.className = 'max-h-[90vh] w-[calc(100vw-2rem)] max-w-md overflow-y-auto rounded-[24px] border border-line bg-white p-0 text-ink shadow-2xl backdrop:bg-ink/50';
+          dlg.innerHTML =
+            '<div class="p-6 sm:p-7">' +
+              '<div class="flex items-start justify-between gap-4">' +
+                '<div class="flex items-center gap-3.5">' +
+                  '<div id="hb-occ-avatar" class="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-forest text-2xl font-bold text-white shadow-sm overflow-hidden"></div>' +
+                  '<div>' +
+                    '<h3 id="hb-occ-name" class="font-display text-xl font-bold tracking-tight"></h3>' +
+                    '<p id="hb-occ-subtitle" class="text-sm text-muted"></p>' +
+                  '</div>' +
+                '</div>' +
+                '<button type="button" id="hb-occ-close-x" class="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line text-muted hover:border-forest hover:text-ink transition-colors" aria-label="Close">&times;</button>' +
+              '</div>' +
+
+              '<div class="mt-4 flex items-center justify-between rounded-xl border border-line bg-tint px-3.5 py-2.5 text-xs">' +
+                '<span class="font-medium text-forest">Occupant in <strong id="hb-occ-room"></strong></span>' +
+                '<span class="rounded-full bg-forest/10 px-2 py-0.5 font-semibold text-forest">Current Resident</span>' +
+              '</div>' +
+
+              '<div id="hb-occ-bio-wrap" class="mt-4 hidden">' +
+                '<h4 class="text-xs font-semibold uppercase tracking-wider text-muted">About</h4>' +
+                '<p id="hb-occ-bio" class="mt-1 text-sm leading-relaxed text-ink bg-tint/60 p-3 rounded-xl border border-line/60"></p>' +
+              '</div>' +
+
+              '<div class="mt-5">' +
+                '<h4 class="text-xs font-semibold uppercase tracking-wider text-muted">Dorm Living & Lifestyle</h4>' +
+                '<p class="mt-0.5 text-xs text-muted">Living habits shared for roommate compatibility.</p>' +
+                '<div class="mt-3 grid gap-2.5">' +
+                  '<div class="flex items-center gap-3 rounded-xl border border-line bg-white p-3 text-sm">' +
+                    '<span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-tint text-base" aria-hidden="true">&#127769;</span>' +
+                    '<div><p class="text-xs text-muted">Sleep Schedule</p><p id="hb-occ-sleep" class="font-semibold text-ink"></p></div>' +
+                  '</div>' +
+                  '<div class="flex items-center gap-3 rounded-xl border border-line bg-white p-3 text-sm">' +
+                    '<span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-tint text-base" aria-hidden="true">&#128218;</span>' +
+                    '<div><p class="text-xs text-muted">Study Habits</p><p id="hb-occ-study" class="font-semibold text-ink"></p></div>' +
+                  '</div>' +
+                  '<div class="flex items-center gap-3 rounded-xl border border-line bg-white p-3 text-sm">' +
+                    '<span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-tint text-base" aria-hidden="true">&#10024;</span>' +
+                    '<div><p class="text-xs text-muted">Cleanliness</p><p id="hb-occ-clean" class="font-semibold text-ink"></p></div>' +
+                  '</div>' +
+                '</div>' +
+              '</div>' +
+
+              '<div class="mt-6 flex justify-end pt-4 border-t border-line">' +
+                '<button type="button" id="hb-occ-close-btn" class="btn btn-outline text-sm">Close</button>' +
+              '</div>' +
+            '</div>';
+          document.body.appendChild(dlg);
+
+          dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close(); });
+          document.getElementById('hb-occ-close-x').addEventListener('click', function () { dlg.close(); });
+          document.getElementById('hb-occ-close-btn').addEventListener('click', function () { dlg.close(); });
+        }
+
+        var av = document.getElementById('hb-occ-avatar');
+        if (prof.photo) {
+          av.innerHTML = '<img src="' + prof.photo + '" alt="' + occName + '" class="h-full w-full object-cover rounded-full">';
+          av.classList.add('overflow-hidden');
+        } else {
+          av.textContent = occName.charAt(0).toUpperCase();
+          av.classList.remove('overflow-hidden');
+        }
+
+        document.getElementById('hb-occ-name').textContent = occName;
+        var sub = (prof.yearLevel ? prof.yearLevel + ' ' : '') + (prof.course || 'Ariate Dorm Resident');
+        document.getElementById('hb-occ-subtitle').textContent = sub;
+        document.getElementById('hb-occ-room').textContent = room ? (room.name + ' (' + room.type + ')') : 'Room';
+
+        var bioWrap = document.getElementById('hb-occ-bio-wrap');
+        if (prof.bio && prof.bio.trim()) {
+          document.getElementById('hb-occ-bio').textContent = prof.bio.trim();
+          bioWrap.classList.remove('hidden');
+        } else {
+          bioWrap.classList.add('hidden');
+        }
+
+        var fmtL = (window.HB_AUTH && HB_AUTH.formatLifestyle) ? HB_AUTH.formatLifestyle : function(t, v) { return v || 'Not specified'; };
+        document.getElementById('hb-occ-sleep').textContent = fmtL('sleep', prof.sleepSchedule);
+        document.getElementById('hb-occ-study').textContent = fmtL('study', prof.studyHabit);
+        document.getElementById('hb-occ-clean').textContent = fmtL('clean', prof.cleanliness);
+
+        if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
+      }
+
+      // ---- one room, all its details, in a window ----
+      var detailDlg = null;
+      function openDetail(room) {
+        if (!detailDlg) {
+          detailDlg = el('dialog', 'max-h-[92vh] w-[calc(100vw-2rem)] max-w-2xl overflow-y-auto rounded-2xl border border-line bg-white p-0 text-ink shadow-xl backdrop:bg-ink/50');
+          detailDlg.id = 'room-detail'; detailDlg.setAttribute('aria-labelledby', 'room-detail-title');
+          document.body.appendChild(detailDlg);
+          detailDlg.addEventListener('click', function (e) { if (e.target === detailDlg) detailDlg.close(); });
+        }
+        var st = HB.roomState(room, user.id), info = HB.bedsInfo(room, user.id), box = el('div', 'p-6');
+        detailDlg.textContent = '';
+
+        var head = el('div', 'flex items-start justify-between gap-4'), hl = el('div');
+        var h = el('h2', 'font-display text-2xl font-bold tracking-tight', room.name); h.id = 'room-detail-title'; hl.appendChild(h);
+        var sp = el('p', 'mt-2'); sp.appendChild(HB.chip({ available: 'Available', full: 'Full', taken: 'Taken', yours: 'Your request' }[st], HB.roomTone(st))); hl.appendChild(sp);
+        head.appendChild(hl);
+        var x = el('button', '-mr-2 -mt-2 grid h-11 w-11 shrink-0 place-items-center rounded-lg text-muted outline-none hover:bg-track focus-visible:ring-2 focus-visible:ring-forest');
+        x.type = 'button'; x.setAttribute('aria-label', 'Close'); x.innerHTML = '<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+        x.addEventListener('click', function () { detailDlg.close(); });
+        head.appendChild(x); box.appendChild(head);
+
+        var pic = el('img', 'mt-4 aspect-[8/5] w-full rounded-xl bg-track object-cover');
+        pic.src = HB.roomImage(room); pic.alt = room.name + ', ' + room.type.toLowerCase() + ' room on floor ' + room.floor + ' (illustration)'; pic.width = 640; pic.height = 400; pic.decoding = 'async';
+        box.appendChild(pic); box.appendChild(el('p', 'mt-1 text-sm text-muted', 'Illustration, not a photo of the real room.'));
+
+        var dl = el('dl', 'mt-5 grid gap-4 text-base sm:grid-cols-2');
+        [['Floor', 'Floor ' + room.floor], ['Room type', room.type + ' room'],
+         ['Beds', info.capacity > 1 ? info.capacity + ' beds, ' + info.free + ' free' : '1 bed, ' + (info.free > 0 ? 'free' : 'not free')],
+         ['Price', HB.priceLabel(room)]].forEach(function (f) {
+          var d = el('div'); d.appendChild(el('dt', 'text-sm font-medium text-muted', f[0])); d.appendChild(el('dd', 'font-semibold', f[1])); dl.appendChild(d);
+        });
+        box.appendChild(dl);
+
+        var am = el('div', 'mt-5'); am.appendChild(el('h3', 'font-display text-lg font-semibold tracking-tight', 'Amenities'));
+        var chips = el('ul', 'mt-2 flex flex-wrap gap-1.5');
+        room.amenities.forEach(function (a) { chips.appendChild(el('li', 'rounded-lg border border-line bg-tint px-2.5 py-1 text-sm', a)); });
+        if (!room.amenities.length) chips.appendChild(el('li', 'text-sm text-muted', 'No amenities listed'));
+        am.appendChild(chips);
+        var no = (window.HOMEBASE_AMENITIES || []).filter(function (a) { return room.amenities.indexOf(a) === -1; });
+        if (no.length) am.appendChild(el('p', 'mt-2 text-sm text-muted', 'Not included: ' + no.join(', ') + '.'));
+        box.appendChild(am);
+
+        if (window.HBReviews) { var rv = el('div', 'mt-6 border-t border-line pt-5'); rv.appendChild(HBReviews.roomPanel(room)); box.appendChild(rv); }
+
+        var rules = el('button', 'mt-4 inline-flex min-h-[44px] items-center rounded font-semibold text-forest underline underline-offset-4 outline-none hover:text-forest-deep focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2', 'Read the house rules');
+        rules.type = 'button'; rules.addEventListener('click', function () { HB.openRules(); }); box.appendChild(rules);
+
+        var acts = el('div', 'mt-4 flex flex-wrap items-center gap-2');
+        if (st === 'available') {
+          if (!hasActive) {
+            var rq = el('button', 'btn', 'Request this room'); rq.type = 'button'; rq.setAttribute('aria-label', 'Request ' + room.name);
+            rq.addEventListener('click', function () { HB.openRequest(room, user); }); acts.appendChild(rq);
+          } else acts.appendChild(el('p', 'text-sm text-muted', 'You already have a room request, so you cannot request another.'));
+          var sv = el('button', 'btn btn-outline'); sv.type = 'button';
+          paintSave(sv, savedIds().indexOf(room.id) !== -1, room.name);
+          sv.addEventListener('click', function () { toggleSave(room, sv); render(); });
+          acts.appendChild(sv);
+        } else if (st === 'yours') {
+          var a = el('a', 'inline-flex min-h-[44px] items-center font-semibold text-forest underline underline-offset-4', 'See your request on Home'); a.href = 'home.html#reservation'; acts.appendChild(a);
+        } else acts.appendChild(el('p', 'text-sm text-muted', st === 'full' ? 'Every bed in this room is taken.' : 'This room is taken.'));
+        var cl = el('button', 'btn btn-outline', 'Close'); cl.type = 'button'; cl.addEventListener('click', function () { detailDlg.close(); }); acts.appendChild(cl);
+        box.appendChild(acts);
+
+        detailDlg.appendChild(box);
+        if (detailDlg.showModal) detailDlg.showModal(); else detailDlg.setAttribute('open', '');
+      }
+
       // ---- one room card ----
       function card(r, saved) {
         var li = el('li', 'flex flex-col overflow-hidden rounded-[20px] border border-line bg-white');
@@ -224,12 +379,18 @@
           frame.appendChild(el('p', 'grid h-full place-items-center px-4 text-center text-sm text-muted', 'No picture for this room yet'));
         });
         frame.appendChild(img);
+        frame.classList.add('cursor-pointer');
+        frame.addEventListener('click', function () { openDetail(r); });
         li.appendChild(frame);
 
         var body = el('div', 'flex flex-1 flex-col p-5');
         var head = el('div', 'flex items-baseline justify-between gap-3');
-        head.appendChild(el('h3', 'font-display text-lg font-semibold tracking-tight', r.name));
-        head.appendChild(el('span', 'shrink-0 text-sm font-semibold ' + (st === 'available' || st === 'yours' ? 'text-forest' : 'text-muted'), { available: 'Available', full: 'Full', taken: 'Taken', yours: 'Your request' }[st]));
+        var h3 = el('h3', 'font-display text-lg font-semibold tracking-tight');
+        var nameBtn = el('button', 'rounded text-left outline-none hover:underline hover:underline-offset-4 focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2', r.name);
+        nameBtn.type = 'button'; nameBtn.setAttribute('aria-label', 'See details of ' + r.name);
+        nameBtn.addEventListener('click', function () { openDetail(r); });
+        h3.appendChild(nameBtn); head.appendChild(h3);
+        head.appendChild(HB.chip({ available: 'Available', full: 'Full', taken: 'Taken', yours: 'Your request' }[st], HB.roomTone(st)));
         body.appendChild(head);
         body.appendChild(el('p', 'mt-1 text-base text-muted', 'Floor ' + r.floor + ', ' + r.type + ' room'));
         var bt = HB.bedsText(r);
@@ -240,7 +401,58 @@
         r.amenities.forEach(function (a) { chips.appendChild(el('li', 'rounded-lg border border-line bg-tint px-2.5 py-1 text-sm', a)); });
         body.appendChild(chips);
 
-        body.appendChild(cmp.checkbox(r, { cls: 'mt-3' }));
+        // ---- occupant preview (clickable avatar pills) ----
+        var occs = HB.load().list.filter(function (res) {
+          return res.roomId === r.id && (res.status === 'confirmed' || res.status === 'approved');
+        });
+        if (occs.length) {
+          var occBox = el('div', 'mt-3.5 pt-3 border-t border-line/60');
+          var occLabel = el('p', 'text-xs font-semibold uppercase tracking-wider text-muted mb-2', 'Room Occupants (' + occs.length + ')');
+          occBox.appendChild(occLabel);
+
+          var occList = el('div', 'flex flex-wrap gap-2');
+          occs.forEach(function (res) {
+            var prof = (window.HB_AUTH && HB_AUTH.getProfile) ? HB_AUTH.getProfile(res.userId) : {};
+            var occName = prof.name || res.studentName || 'Resident';
+
+            var pill = el('button', 'inline-flex items-center gap-2 rounded-full border border-line bg-tint pl-1.5 pr-3 py-1 text-xs font-medium text-ink transition-all hover:border-forest hover:bg-white focus-visible:ring-2 focus-visible:ring-forest outline-none text-left cursor-pointer group shadow-sm');
+            pill.type = 'button';
+            pill.setAttribute('aria-label', 'View profile and lifestyle habits of ' + occName);
+            pill.setAttribute('title', 'Click to view ' + occName + '\'s lifestyle & profile');
+
+            var av = el('span', 'grid h-6 w-6 shrink-0 place-items-center rounded-full bg-forest text-[11px] font-semibold text-white overflow-hidden');
+            if (prof.photo) {
+              var im = el('img', 'h-full w-full object-cover rounded-full');
+              im.src = prof.photo;
+              im.alt = occName;
+              av.appendChild(im);
+            } else {
+              av.textContent = occName.charAt(0).toUpperCase();
+            }
+            pill.appendChild(av);
+
+            var textSpan = el('span', 'truncate max-w-[120px] font-medium text-ink', occName);
+            pill.appendChild(textSpan);
+
+            var arrowSpan = el('span', 'text-muted group-hover:text-forest transition-colors text-[11px]', '\u2192');
+            pill.appendChild(arrowSpan);
+
+            pill.addEventListener('click', function (e) {
+              e.stopPropagation();
+              openOccupantModal(prof, occName, r);
+            });
+
+            occList.appendChild(pill);
+          });
+          occBox.appendChild(occList);
+          body.appendChild(occBox);
+        }
+
+        var more = el('button', 'mt-2 inline-flex min-h-[44px] items-center rounded font-semibold text-forest underline underline-offset-4 outline-none hover:text-forest-deep focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2', 'View details');
+        more.type = 'button'; more.setAttribute('aria-label', 'View all details of ' + r.name);
+        more.addEventListener('click', function () { openDetail(r); });
+        body.appendChild(more);
+        body.appendChild(cmp.checkbox(r, { cls: 'mt-1' }));
 
         if (window.HBReviews) { var rl = HBReviews.roomLine(r, { quiet: true }); if (rl) body.appendChild(rl); }
 
@@ -311,6 +523,11 @@
       // opened from a link on Home: rooms.html?compare=204,301
       var fromUrl = (new URLSearchParams(window.location.search).get('compare') || '').split(',').filter(function (id) { return ROOMS.some(function (r) { return r.id === id; }); }).slice(0, 3);
       if (fromUrl.length > 1) { cmp.setPicked(fromUrl); cmp.open(fromUrl); }
+
+      // opened from a saved room on Home: rooms.html?room=103
+      var roomParam = new URLSearchParams(window.location.search).get('room');
+      var linked = roomParam ? ROOMS.filter(function (r) { return r.id === roomParam; })[0] : null;
+      if (linked && fromUrl.length < 2) openDetail(linked);
     })();
   </script>
 </body>

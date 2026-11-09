@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -47,30 +47,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
 
+  <script src="assets/js/auth.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="assets/js/tw-config.js"></script>
+  <link rel="stylesheet" href="assets/css/components.css">
 
-  <style type="text/tailwindcss">
-    @layer components {
-      .btn {
-        @apply inline-flex min-h-[44px] items-center justify-center rounded-full border border-transparent bg-forest px-5 py-2.5 text-base font-semibold text-white no-underline
-               transition-colors hover:bg-forest-deep outline-none
-               focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2;
-      }
-      .btn-outline { @apply border-forest bg-white text-forest hover:bg-tint; }
-      .btn-lime {
-        @apply bg-lime text-ink hover:bg-[#B5E03F] focus-visible:ring-lime focus-visible:ring-offset-forest;
-      }
-      .textlink { @apply inline-flex min-h-[44px] items-center rounded font-semibold text-forest underline underline-offset-4 outline-none hover:text-forest-deep focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2; }
-      .nav-link {
-        @apply inline-flex min-h-[44px] items-center rounded-full px-4 text-base font-medium text-ink no-underline transition-colors outline-none
-               hover:bg-track focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2
-               aria-[current=page]:bg-forest aria-[current=page]:text-white;
-      }
-      .card-title { @apply font-display text-lg font-semibold tracking-tight text-ink; }
-      .note { @apply text-base text-muted; }
-    }
-  </style>
 
   <style>
     /* The dorm motif: all windows dark, one lights up when a best match exists. */
@@ -105,11 +86,11 @@
       </ul>
 
       <div class="flex items-center gap-2">
-        <span class="hidden items-center gap-2 pr-1 md:flex">
-          <span id="nav-initial" class="grid h-9 w-9 place-items-center rounded-full bg-forest font-display text-sm font-semibold text-white" aria-hidden="true"></span>
+        <a href="profile.html" class="hidden items-center gap-2 pr-1 md:flex rounded-full py-1 pl-1 pr-2 hover:bg-track transition-colors outline-none focus-visible:ring-2 focus-visible:ring-forest" title="My Profile" aria-label="My Profile">
+          <span id="nav-initial" class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-forest font-display text-sm font-semibold text-white overflow-hidden" aria-hidden="true"></span>
           <span id="nav-name" class="max-w-[9rem] truncate text-sm font-medium text-ink"></span>
-        </span>
-        <button type="button" data-logout class="btn btn-outline hidden md:inline-flex">Log out</button>
+        </a>
+        <button type="button" data-logout class="btn btn-logout hidden md:inline-flex">Log out</button>
         <button type="button" id="menu-btn" aria-expanded="false" aria-controls="menu"
           class="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-forest bg-white px-4 text-base font-semibold text-forest outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 md:hidden">
           <span id="menu-label">Menu</span>
@@ -123,9 +104,10 @@
         <li><a class="nav-link w-full" href="home.html" aria-current="page">Home</a></li>
         <li><a class="nav-link w-full" href="matches.html">My Matches</a></li>
         <li><a class="nav-link w-full" href="rooms.html">Explore Rooms</a></li>
+        <li><a class="nav-link w-full" href="profile.html">My Profile</a></li>
       </ul>
       <div class="mt-2 border-t border-line pt-2">
-        <button type="button" data-logout class="btn btn-outline w-full">Log out</button>
+        <button type="button" data-logout class="btn btn-logout w-full">Log out</button>
       </div>
     </div>
   </header>
@@ -210,13 +192,17 @@
 
         <!-- PROFILE -->
         <section aria-labelledby="profile-title" class="rounded-[20px] border border-line bg-tint p-6">
-          <h2 id="profile-title" class="card-title">Your profile</h2>
+          <div class="flex items-center justify-between">
+            <h2 id="profile-title" class="card-title">Your profile</h2>
+            <a href="profile.html" class="inline-flex items-center text-sm font-semibold text-forest underline underline-offset-4 hover:text-forest-deep">Edit profile</a>
+          </div>
           <div class="mt-4 flex items-center gap-4">
-            <!-- placeholder avatar: initial only, no photos yet -->
-            <span id="profile-initial" class="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-forest font-display text-xl font-semibold text-white" aria-hidden="true"></span>
+            <a href="profile.html" title="Edit your profile" class="group block rounded-full focus-visible:ring-2 focus-visible:ring-forest outline-none">
+              <span id="profile-initial" class="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-forest font-display text-xl font-semibold text-white overflow-hidden" aria-hidden="true"></span>
+            </a>
             <div class="min-w-0">
               <p id="profile-name" class="truncate font-display text-lg font-semibold tracking-tight"></p>
-              <p class="text-sm text-muted">Student</p>
+              <p id="profile-sub" class="text-sm text-muted">Student</p>
             </div>
           </div>
           <dl class="mt-5 space-y-3 text-base">
@@ -229,7 +215,10 @@
               <dd>Ariate Dormitory</dd>
             </div>
           </dl>
-          <button type="button" id="open-rules" class="textlink mt-3">Read the house rules</button>
+          <div class="mt-4 flex flex-wrap items-center gap-3">
+            <a href="profile.html" class="btn btn-outline text-sm !min-h-[38px] !px-4">Manage Profile</a>
+            <button type="button" id="open-rules" class="textlink !min-h-[38px] text-sm">House rules</button>
+          </div>
         </section>
       </div>
 
@@ -402,10 +391,25 @@
       if (user.role === 'landlord') { window.location.replace('landlord.html'); return; }
 
       // ---- profile ----
+      var prof = (window.HB_AUTH && HB_AUTH.getProfile) ? HB_AUTH.getProfile(user) : {};
+      if (prof && prof.name) {
+        fullName = prof.name;
+        firstName = fullName.split(/\s+/)[0];
+        $('nav-name').textContent = firstName;
+      }
       $('first-name').textContent = firstName;
-      $('profile-initial').textContent = initial;
       $('profile-name').textContent = fullName;
-      $('profile-email').textContent = String(user.email);
+      $('profile-email').textContent = String((prof && prof.email) || user.email);
+      if (prof && prof.course) {
+        var subEl = $('profile-sub');
+        if (subEl) subEl.textContent = prof.course + (prof.yearLevel ? ' (' + prof.yearLevel + ')' : '');
+      }
+      if (window.HB_AUTH && HB_AUTH.renderAvatar) {
+        HB_AUTH.renderAvatar($('nav-initial'), user);
+        HB_AUTH.renderAvatar($('profile-initial'), user);
+      } else {
+        $('profile-initial').textContent = initial;
+      }
 
       // ---- best match ----
       function renderTop() {
@@ -437,8 +441,10 @@
 
           var text = document.createElement('div');
           text.className = 'min-w-0';
-          var name = document.createElement('p');
-          name.className = 'truncate font-semibold';
+          var name = document.createElement('a');
+          name.href = 'rooms.html?room=' + encodeURIComponent(room.id);
+          name.className = 'block truncate font-semibold text-forest underline underline-offset-4 outline-none hover:text-forest-deep focus-visible:ring-2 focus-visible:ring-forest';
+          name.setAttribute('aria-label', 'See details of ' + room.name);
           name.textContent = room.name;
           text.appendChild(name);
           var price = room.type ? HB.priceLabel(room) : peso(room.price);
@@ -540,7 +546,7 @@
         var head = mk('div', 'flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1');
         head.appendChild(mk('p', 'font-display text-2xl font-bold tracking-tight', r.roomName));
         var label = { pending: 'Pending', approved: 'Approved, payment due', confirmed: 'Confirmed', declined: 'Declined', cancelled: 'Cancelled', expired: 'Expired', ended: 'Stay ended' }[r.status] || r.status;
-        head.appendChild(mk('p', 'text-base font-semibold ' + (r.status === 'approved' || r.status === 'confirmed' ? 'text-forest' : r.status === 'pending' ? 'text-ink' : 'text-muted'), label));
+        head.appendChild(HB.chip(label, HB.statusTone(r.status)));
         box.appendChild(head);
         box.appendChild(mk('p', 'mt-1 text-base text-muted', 'Floor ' + r.floor + ', ' + r.type + ' room, ' + HB.priceLabel(r)));
 
@@ -571,7 +577,7 @@
           var row = mk('div', 'mt-3 flex flex-wrap items-center gap-2');
           if (cancelling) {
             row.appendChild(mk('p', 'mr-2 text-base font-medium', question));
-            var yes = mk('button', 'btn !border-danger !bg-white !text-danger hover:!bg-[#FEF3F2]', 'Yes, cancel request'); yes.type = 'button';
+            var yes = mk('button', 'btn !border-danger !bg-white !text-danger hover:!bg-danger-soft', 'Yes, cancel request'); yes.type = 'button';
             yes.addEventListener('click', function () { cancelling = false; if (!HB.setStatus(r.id, 'cancelled')) { setState('reservation', 'error'); return; } renderReservation(); });
             var keep = mk('button', 'btn btn-outline', 'Keep my request'); keep.type = 'button';
             keep.addEventListener('click', function () { cancelling = false; renderReservation(); });
@@ -633,7 +639,7 @@
         var row = mk('div', 'mt-5 flex flex-wrap items-center gap-2');
         if (clearing) {
           row.appendChild(mk('p', 'mr-2 text-base font-medium', 'Clear your preferences? Your best match is cleared too.'));
-          var yes = mk('button', 'btn !border-danger !bg-white !text-danger hover:!bg-[#FEF3F2]', 'Yes, clear them'); yes.type = 'button';
+          var yes = mk('button', 'btn !border-danger !bg-white !text-danger hover:!bg-danger-soft', 'Yes, clear them'); yes.type = 'button';
           yes.addEventListener('click', function () {
             try { localStorage.removeItem(KEYS.prefs); localStorage.removeItem(KEYS.top); } catch (e) { setState('prefs', 'error'); return; }
             clearing = false; renderTop(); renderPrefs(); renderStart();

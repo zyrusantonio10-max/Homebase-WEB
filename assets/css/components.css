@@ -1,0 +1,95 @@
+/*
+  Shared look for buttons, links, fields, pills and status chips. Every page except the landing page uses this file.
+  It has no colors of its own: they come from the CSS variables that assets/js/tw-config.js publishes.
+  Load order in each page: tailwind CDN, assets/js/tw-config.js, then this file.
+  (Tailwind's own utility classes load after this file, so a class like "w-full" or "hidden" still wins over these.)
+*/
+
+/* ---------- buttons ---------- */
+.btn {
+  display: inline-flex; min-height: 44px; align-items: center; justify-content: center;
+  border-radius: 9999px; border: 1px solid transparent; background: var(--forest); color: #fff;
+  padding: .625rem 1.25rem; font-size: 1rem; line-height: 1.5rem; font-weight: 600; text-decoration: none;
+  cursor: pointer; transition: background-color .15s, color .15s, border-color .15s;
+}
+.btn:hover { background: var(--forest-deep); }
+.btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--ring-offset, #fff), 0 0 0 4px var(--ring, var(--forest)); }
+.btn:disabled { opacity: .7; cursor: not-allowed; }
+
+.btn-outline { border-color: var(--forest); background: #fff; color: var(--forest); }
+.btn-outline:hover { background: var(--tint); }
+
+.btn-lime { background: var(--lime); color: var(--ink); --ring: var(--lime); --ring-offset: var(--forest); }
+.btn-lime:hover { background: var(--lime-deep); }
+
+/* red buttons: Decline, Delete, Hide, and Log out (leaving the site). */
+.btn-danger { border-color: var(--danger); background: #fff; color: var(--danger); --ring: var(--danger); }
+.btn-danger:hover { background: var(--danger-soft); }
+
+.btn-logout, .btn.btn-logout {
+  border: 1px solid var(--danger-line, #FDA29B) !important;
+  background-color: var(--danger-soft, #FEF3F2) !important;
+  color: var(--danger, #B42318) !important;
+  --ring: var(--danger, #B42318);
+}
+.btn-logout:hover, .btn.btn-logout:hover {
+  background-color: var(--danger, #B42318) !important;
+  color: #ffffff !important;
+  border-color: var(--danger, #B42318) !important;
+}
+.btn-logout:focus-visible, .btn.btn-logout:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--danger, #B42318) !important;
+}
+
+/* an outline button sitting on the dark green card needs a lime focus ring */
+.on-dark { --ring: var(--lime); --ring-offset: var(--forest); }
+
+/* ---------- links ---------- */
+.nav-link {
+  display: inline-flex; min-height: 44px; align-items: center; border-radius: 9999px; padding: 0 1rem;
+  font-size: 1rem; line-height: 1.5rem; font-weight: 500; color: var(--ink); text-decoration: none; transition: background-color .15s, color .15s;
+}
+.nav-link:hover { background: var(--track); }
+.nav-link:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--forest); }
+.nav-link[aria-current="page"] { background: var(--forest); color: #fff; }
+
+.textlink {
+  display: inline-flex; min-height: 44px; align-items: center; border-radius: .25rem; font-weight: 600; color: var(--forest);
+  text-decoration: underline; text-underline-offset: 4px; cursor: pointer;
+}
+.textlink:hover { color: var(--forest-deep); }
+.textlink:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--forest); }
+
+/* ---------- text ---------- */
+.card-title { font-family: Sora, system-ui, sans-serif; font-size: 1.125rem; line-height: 1.75rem; font-weight: 600; letter-spacing: -.025em; color: var(--ink); }
+.note { font-size: 1rem; line-height: 1.5rem; color: var(--muted); }
+.label { display: block; margin-bottom: .375rem; font-size: .875rem; line-height: 1.25rem; font-weight: 500; color: var(--ink); }
+.err { margin-top: .375rem; font-size: .875rem; line-height: 1.25rem; font-weight: 500; color: var(--danger); }
+
+/* ---------- form fields ---------- */
+.field {
+  display: block; width: 100%; min-height: 3rem; border-radius: .75rem; border: 1px solid var(--line); background: #fff; color: var(--ink);
+  padding: .625rem .875rem; font-size: 1rem; line-height: 1.5rem; transition: border-color .15s, box-shadow .15s;
+}
+.field:hover { border-color: var(--edge); }
+.field:focus-visible { outline: none; border-color: var(--forest); box-shadow: 0 0 0 2px color-mix(in srgb, var(--forest) 30%, transparent); }
+.field[aria-invalid="true"] { border-color: var(--danger); }
+.field:read-only { background: var(--track); color: var(--muted); }
+
+/* ---------- pills: radio and checkbox choices (<input class="peer sr-only"> then <span class="choice">) ---------- */
+.choice {
+  display: flex; min-height: 44px; align-items: center; justify-content: center; border-radius: .75rem; border: 1px solid var(--line); background: #fff; color: var(--ink);
+  padding: 0 1rem; text-align: center; font-size: 1rem; line-height: 1.5rem; font-weight: 500; transition: background-color .15s, color .15s, border-color .15s;
+}
+.choice:hover { border-color: var(--edge); }
+.peer:checked + .choice { border-color: var(--forest); background: var(--forest); color: #fff; }
+.peer:focus-visible + .choice { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--forest); }
+.peer:disabled + .choice { opacity: .6; }
+
+/* ---------- status chips: always a word, tinted by meaning ---------- */
+.chip { display: inline-flex; align-items: center; border-radius: .5rem; border: 1px solid transparent; padding: .125rem .625rem; font-size: .875rem; line-height: 1.5; font-weight: 600; }
+.chip-ok    { background: var(--tint);        color: var(--forest-deep); border-color: color-mix(in srgb, var(--forest) 30%, transparent); }
+.chip-warn  { background: var(--warn-soft);   color: var(--warn);        border-color: var(--warn-line); }
+.chip-bad   { background: var(--danger-soft); color: var(--danger);      border-color: var(--danger-line); }
+.chip-muted { background: var(--track);       color: var(--muted);       border-color: var(--line); }
