@@ -22,9 +22,25 @@
 .btn-lime { background: var(--lime); color: var(--ink); --ring: var(--lime); --ring-offset: var(--forest); }
 .btn-lime:hover { background: var(--lime-deep); }
 
-/* red buttons: Decline, Delete, Hide, and Log out (leaving the site). Outlined, so they warn without shouting. */
-.btn-danger, .btn-logout { border-color: var(--danger); background: #fff; color: var(--danger); --ring: var(--danger); }
-.btn-danger:hover, .btn-logout:hover { background: var(--danger-soft); }
+/* red buttons: Decline, Delete, Hide, and Log out (leaving the site). */
+.btn-danger { border-color: var(--danger); background: #fff; color: var(--danger); --ring: var(--danger); }
+.btn-danger:hover { background: var(--danger-soft); }
+
+.btn-logout, .btn.btn-logout {
+  border: 1px solid var(--danger-line, #FDA29B) !important;
+  background-color: var(--danger-soft, #FEF3F2) !important;
+  color: var(--danger, #B42318) !important;
+  --ring: var(--danger, #B42318);
+}
+.btn-logout:hover, .btn.btn-logout:hover {
+  background-color: var(--danger, #B42318) !important;
+  color: #ffffff !important;
+  border-color: var(--danger, #B42318) !important;
+}
+.btn-logout:focus-visible, .btn.btn-logout:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--danger, #B42318) !important;
+}
 
 /* an outline button sitting on the dark green card needs a lime focus ring */
 .on-dark { --ring: var(--lime); --ring-offset: var(--forest); }

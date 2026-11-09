@@ -21,6 +21,7 @@
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="assets/js/tw-config.js"></script>
+  <link rel="stylesheet" href="assets/css/components.css">
 
   <style type="text/tailwindcss">
     @layer components {
@@ -35,6 +36,9 @@
       }
       .btn-danger {
         @apply border-danger bg-white text-danger hover:bg-[#FEF3F2] focus-visible:ring-danger;
+      }
+      .btn-logout {
+        @apply border border-danger-line bg-danger-soft text-danger hover:bg-danger hover:text-white hover:border-danger focus-visible:ring-danger;
       }
       .nav-link {
         @apply inline-flex min-h-[44px] items-center rounded-full px-4 text-base font-medium text-ink no-underline transition-colors outline-none
@@ -95,7 +99,7 @@
           <span id="nav-avatar" class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-forest font-display text-sm font-semibold text-white overflow-hidden" aria-hidden="true"></span>
           <span id="nav-name" class="hidden max-w-[8rem] truncate text-sm font-medium text-ink md:inline-block"></span>
         </a>
-        <button type="button" data-logout class="btn btn-outline hidden md:inline-flex">Log out</button>
+        <button type="button" data-logout class="btn btn-logout hidden md:inline-flex">Log out</button>
         <button type="button" id="menu-btn" aria-expanded="false" aria-controls="menu"
           class="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-forest bg-white px-4 text-base font-semibold text-forest outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 md:hidden">
           <span id="menu-label">Menu</span>
@@ -109,7 +113,7 @@
         <!-- Rendered by JS -->
       </ul>
       <div class="mt-2 border-t border-line pt-2">
-        <button type="button" data-logout class="btn btn-outline w-full">Log out</button>
+        <button type="button" data-logout class="btn btn-logout w-full">Log out</button>
       </div>
     </div>
   </header>
