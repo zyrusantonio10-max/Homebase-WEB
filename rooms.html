@@ -39,17 +39,8 @@
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="assets/js/tw-config.js"></script>
+  <link rel="stylesheet" href="assets/css/components.css">
 
-  <style type="text/tailwindcss">
-    @layer components {
-      .btn { @apply inline-flex min-h-[44px] items-center justify-center rounded-full border border-transparent bg-forest px-5 py-2.5 text-base font-semibold text-white no-underline transition-colors hover:bg-forest-deep outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2; }
-      .btn-outline { @apply border-forest bg-white text-forest hover:bg-tint; }
-      .nav-link { @apply inline-flex min-h-[44px] items-center rounded-full px-4 text-base font-medium text-ink no-underline transition-colors outline-none hover:bg-track focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 aria-[current=page]:bg-forest aria-[current=page]:text-white; }
-      .label { @apply mb-1.5 block text-sm font-medium text-ink; }
-      .field { @apply block h-12 w-full rounded-xl border border-line bg-white px-3.5 text-base text-ink outline-none transition-colors hover:border-[#8FA397] focus-visible:border-forest focus-visible:ring-2 focus-visible:ring-forest/30; }
-      .choice { @apply flex min-h-[44px] items-center justify-center rounded-xl border border-line bg-white px-4 text-center text-base font-medium text-ink transition-colors hover:border-[#8FA397] peer-checked:border-forest peer-checked:bg-forest peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-forest peer-focus-visible:ring-offset-2; }
-    }
-  </style>
   <style>[hidden] { display: none !important; }</style>
 </head>
 
@@ -73,7 +64,7 @@
           <span id="nav-initial" class="grid h-9 w-9 place-items-center rounded-full bg-forest font-display text-sm font-semibold text-white" aria-hidden="true"></span>
           <span id="nav-name" class="max-w-[9rem] truncate text-sm font-medium"></span>
         </span>
-        <button type="button" data-logout class="btn btn-outline hidden md:inline-flex">Log out</button>
+        <button type="button" data-logout class="btn btn-logout hidden md:inline-flex">Log out</button>
         <button type="button" id="menu-btn" aria-expanded="false" aria-controls="menu" class="inline-flex min-h-[44px] items-center rounded-full border border-forest bg-white px-4 text-base font-semibold text-forest outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 md:hidden"><span id="menu-label">Menu</span></button>
       </div>
     </nav>
@@ -83,13 +74,13 @@
         <li><a class="nav-link w-full" href="matches.html">My Matches</a></li>
         <li><a class="nav-link w-full" href="rooms.html" aria-current="page">Explore Rooms</a></li>
       </ul>
-      <div class="mt-2 border-t border-line pt-2"><button type="button" data-logout class="btn btn-outline w-full">Log out</button></div>
+      <div class="mt-2 border-t border-line pt-2"><button type="button" data-logout class="btn btn-logout w-full">Log out</button></div>
     </div>
   </header>
 
   <main class="mx-auto max-w-6xl px-4 pb-28 pt-6 sm:px-6 sm:pt-8">
     <h1 class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">Explore Rooms</h1>
-    <p class="mt-2 max-w-xl text-base text-muted">Every room at Ariate Dormitory, available or taken. Tick Compare on two or three rooms to see them side by side.</p>
+    <p class="mt-2 max-w-xl text-base text-muted">Every room at Ariate Dormitory, available or taken. Click a room to see everything about it. Tick Compare on two or three rooms to see them side by side.</p>
     <div id="reviews-strip" class="mt-6"></div>
 
     <!-- FILTERS: apply as soon as you change them -->
@@ -209,6 +200,73 @@
       var cmp = HBCompare.mount({ rooms: ROOMS, user: user, hasActive: hasActive });
       if (window.HBReviews) $('reviews-strip').appendChild(HBReviews.summaryBox());
 
+      // ---- one room, all its details, in a window ----
+      var detailDlg = null;
+      function openDetail(room) {
+        if (!detailDlg) {
+          detailDlg = el('dialog', 'max-h-[92vh] w-[calc(100vw-2rem)] max-w-2xl overflow-y-auto rounded-2xl border border-line bg-white p-0 text-ink shadow-xl backdrop:bg-ink/50');
+          detailDlg.id = 'room-detail'; detailDlg.setAttribute('aria-labelledby', 'room-detail-title');
+          document.body.appendChild(detailDlg);
+          detailDlg.addEventListener('click', function (e) { if (e.target === detailDlg) detailDlg.close(); });
+        }
+        var st = HB.roomState(room, user.id), info = HB.bedsInfo(room, user.id), box = el('div', 'p-6');
+        detailDlg.textContent = '';
+
+        var head = el('div', 'flex items-start justify-between gap-4'), hl = el('div');
+        var h = el('h2', 'font-display text-2xl font-bold tracking-tight', room.name); h.id = 'room-detail-title'; hl.appendChild(h);
+        var sp = el('p', 'mt-2'); sp.appendChild(HB.chip({ available: 'Available', full: 'Full', taken: 'Taken', yours: 'Your request' }[st], HB.roomTone(st))); hl.appendChild(sp);
+        head.appendChild(hl);
+        var x = el('button', '-mr-2 -mt-2 grid h-11 w-11 shrink-0 place-items-center rounded-lg text-muted outline-none hover:bg-track focus-visible:ring-2 focus-visible:ring-forest');
+        x.type = 'button'; x.setAttribute('aria-label', 'Close'); x.innerHTML = '<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+        x.addEventListener('click', function () { detailDlg.close(); });
+        head.appendChild(x); box.appendChild(head);
+
+        var pic = el('img', 'mt-4 aspect-[8/5] w-full rounded-xl bg-track object-cover');
+        pic.src = HB.roomImage(room); pic.alt = room.name + ', ' + room.type.toLowerCase() + ' room on floor ' + room.floor + ' (illustration)'; pic.width = 640; pic.height = 400; pic.decoding = 'async';
+        box.appendChild(pic); box.appendChild(el('p', 'mt-1 text-sm text-muted', 'Illustration, not a photo of the real room.'));
+
+        var dl = el('dl', 'mt-5 grid gap-4 text-base sm:grid-cols-2');
+        [['Floor', 'Floor ' + room.floor], ['Room type', room.type + ' room'],
+         ['Beds', info.capacity > 1 ? info.capacity + ' beds, ' + info.free + ' free' : '1 bed, ' + (info.free > 0 ? 'free' : 'not free')],
+         ['Price', HB.priceLabel(room)]].forEach(function (f) {
+          var d = el('div'); d.appendChild(el('dt', 'text-sm font-medium text-muted', f[0])); d.appendChild(el('dd', 'font-semibold', f[1])); dl.appendChild(d);
+        });
+        box.appendChild(dl);
+
+        var am = el('div', 'mt-5'); am.appendChild(el('h3', 'font-display text-lg font-semibold tracking-tight', 'Amenities'));
+        var chips = el('ul', 'mt-2 flex flex-wrap gap-1.5');
+        room.amenities.forEach(function (a) { chips.appendChild(el('li', 'rounded-lg border border-line bg-tint px-2.5 py-1 text-sm', a)); });
+        if (!room.amenities.length) chips.appendChild(el('li', 'text-sm text-muted', 'No amenities listed'));
+        am.appendChild(chips);
+        var no = (window.HOMEBASE_AMENITIES || []).filter(function (a) { return room.amenities.indexOf(a) === -1; });
+        if (no.length) am.appendChild(el('p', 'mt-2 text-sm text-muted', 'Not included: ' + no.join(', ') + '.'));
+        box.appendChild(am);
+
+        if (window.HBReviews) { var rv = el('div', 'mt-6 border-t border-line pt-5'); rv.appendChild(HBReviews.roomPanel(room)); box.appendChild(rv); }
+
+        var rules = el('button', 'mt-4 inline-flex min-h-[44px] items-center rounded font-semibold text-forest underline underline-offset-4 outline-none hover:text-forest-deep focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2', 'Read the house rules');
+        rules.type = 'button'; rules.addEventListener('click', function () { HB.openRules(); }); box.appendChild(rules);
+
+        var acts = el('div', 'mt-4 flex flex-wrap items-center gap-2');
+        if (st === 'available') {
+          if (!hasActive) {
+            var rq = el('button', 'btn', 'Request this room'); rq.type = 'button'; rq.setAttribute('aria-label', 'Request ' + room.name);
+            rq.addEventListener('click', function () { HB.openRequest(room, user); }); acts.appendChild(rq);
+          } else acts.appendChild(el('p', 'text-sm text-muted', 'You already have a room request, so you cannot request another.'));
+          var sv = el('button', 'btn btn-outline'); sv.type = 'button';
+          paintSave(sv, savedIds().indexOf(room.id) !== -1, room.name);
+          sv.addEventListener('click', function () { toggleSave(room, sv); render(); });
+          acts.appendChild(sv);
+        } else if (st === 'yours') {
+          var a = el('a', 'inline-flex min-h-[44px] items-center font-semibold text-forest underline underline-offset-4', 'See your request on Home'); a.href = 'home.html#reservation'; acts.appendChild(a);
+        } else acts.appendChild(el('p', 'text-sm text-muted', st === 'full' ? 'Every bed in this room is taken.' : 'This room is taken.'));
+        var cl = el('button', 'btn btn-outline', 'Close'); cl.type = 'button'; cl.addEventListener('click', function () { detailDlg.close(); }); acts.appendChild(cl);
+        box.appendChild(acts);
+
+        detailDlg.appendChild(box);
+        if (detailDlg.showModal) detailDlg.showModal(); else detailDlg.setAttribute('open', '');
+      }
+
       // ---- one room card ----
       function card(r, saved) {
         var li = el('li', 'flex flex-col overflow-hidden rounded-[20px] border border-line bg-white');
@@ -224,12 +282,18 @@
           frame.appendChild(el('p', 'grid h-full place-items-center px-4 text-center text-sm text-muted', 'No picture for this room yet'));
         });
         frame.appendChild(img);
+        frame.classList.add('cursor-pointer');
+        frame.addEventListener('click', function () { openDetail(r); });
         li.appendChild(frame);
 
         var body = el('div', 'flex flex-1 flex-col p-5');
         var head = el('div', 'flex items-baseline justify-between gap-3');
-        head.appendChild(el('h3', 'font-display text-lg font-semibold tracking-tight', r.name));
-        head.appendChild(el('span', 'shrink-0 text-sm font-semibold ' + (st === 'available' || st === 'yours' ? 'text-forest' : 'text-muted'), { available: 'Available', full: 'Full', taken: 'Taken', yours: 'Your request' }[st]));
+        var h3 = el('h3', 'font-display text-lg font-semibold tracking-tight');
+        var nameBtn = el('button', 'rounded text-left outline-none hover:underline hover:underline-offset-4 focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2', r.name);
+        nameBtn.type = 'button'; nameBtn.setAttribute('aria-label', 'See details of ' + r.name);
+        nameBtn.addEventListener('click', function () { openDetail(r); });
+        h3.appendChild(nameBtn); head.appendChild(h3);
+        head.appendChild(HB.chip({ available: 'Available', full: 'Full', taken: 'Taken', yours: 'Your request' }[st], HB.roomTone(st)));
         body.appendChild(head);
         body.appendChild(el('p', 'mt-1 text-base text-muted', 'Floor ' + r.floor + ', ' + r.type + ' room'));
         var bt = HB.bedsText(r);
@@ -240,7 +304,11 @@
         r.amenities.forEach(function (a) { chips.appendChild(el('li', 'rounded-lg border border-line bg-tint px-2.5 py-1 text-sm', a)); });
         body.appendChild(chips);
 
-        body.appendChild(cmp.checkbox(r, { cls: 'mt-3' }));
+        var more = el('button', 'mt-2 inline-flex min-h-[44px] items-center rounded font-semibold text-forest underline underline-offset-4 outline-none hover:text-forest-deep focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2', 'View details');
+        more.type = 'button'; more.setAttribute('aria-label', 'View all details of ' + r.name);
+        more.addEventListener('click', function () { openDetail(r); });
+        body.appendChild(more);
+        body.appendChild(cmp.checkbox(r, { cls: 'mt-1' }));
 
         if (window.HBReviews) { var rl = HBReviews.roomLine(r, { quiet: true }); if (rl) body.appendChild(rl); }
 
@@ -311,6 +379,11 @@
       // opened from a link on Home: rooms.html?compare=204,301
       var fromUrl = (new URLSearchParams(window.location.search).get('compare') || '').split(',').filter(function (id) { return ROOMS.some(function (r) { return r.id === id; }); }).slice(0, 3);
       if (fromUrl.length > 1) { cmp.setPicked(fromUrl); cmp.open(fromUrl); }
+
+      // opened from a saved room on Home: rooms.html?room=103
+      var roomParam = new URLSearchParams(window.location.search).get('room');
+      var linked = roomParam ? ROOMS.filter(function (r) { return r.id === roomParam; })[0] : null;
+      if (linked && fromUrl.length < 2) openDetail(linked);
     })();
   </script>
 </body>

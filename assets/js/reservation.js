@@ -91,6 +91,12 @@
   var HB = {
     load: load,
 
+    // status chips: a word, tinted by meaning (ok = good, warn = needs attention, bad = problem, muted = neutral)
+    statusTone: function (status) { return { pending: 'warn', approved: 'warn', confirmed: 'ok', ended: 'muted', declined: 'bad', cancelled: 'muted', expired: 'bad' }[status] || 'muted'; },
+    roomTone: function (state) { return { available: 'ok', yours: 'ok', full: 'muted', taken: 'muted' }[state] || 'muted'; },
+    chip: function (text, tone) { var n = document.createElement('span'); n.className = 'chip chip-' + tone; n.textContent = text; return n; },
+
+
     // ---- the room list ----
     // Starts as the sample rooms in assets/js/rooms.js. Once the landlord saves a change, the list lives in the browser
     // under "homebase_rooms" and every page reads it from here. (PHP + MySQL phase: this becomes a fetch to the server.)
@@ -225,7 +231,7 @@
             '<h2 id="hb-req-title" class="font-display text-xl font-bold tracking-tight"></h2>' +
             '<p id="hb-req-sub" class="mt-1 text-base text-muted"></p>' +
             '<form id="hb-req-form" novalidate class="mt-5 space-y-4">' +
-              '<p id="hb-req-error" role="alert" class="hidden rounded-xl border border-danger/30 bg-[#FEF3F2] px-3.5 py-3 text-sm font-medium text-danger"></p>' +
+              '<p id="hb-req-error" role="alert" class="hidden rounded-xl border border-danger/30 bg-danger-soft px-3.5 py-3 text-sm font-medium text-danger"></p>' +
               '<div><label class="mb-1.5 block text-sm font-medium" for="hb-req-date">Move-in date</label>' +
                 '<input id="hb-req-date" type="date" required aria-describedby="hb-req-date-err" class="block h-12 w-full rounded-xl border border-line bg-white px-3.5 text-base text-ink outline-none focus-visible:border-forest focus-visible:ring-2 focus-visible:ring-forest/30 aria-[invalid=true]:border-danger">' +
                 '<p id="hb-req-date-err" class="mt-1.5 hidden text-sm font-medium text-danger"></p></div>' +

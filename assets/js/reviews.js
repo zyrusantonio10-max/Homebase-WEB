@@ -4,17 +4,25 @@
   Who can review: a student whose stay is confirmed (paid) and whose move-in date has arrived, or whose stay has ended.
   One review per stay (per reservation). The student can edit it later. Commute and safety live here, as reviews.
 
+  The office (landlord) can do two things, and only two:
+    - reply in public under a review, and
+    - hide ONE review's comment text, always with a visible reason. Ratings are never hidden or changed, so scores
+      like commute and safety cannot be moved by the office. Hidden comments can be restored.
+
   Stored in localStorage "homebase_reviews" (PHP + MySQL phase: a "reviews" table with the same columns):
     { id, reservationId, userId, authorName ("Zyrus A."), roomId, roomName,
-      ratings: { overall, commute, safety, cleanliness } (each a whole number 1 to 5), comment, createdAt, updatedAt }
+      ratings: { overall, commute, safety, cleanliness } (whole numbers 1 to 5), comment,
+      reply: { text, at } | absent, hidden: { reason, at } | absent, createdAt, updatedAt }
 
   No review is made up: with no reviews, every place that shows them says so.
 */
 (function () {
   var KEY = 'homebase_reviews';
   var CATS = [['overall', 'Overall'], ['commute', 'Commute'], ['safety', 'Safety'], ['cleanliness', 'Cleanliness']];
-  var PILL = 'flex min-h-[44px] items-center justify-center rounded-xl border border-line bg-white px-3 text-center text-base font-medium text-ink transition-colors hover:border-[#8FA397] peer-checked:border-forest peer-checked:bg-forest peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-forest peer-focus-visible:ring-offset-2';
+  var HIDE_REASONS = ['Abusive or offensive language', 'Personal information about someone', 'Not about the dormitory or the stay', 'Spam or advertising'];
+  var PILL = 'flex min-h-[44px] items-center justify-center rounded-xl border border-line bg-white px-3 text-center text-base font-medium text-ink transition-colors hover:border-edge peer-checked:border-forest peer-checked:bg-forest peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-forest peer-focus-visible:ring-offset-2';
   var DIALOG = 'max-h-[90vh] w-[calc(100vw-2rem)] overflow-y-auto rounded-2xl border border-line bg-white p-0 text-ink shadow-xl backdrop:bg-ink/50';
+  var LINK = 'inline-flex min-h-[44px] items-center rounded font-semibold text-forest underline underline-offset-4 outline-none hover:text-forest-deep focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2';
 
   function readAll() { try { var r = localStorage.getItem(KEY), v = r ? JSON.parse(r) : []; return Array.isArray(v) ? v : []; } catch (e) { return []; } }
   function writeAll(v) { try { localStorage.setItem(KEY, JSON.stringify(v)); return true; } catch (e) { return false; } }
@@ -32,6 +40,7 @@
     return Math.round(s / list.length * 10) / 10;
   }
   function ratingLine(r) { return CATS.map(function (c) { return c[1] + ' ' + r.ratings[c[0]] + '/5'; }).join(', '); }
+  function plural(n, word) { return n + ' ' + word + (n === 1 ? '' : 's'); }
 
   function openDialog(d) { if (d.showModal) d.showModal(); else d.setAttribute('open', ''); }
   function makeDialog(id, width) {
@@ -39,9 +48,38 @@
     if (!d) { d = el('dialog', DIALOG + ' ' + width); d.id = id; document.body.appendChild(d); d.addEventListener('click', function (e) { if (e.target === d) d.close(); }); }
     return d;
   }
+  // change one review and save the list
+  function modify(id, fn) {
+    var all = readAll(), hit = all.filter(function (r) { return r.id === id; })[0];
+    if (!hit) return false;
+    fn(hit); hit.updatedAt = new Date().toISOString();
+    return writeAll(all);
+  }
+
+  // one review as a list item, the way students see it
+  function reviewItem(r, showRoom) {
+    var li = el('li', 'rounded-xl border border-line p-4');
+    li.appendChild(el('p', 'font-semibold', r.authorName + (showRoom ? ' stayed in ' + r.roomName : ' stayed here')));
+    li.appendChild(el('p', 'text-sm text-muted', fmt(r.createdAt)));
+    li.appendChild(el('p', 'mt-2 text-base', ratingLine(r)));
+    if (r.comment) {
+      if (r.hidden) li.appendChild(el('p', 'mt-2 text-base italic text-muted', 'Comment hidden by the office. Reason: ' + r.hidden.reason + '.'));
+      else li.appendChild(el('p', 'mt-2 break-words text-base', r.comment));
+    }
+    if (r.reply && r.reply.text) {
+      var rp = el('div', 'mt-3 rounded-lg bg-tint p-3');
+      rp.appendChild(el('p', 'text-sm font-semibold', 'Reply from the office'));
+      rp.appendChild(el('p', 'mt-1 break-words text-base', r.reply.text));
+      rp.appendChild(el('p', 'mt-1 text-sm text-muted', fmt(r.reply.at)));
+      li.appendChild(rp);
+    }
+    return li;
+  }
 
   var HBR = {
     CATS: CATS,
+    HIDE_REASONS: HIDE_REASONS,
+    reviewItem: reviewItem,
     list: function () { return readAll().sort(function (a, b) { return String(b.createdAt).localeCompare(String(a.createdAt)); }); },
     forRoom: function (roomId) { return HBR.list().filter(function (r) { return r.roomId === roomId; }); },
     summary: function (list) {
@@ -62,10 +100,27 @@
       }
       var all = readAll(), now = new Date().toISOString(), text = String(comment || '').trim().slice(0, 500);
       var hit = all.filter(function (r) { return r.reservationId === res.id; })[0];
-      if (hit) { hit.ratings = ratings; hit.comment = text; hit.updatedAt = now; hit.authorName = shortName(user.name); }
-      else all.push({ id: 'rev-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7), reservationId: res.id, userId: user.id, authorName: shortName(user.name), roomId: res.roomId, roomName: res.roomName, ratings: ratings, comment: text, createdAt: now, updatedAt: now });
+      if (hit) {
+        if (hit.comment !== text) delete hit.hidden;      // a changed comment is a new comment: the office can look at it again
+        hit.ratings = ratings; hit.comment = text; hit.updatedAt = now; hit.authorName = shortName(user.name);
+      } else all.push({ id: 'rev-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7), reservationId: res.id, userId: user.id, authorName: shortName(user.name), roomId: res.roomId, roomName: res.roomName, ratings: ratings, comment: text, createdAt: now, updatedAt: now });
       return writeAll(all) ? { ok: true } : { ok: false, error: 'Your browser blocked saving the review. Allow site data and try again.' };
     },
+
+    // ---- the office (landlord) ----
+    reply: function (id, text) {
+      text = String(text || '').trim().slice(0, 500);
+      if (!text) return false;
+      return modify(id, function (r) { r.reply = { text: text, at: new Date().toISOString() }; });
+    },
+    removeReply: function (id) { return modify(id, function (r) { delete r.reply; }); },
+    hide: function (id, reason) {
+      if (HIDE_REASONS.indexOf(reason) === -1) return false;
+      var ok = false;
+      modify(id, function (r) { if (r.comment) { r.hidden = { reason: reason, at: new Date().toISOString() }; ok = true; } });
+      return ok;
+    },
+    restore: function (id) { return modify(id, function (r) { delete r.hidden; }); },
 
     // ---- the list of reviews (all, or one room) ----
     openList: function (opts) {
@@ -76,22 +131,13 @@
         d.textContent = '';
         var box = el('div', 'p-6');
         box.appendChild(el('h2', 'font-display text-xl font-bold tracking-tight', roomId ? 'Reviews of ' + roomName : 'Student reviews'));
-        box.appendChild(el('p', 'mt-1 text-base text-muted', 'Ariate Dormitory' + (list.length ? ', ' + list.length + ' review' + (list.length === 1 ? '' : 's') : '')));
-        if (list.length) {
-          box.appendChild(el('p', 'mt-3 text-base font-medium', CATS.map(function (c) { return c[1] + ' ' + s[c[0]] + '/5'; }).join(', ')));
-        }
+        box.appendChild(el('p', 'mt-1 text-base text-muted', 'Ariate Dormitory' + (list.length ? ', ' + plural(list.length, 'review') : '')));
+        if (list.length) box.appendChild(el('p', 'mt-3 text-base font-medium', CATS.map(function (c) { return c[1] + ' ' + s[c[0]] + '/5'; }).join(', ')));
         if (!list.length) {
           box.appendChild(el('p', 'mt-4 text-base text-muted', roomId ? 'No one has reviewed this room yet.' : 'No reviews yet. Students who stayed at Ariate Dormitory can review after their stay.'));
         } else {
           var ul = el('ul', 'mt-4 space-y-3');
-          list.forEach(function (r) {
-            var li = el('li', 'rounded-xl border border-line p-4');
-            li.appendChild(el('p', 'font-semibold', r.authorName + ' stayed in ' + r.roomName));
-            li.appendChild(el('p', 'text-sm text-muted', fmt(r.createdAt)));
-            li.appendChild(el('p', 'mt-2 text-base', ratingLine(r)));
-            if (r.comment) li.appendChild(el('p', 'mt-2 break-words text-base', r.comment));
-            ul.appendChild(li);
-          });
+          list.forEach(function (r) { ul.appendChild(reviewItem(r, true)); });
           box.appendChild(ul);
         }
         var row = el('div', 'mt-5 flex flex-wrap gap-2');
@@ -112,7 +158,7 @@
       box.appendChild(el('h2', 'font-display text-xl font-bold tracking-tight', (mine ? 'Edit your review of ' : 'Review your stay in ') + res.roomName));
       box.appendChild(el('p', 'mt-1 text-base text-muted', 'Rate each part from 1 (poor) to 5 (excellent). Other students will read this.'));
       var form = el('form', 'mt-5 space-y-4'); form.noValidate = true;
-      var err = el('p', 'rounded-xl border border-danger/30 bg-[#FEF3F2] px-3.5 py-3 text-sm font-medium text-danger'); err.setAttribute('role', 'alert'); err.hidden = true;
+      var err = el('p', 'rounded-xl border border-danger/30 bg-danger-soft px-3.5 py-3 text-sm font-medium text-danger'); err.setAttribute('role', 'alert'); err.hidden = true;
       form.appendChild(err);
       CATS.forEach(function (c) {
         var fs = el('fieldset'); fs.appendChild(el('legend', 'mb-1.5 block text-sm font-medium', c[1]));
@@ -156,23 +202,36 @@
         box.appendChild(el('p', 'mt-1 text-base text-muted', 'No reviews yet. Students who stayed at Ariate Dormitory can review it after their stay.'));
         return box;
       }
-      box.appendChild(el('p', 'mt-1 text-base', s.overall + ' out of 5 overall, from ' + s.count + ' review' + (s.count === 1 ? '' : 's') + '. ' +
-        'Commute ' + s.commute + '/5, safety ' + s.safety + '/5, cleanliness ' + s.cleanliness + '/5.'));
-      var b = el('button', 'mt-2 inline-flex min-h-[44px] items-center rounded font-semibold text-forest underline underline-offset-4 outline-none hover:text-forest-deep focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2', 'Read reviews');
-      b.type = 'button'; b.addEventListener('click', function () { HBR.openList(); });
+      box.appendChild(el('p', 'mt-1 text-base', s.overall + ' out of 5 overall, from ' + plural(s.count, 'review') + '. Commute ' + s.commute + '/5, safety ' + s.safety + '/5, cleanliness ' + s.cleanliness + '/5.'));
+      var b = el('button', 'mt-2 ' + LINK, 'Read reviews'); b.type = 'button'; b.addEventListener('click', function () { HBR.openList(); });
       box.appendChild(b);
       return box;
     },
-    // a line about one room's reviews
-    // opts.quiet: show nothing at all when the room has no reviews yet
+    // one line about a room's reviews (opts.quiet: show nothing when there are none)
     roomLine: function (room, opts) {
       var list = HBR.forRoom(room.id), box = el('div', 'mt-3');
       if (!list.length) { if (opts && opts.quiet) return null; box.appendChild(el('p', 'text-sm text-muted', 'No reviews of this room yet.')); return box; }
-      var o = HBR.summary(list).overall;
-      box.appendChild(el('p', 'text-sm text-muted', list.length + ' review' + (list.length === 1 ? '' : 's') + ' of this room, ' + o + ' out of 5 overall.'));
-      var b = el('button', 'inline-flex min-h-[44px] items-center rounded font-semibold text-forest underline underline-offset-4 outline-none hover:text-forest-deep focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2', 'Read reviews of ' + room.name);
-      b.type = 'button'; b.addEventListener('click', function () { HBR.openList({ roomId: room.id, roomName: room.name }); });
+      box.appendChild(el('p', 'text-sm text-muted', plural(list.length, 'review') + ' of this room, ' + HBR.summary(list).overall + ' out of 5 overall.'));
+      var b = el('button', LINK, 'Read reviews of ' + room.name); b.type = 'button';
+      b.addEventListener('click', function () { HBR.openList({ roomId: room.id, roomName: room.name }); });
       box.appendChild(b);
+      return box;
+    },
+    // the reviews of one room, for the room's details window: averages plus the latest reviews
+    roomPanel: function (room) {
+      var list = HBR.forRoom(room.id), box = el('div');
+      box.appendChild(el('h3', 'font-display text-lg font-semibold tracking-tight', 'Student reviews of this room'));
+      if (!list.length) { box.appendChild(el('p', 'mt-1 text-base text-muted', 'No one has reviewed this room yet. Reviews from students who stayed here will appear in this place.')); return box; }
+      var s = HBR.summary(list);
+      box.appendChild(el('p', 'mt-1 text-base', s.overall + ' out of 5 overall, from ' + plural(list.length, 'review') + '. Commute ' + s.commute + '/5, safety ' + s.safety + '/5, cleanliness ' + s.cleanliness + '/5.'));
+      var ul = el('ul', 'mt-3 space-y-3');
+      list.slice(0, 3).forEach(function (r) { ul.appendChild(reviewItem(r, false)); });
+      box.appendChild(ul);
+      if (list.length > 3) {
+        var b = el('button', LINK, 'Read all ' + list.length + ' reviews of ' + room.name); b.type = 'button';
+        b.addEventListener('click', function () { HBR.openList({ roomId: room.id, roomName: room.name }); });
+        box.appendChild(b);
+      }
       return box;
     },
     // on Home: the student's stays that can be reviewed
@@ -190,6 +249,8 @@
         } else {
           var m = HBR.mine(r.id);
           left.appendChild(el('p', 'text-sm text-muted', m ? 'Your review: ' + ratingLine(m) : 'How was it? Rate the commute, safety and more.'));
+          if (m && m.hidden) left.appendChild(el('p', 'text-sm text-muted', 'The office hid your comment (' + m.hidden.reason + '). Your ratings still count.'));
+          if (m && m.reply && m.reply.text) left.appendChild(el('p', 'text-sm text-muted', 'The office replied: ' + m.reply.text));
           row.appendChild(left);
           var b = el('button', 'btn btn-outline', m ? 'Edit review' : 'Write a review'); b.type = 'button';
           b.setAttribute('aria-label', (m ? 'Edit your review of ' : 'Write a review of ') + r.roomName);

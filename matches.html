@@ -40,19 +40,8 @@
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="assets/js/tw-config.js"></script>
+  <link rel="stylesheet" href="assets/css/components.css">
 
-  <style type="text/tailwindcss">
-    @layer components {
-      .btn { @apply inline-flex min-h-[44px] items-center justify-center rounded-full border border-transparent bg-forest px-5 py-2.5 text-base font-semibold text-white no-underline transition-colors hover:bg-forest-deep outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 disabled:opacity-70; }
-      .btn-outline { @apply border-forest bg-white text-forest hover:bg-tint; }
-      .btn-lime { @apply bg-lime text-ink hover:bg-[#B5E03F] focus-visible:ring-lime focus-visible:ring-offset-forest; }
-      .nav-link { @apply inline-flex min-h-[44px] items-center rounded-full px-4 text-base font-medium text-ink no-underline transition-colors outline-none hover:bg-track focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 aria-[current=page]:bg-forest aria-[current=page]:text-white; }
-      .label { @apply mb-1.5 block text-sm font-medium text-ink; }
-      .field { @apply block h-12 w-full rounded-xl border border-line bg-white px-3.5 text-base text-ink outline-none transition-colors hover:border-[#8FA397] focus-visible:border-forest focus-visible:ring-2 focus-visible:ring-forest/30 aria-[invalid=true]:border-danger; }
-      .choice { @apply flex min-h-[44px] items-center justify-center rounded-xl border border-line bg-white px-3 text-center text-base font-medium text-ink transition-colors hover:border-[#8FA397] peer-checked:border-forest peer-checked:bg-forest peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-forest peer-focus-visible:ring-offset-2; }
-      .card-title { @apply font-display text-lg font-semibold tracking-tight text-ink; }
-    }
-  </style>
   <style>[hidden] { display: none !important; }</style>
 </head>
 
@@ -76,7 +65,7 @@
           <span id="nav-initial" class="grid h-9 w-9 place-items-center rounded-full bg-forest font-display text-sm font-semibold text-white" aria-hidden="true"></span>
           <span id="nav-name" class="max-w-[9rem] truncate text-sm font-medium"></span>
         </span>
-        <button type="button" data-logout class="btn btn-outline hidden md:inline-flex">Log out</button>
+        <button type="button" data-logout class="btn btn-logout hidden md:inline-flex">Log out</button>
         <button type="button" id="menu-btn" aria-expanded="false" aria-controls="menu" class="inline-flex min-h-[44px] items-center rounded-full border border-forest bg-white px-4 text-base font-semibold text-forest outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 md:hidden"><span id="menu-label">Menu</span></button>
       </div>
     </nav>
@@ -86,7 +75,7 @@
         <li><a class="nav-link w-full" href="matches.html" aria-current="page">My Matches</a></li>
         <li><a class="nav-link w-full" href="rooms.html">Explore Rooms</a></li>
       </ul>
-      <div class="mt-2 border-t border-line pt-2"><button type="button" data-logout class="btn btn-outline w-full">Log out</button></div>
+      <div class="mt-2 border-t border-line pt-2"><button type="button" data-logout class="btn btn-logout w-full">Log out</button></div>
     </div>
   </header>
 
@@ -366,7 +355,7 @@
         card.appendChild(breakdown(s, 'mt-3 text-sm text-white/85'));
         var actions = el('div', 'mt-5 flex flex-wrap gap-2');
         if (!hasActive) actions.appendChild(requestButton(s.room, 'btn-lime'));
-        actions.appendChild(saveButton(s.room, 'btn-outline focus-visible:ring-lime focus-visible:ring-offset-forest'));
+        actions.appendChild(saveButton(s.room, 'btn-outline on-dark'));
         card.appendChild(actions);
         card.appendChild(cmp.checkbox(s.room, { dark: true, cls: 'mt-2' }));
         box.appendChild(card);
@@ -381,7 +370,7 @@
         head.appendChild(el('span', 'font-semibold text-forest', fitLabel(s) + ' (' + s.total + '%)'));
         left.appendChild(head);
         left.appendChild(el('p', 'mt-1 text-base text-muted', facts(s.room)));
-        if (s.over) left.appendChild(el('p', 'mt-1 text-base font-semibold text-ink', 'Over your budget by ' + peso(s.overBy) + ' per month.'));
+        if (s.over) left.appendChild(el('p', 'mt-1 text-base font-semibold text-warn', 'Over your budget by ' + peso(s.overBy) + ' per month.'));
         left.appendChild(el('p', 'mt-1 text-sm text-muted', why(s)));
         left.appendChild(breakdown(s, 'mt-1 text-sm text-muted'));
         left.appendChild(cmp.checkbox(s.room, { cls: 'mt-1' }));

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -33,22 +33,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
 
-  <script src="assets/js/auth.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="assets/js/tw-config.js"></script>
+  <link rel="stylesheet" href="assets/css/components.css">
 
-  <style type="text/tailwindcss">
-    @layer components {
-      .btn { @apply inline-flex min-h-[44px] items-center justify-center rounded-full border border-transparent bg-forest px-5 py-2.5 text-base font-semibold text-white no-underline transition-colors hover:bg-forest-deep outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 disabled:opacity-70; }
-      .btn-outline { @apply border-forest bg-white text-forest hover:bg-tint; }
-      .btn-danger { @apply border-danger bg-white text-danger hover:bg-[#FEF3F2] focus-visible:ring-danger; }
-      .nav-link { @apply inline-flex min-h-[44px] items-center rounded-full px-4 text-base font-medium text-ink no-underline transition-colors outline-none hover:bg-track focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 aria-[current=page]:bg-forest aria-[current=page]:text-white; }
-      .label { @apply mb-1.5 block text-sm font-medium text-ink; }
-      .field { @apply block h-12 w-full rounded-xl border border-line bg-white px-3.5 text-base text-ink outline-none transition-colors hover:border-[#8FA397] focus-visible:border-forest focus-visible:ring-2 focus-visible:ring-forest/30 aria-[invalid=true]:border-danger read-only:bg-track read-only:text-muted; }
-      .choice { @apply flex min-h-[44px] items-center justify-center rounded-xl border border-line bg-white px-3 text-center text-base font-medium text-ink transition-colors hover:border-[#8FA397] peer-checked:border-forest peer-checked:bg-forest peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-forest peer-focus-visible:ring-offset-2 peer-disabled:opacity-60; }
-      .err { @apply mt-1.5 text-sm font-medium text-danger; }
-    }
-  </style>
   <style>[hidden] { display: none !important; }</style>
 </head>
 
@@ -65,14 +53,11 @@
       <ul class="flex items-center gap-1">
         <li><a class="nav-link" href="landlord.html">Dashboard</a></li>
         <li><a class="nav-link" href="landlord-rooms.html" aria-current="page">Rooms</a></li>
-        <li><a class="nav-link" href="profile.html">Profile</a></li>
+        <li><a class="nav-link" href="landlord-reviews.html">Reviews</a></li>
       </ul>
       <div class="flex items-center gap-3">
-        <a href="profile.html" class="flex items-center gap-2 rounded-full py-1 pl-1 pr-2 hover:bg-track transition-colors outline-none focus-visible:ring-2 focus-visible:ring-forest" title="My Profile" aria-label="My Profile">
-          <span id="nav-avatar" class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-forest font-display text-sm font-semibold text-white overflow-hidden" aria-hidden="true"></span>
-          <span id="nav-name" class="hidden max-w-[12rem] truncate text-sm font-medium lg:block"></span>
-        </a>
-        <button type="button" id="logout" class="btn btn-outline">Log out</button>
+        <span id="nav-name" class="hidden max-w-[12rem] truncate text-sm font-medium lg:block"></span>
+        <button type="button" id="logout" class="btn btn-logout">Log out</button>
       </div>
     </nav>
   </header>
@@ -122,7 +107,7 @@
     <div class="p-6">
       <h2 id="room-title" class="font-display text-xl font-bold tracking-tight"></h2>
       <form id="room-form" novalidate class="mt-5 space-y-4">
-        <p id="form-error" role="alert" hidden class="rounded-xl border border-danger/30 bg-[#FEF3F2] px-3.5 py-3 text-sm font-medium text-danger"></p>
+        <p id="form-error" role="alert" hidden class="rounded-xl border border-danger/30 bg-danger-soft px-3.5 py-3 text-sm font-medium text-danger"></p>
 
         <div>
           <label class="label" for="f-id">Room number</label>
@@ -189,9 +174,6 @@
       var user = {};
       try { user = JSON.parse(localStorage.getItem('homebase_currentUser') || '{}') || {}; } catch (e) {}
       $('nav-name').textContent = String(user.name || user.email || '');
-      if (window.HB_AUTH && HB_AUTH.renderAvatar && $('nav-avatar')) {
-        HB_AUTH.renderAvatar($('nav-avatar'), user);
-      }
       $('logout').addEventListener('click', function () { try { localStorage.removeItem('homebase_currentUser'); } catch (e) {} window.location.href = 'index.html'; });
       $('reload').addEventListener('click', function () { window.location.reload(); });
 
@@ -234,7 +216,7 @@
         var body = el('div', 'min-w-0');
         var head = el('div', 'flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1');
         head.appendChild(el('p', 'font-display text-xl font-bold tracking-tight', r.name));
-        head.appendChild(el('p', 'text-sm font-semibold ' + (st === 'available' ? 'text-forest' : 'text-muted'), statusText));
+        head.appendChild(HB.chip(statusText, HB.roomTone(st)));
         body.appendChild(head);
         body.appendChild(el('p', 'mt-1 text-base text-muted', 'Floor ' + r.floor + ', ' + r.type + ' room, ' + HB.priceLabel(r)));
         var chips = el('ul', 'mt-2 flex flex-wrap gap-1.5');
@@ -246,15 +228,6 @@
           body.appendChild(el('p', 'mt-2 text-sm text-muted', 'Requests: ' + who));
         }
         if (info.outside) body.appendChild(el('p', 'mt-1 text-sm text-muted', info.outside + ' bed' + (info.outside === 1 ? '' : 's') + ' taken outside Homebase.'));
-        var pastStays = HB.historyForRoom ? HB.historyForRoom(r.id).filter(function (x) { return x.status === 'ended'; }) : [];
-        if (pastStays.length) {
-          var pastNames = pastStays.map(function (x) {
-            var d = new Date(x.endedAt);
-            var endedStr = !isNaN(d.getTime()) ? d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : 'past';
-            return x.studentName + ' (ended ' + endedStr + ')';
-          }).join(', ');
-          body.appendChild(el('p', 'mt-1 text-sm text-muted', 'Past stays: ' + pastNames));
-        }
 
         var acts = el('div', 'mt-4 flex flex-wrap items-center gap-2');
         if (ui.kind === 'delete' && ui.id === r.id) {

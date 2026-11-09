@@ -39,16 +39,13 @@
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="assets/js/tw-config.js"></script>
+  <link rel="stylesheet" href="assets/css/components.css">
 
   <style type="text/tailwindcss">
     @layer components {
-      .btn { @apply inline-flex min-h-[44px] items-center justify-center rounded-full border border-transparent bg-forest px-5 py-2.5 text-base font-semibold text-white no-underline transition-colors hover:bg-forest-deep outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2; }
-      .btn-outline { @apply border-forest bg-white text-forest hover:bg-tint; }
-      .nav-link { @apply inline-flex min-h-[44px] items-center rounded-full px-4 text-base font-medium text-ink no-underline transition-colors outline-none hover:bg-track focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 aria-[current=page]:bg-forest aria-[current=page]:text-white; }
-      .floor-btn { @apply inline-flex min-h-[44px] items-center justify-center rounded-full border border-line bg-white px-5 text-base font-medium text-ink transition-colors outline-none hover:border-[#8FA397] focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 aria-pressed:border-forest aria-pressed:bg-forest aria-pressed:text-white; }
+      .floor-btn { @apply inline-flex min-h-[44px] items-center justify-center rounded-full border border-line bg-white px-5 text-base font-medium text-ink transition-colors outline-none hover:border-edge focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 aria-pressed:border-forest aria-pressed:bg-forest aria-pressed:text-white; }
       .tile { @apply relative flex h-[92px] w-[96px] flex-col items-start justify-end rounded-xl border-2 border-forest bg-white p-2.5 text-left text-ink transition-colors outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 aria-pressed:bg-forest aria-pressed:text-white; }
       .tile-taken { @apply border-line bg-track text-muted hover:bg-track aria-pressed:border-forest aria-pressed:bg-forest aria-pressed:text-white; }
-      .card-title { @apply font-display text-lg font-semibold tracking-tight text-ink; }
     }
   </style>
   <style>[hidden] { display: none !important; }</style>
@@ -74,7 +71,7 @@
           <span id="nav-initial" class="grid h-9 w-9 place-items-center rounded-full bg-forest font-display text-sm font-semibold text-white" aria-hidden="true"></span>
           <span id="nav-name" class="max-w-[9rem] truncate text-sm font-medium"></span>
         </span>
-        <button type="button" data-logout class="btn btn-outline hidden md:inline-flex">Log out</button>
+        <button type="button" data-logout class="btn btn-logout hidden md:inline-flex">Log out</button>
         <button type="button" id="menu-btn" aria-expanded="false" aria-controls="menu" class="inline-flex min-h-[44px] items-center rounded-full border border-forest bg-white px-4 text-base font-semibold text-forest outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 md:hidden"><span id="menu-label">Menu</span></button>
       </div>
     </nav>
@@ -84,7 +81,7 @@
         <li><a class="nav-link w-full" href="matches.html">My Matches</a></li>
         <li><a class="nav-link w-full" href="rooms.html">Explore Rooms</a></li>
       </ul>
-      <div class="mt-2 border-t border-line pt-2"><button type="button" data-logout class="btn btn-outline w-full">Log out</button></div>
+      <div class="mt-2 border-t border-line pt-2"><button type="button" data-logout class="btn btn-logout w-full">Log out</button></div>
     </div>
   </header>
 

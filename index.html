@@ -44,7 +44,7 @@
       .field {
         @apply block h-[60px] w-full rounded-xl border border-line bg-white px-3.5 pb-2 pt-6 text-base text-ink
                placeholder:text-transparent outline-none transition-colors
-               hover:border-[#8FA397] focus-visible:border-forest focus-visible:ring-2 focus-visible:ring-forest/30
+               hover:border-edge focus-visible:border-forest focus-visible:ring-2 focus-visible:ring-forest/30
                aria-[invalid=true]:border-danger aria-[invalid=true]:ring-danger/20;
       }
       .float-label {
@@ -58,7 +58,8 @@
                transition-colors hover:bg-forest-deep outline-none
                focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-70;
       }
-      .btn-outline { @apply border-forest bg-white text-forest hover:bg-[#F4F8F5]; }
+      .btn-outline { @apply border-forest bg-white text-forest hover:bg-tint; }
+      .btn-logout { @apply border-danger bg-white text-danger hover:bg-danger-soft; }
       .linkbtn { @apply inline-flex min-h-[44px] items-center rounded px-1 font-semibold text-forest underline underline-offset-4 outline-none hover:text-forest-deep focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2; }
     }
   </style>
@@ -234,7 +235,7 @@
           <h2 class="font-display text-xl font-semibold tracking-tight text-ink">Log into Homebase</h2>
 
           <form id="form-login" novalidate class="mt-5 space-y-3">
-            <div id="login-error" role="alert" class="err hidden !mt-0 rounded-xl border border-danger/30 bg-[#FEF3F2] px-3.5 py-3"></div>
+            <div id="login-error" role="alert" class="err hidden !mt-0 rounded-xl border border-danger/30 bg-danger-soft px-3.5 py-3"></div>
             <div>
               <div class="relative">
                 <input class="field peer" id="login-email" name="email" type="email" autocomplete="email" inputmode="email" placeholder=" " aria-describedby="login-email-err" required>
@@ -247,7 +248,7 @@
                 <input class="field peer pr-16" id="login-password" name="password" type="password" autocomplete="current-password" placeholder=" " aria-describedby="login-password-err" required>
                 <label class="float-label" for="login-password">Password</label>
                 <button type="button" data-toggle-password="login-password" aria-controls="login-password" aria-pressed="false"
-                  class="absolute inset-y-0 right-0 my-1 mr-1 rounded-lg px-3 text-sm font-semibold text-forest outline-none hover:bg-[#E8EEEA] focus-visible:ring-2 focus-visible:ring-forest">Show</button>
+                  class="absolute inset-y-0 right-0 my-1 mr-1 rounded-lg px-3 text-sm font-semibold text-forest outline-none hover:bg-track focus-visible:ring-2 focus-visible:ring-forest">Show</button>
               </div>
               <p class="err hidden" id="login-password-err"></p>
             </div>
@@ -267,7 +268,7 @@
         <div id="session-view" hidden>
           <h2 class="font-display text-2xl font-bold tracking-tight text-ink" id="session-heading" tabindex="-1">You are logged in</h2>
           <p class="mt-1.5 text-base text-muted" id="session-detail"></p>
-          <div class="mt-6 rounded-xl border border-line bg-[#F4F8F5] p-5 text-base text-ink">
+          <div class="mt-6 rounded-xl border border-line bg-tint p-5 text-base text-ink">
             <p class="font-semibold text-forest-deep" id="session-lead">Ready to find a room?</p>
             <p class="mt-1 text-sm text-muted" id="session-text">Explore Ariate Dormitory rooms, set your budget and needs, and see how well each room fits you.</p>
             <a href="home.html" id="session-link" class="btn mt-4 inline-flex items-center justify-center gap-2 text-white no-underline">
@@ -275,7 +276,7 @@
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </a>
           </div>
-          <button type="button" id="logout" class="btn btn-outline mt-4">Log out</button>
+          <button type="button" id="logout" class="btn btn-logout mt-4">Log out</button>
         </div>
 
       </div>
@@ -291,13 +292,13 @@
           <p class="mt-1 text-base text-muted">Tell us who you are and we will start matching.</p>
         </div>
         <button type="button" id="close-register" aria-label="Close"
-          class="-mr-2 -mt-2 grid h-11 w-11 shrink-0 place-items-center rounded-lg text-muted outline-none hover:bg-[#E8EEEA] focus-visible:ring-2 focus-visible:ring-forest">
+          class="-mr-2 -mt-2 grid h-11 w-11 shrink-0 place-items-center rounded-lg text-muted outline-none hover:bg-track focus-visible:ring-2 focus-visible:ring-forest">
           <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
         </button>
       </div>
 
       <form id="form-register" novalidate class="mt-5 space-y-3">
-        <div id="register-error" role="alert" class="err hidden !mt-0 rounded-xl border border-danger/30 bg-[#FEF3F2] px-3.5 py-3"></div>
+        <div id="register-error" role="alert" class="err hidden !mt-0 rounded-xl border border-danger/30 bg-danger-soft px-3.5 py-3"></div>
 
         <div>
           <div class="relative">
@@ -318,7 +319,7 @@
             <input class="field peer pr-16" id="reg-password" name="password" type="password" autocomplete="new-password" placeholder=" " aria-describedby="reg-password-hint reg-password-err" required>
             <label class="float-label" for="reg-password">Password</label>
             <button type="button" data-toggle-password="reg-password" aria-controls="reg-password" aria-pressed="false"
-              class="absolute inset-y-0 right-0 my-1 mr-1 rounded-lg px-3 text-sm font-semibold text-forest outline-none hover:bg-[#E8EEEA] focus-visible:ring-2 focus-visible:ring-forest">Show</button>
+              class="absolute inset-y-0 right-0 my-1 mr-1 rounded-lg px-3 text-sm font-semibold text-forest outline-none hover:bg-track focus-visible:ring-2 focus-visible:ring-forest">Show</button>
           </div>
           <p class="mt-1.5 text-sm text-muted" id="reg-password-hint">At least 8 characters.</p>
           <p class="err hidden" id="reg-password-err"></p>
