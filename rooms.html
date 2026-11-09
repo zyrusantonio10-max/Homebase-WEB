@@ -86,7 +86,7 @@
     <div id="reviews-strip" class="mt-6"></div>
 
     <!-- FILTERS: apply as soon as you change them -->
-    <form id="filters" class="mt-6 flex flex-wrap items-end gap-x-6 gap-y-4 rounded-[20px] border border-line bg-tint p-5" onsubmit="return false">
+    <form id="filters" class="mt-6 flex flex-wrap items-end gap-x-6 gap-y-4 rounded-[20px] border border-line bg-tint p-4 sm:p-5" onsubmit="return false">
       <fieldset>
         <legend class="label">Availability</legend>
         <div class="flex flex-wrap gap-2">
@@ -148,6 +148,7 @@
 
   <script src="assets/js/rooms.js"></script>
   <script src="assets/js/reservation.js"></script>
+  <script src="assets/js/building.js"></script>
   <script src="assets/js/compare.js"></script>
   <script src="assets/js/reviews.js"></script>
   <script>
@@ -330,14 +331,27 @@
         });
         box.appendChild(dl);
 
-        var am = el('div', 'mt-5'); am.appendChild(el('h3', 'font-display text-lg font-semibold tracking-tight', 'Amenities'));
+        var am = el('div', 'mt-5'); am.appendChild(el('h3', 'font-display text-lg font-semibold tracking-tight', 'Room Amenities'));
         var chips = el('ul', 'mt-2 flex flex-wrap gap-1.5');
         room.amenities.forEach(function (a) { chips.appendChild(el('li', 'rounded-lg border border-line bg-tint px-2.5 py-1 text-sm', a)); });
         if (!room.amenities.length) chips.appendChild(el('li', 'text-sm text-muted', 'No amenities listed'));
         am.appendChild(chips);
-        var no = (window.HOMEBASE_AMENITIES || []).filter(function (a) { return room.amenities.indexOf(a) === -1; });
-        if (no.length) am.appendChild(el('p', 'mt-2 text-sm text-muted', 'Not included: ' + no.join(', ') + '.'));
         box.appendChild(am);
+
+        var bAm = (window.HB_BUILDING && HB_BUILDING.get) ? HB_BUILDING.get() : [];
+        if (bAm.length) {
+          var bamDiv = el('div', 'mt-4 rounded-xl border border-line bg-tint p-4');
+          var bHead = el('div', 'flex items-center justify-between gap-2');
+          bHead.appendChild(el('h4', 'font-display text-sm font-semibold tracking-tight text-ink', '\uD83C\uDFE2 Building & Property Perks (Shared)'));
+          bHead.appendChild(el('span', 'text-xs font-semibold text-forest uppercase tracking-wider', 'Included'));
+          bamDiv.appendChild(bHead);
+          var bChips = el('ul', 'mt-2 flex flex-wrap gap-1.5');
+          bAm.forEach(function (ba) {
+            bChips.appendChild(el('li', 'rounded-lg border border-line/80 bg-white px-2.5 py-1 text-xs font-medium text-ink shadow-sm', ba));
+          });
+          bamDiv.appendChild(bChips);
+          box.appendChild(bamDiv);
+        }
 
         if (window.HBReviews) { var rv = el('div', 'mt-6 border-t border-line pt-5'); rv.appendChild(HBReviews.roomPanel(room)); box.appendChild(rv); }
 
@@ -400,6 +414,13 @@
         var chips = el('ul', 'mt-3 flex flex-wrap gap-1.5');
         r.amenities.forEach(function (a) { chips.appendChild(el('li', 'rounded-lg border border-line bg-tint px-2.5 py-1 text-sm', a)); });
         body.appendChild(chips);
+
+        var bList = (window.HB_BUILDING && HB_BUILDING.get) ? HB_BUILDING.get() : [];
+        if (bList.length) {
+          var bPerk = el('p', 'mt-2 text-xs text-muted flex items-center gap-1.5');
+          bPerk.innerHTML = '<span class="font-semibold text-forest">\uD83C\uDFE2 Property:</span> ' + bList.slice(0, 3).join(', ') + (bList.length > 3 ? ' +' + (bList.length - 3) + ' more' : '');
+          body.appendChild(bPerk);
+        }
 
         // ---- occupant preview (clickable avatar pills) ----
         var occs = HB.load().list.filter(function (res) {

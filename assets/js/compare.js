@@ -1,4 +1,4 @@
-﻿/*
+/*
   Compare rooms: shared by Explore Rooms (rooms.html) and My Matches (matches.html).
   Needs assets/js/reservation.js (window.HB) loaded first, and the pages' .btn / .btn-outline classes.
 
@@ -27,13 +27,13 @@
       // ---- the bar at the bottom of the page and the comparison window ----
       var bar = document.getElementById('cmp-bar'), dlg = document.getElementById('cmp-dialog');
       if (!bar) {
-        bar = el('div', 'fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white px-4 py-3 sm:px-6');
+        bar = el('div', 'fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white/95 backdrop-blur-md px-4 py-2.5 sm:px-6 shadow-lg');
         bar.id = 'cmp-bar'; bar.hidden = true;
         bar.innerHTML =
-          '<div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">' +
-            '<p id="cmp-count" class="text-base font-medium" aria-live="polite"></p>' +
-            '<div class="flex gap-2"><button type="button" id="cmp-clear" class="btn btn-outline">Clear</button>' +
-            '<button type="button" id="cmp-open" class="btn">Compare rooms</button></div>' +
+          '<div class="mx-auto flex max-w-6xl items-center justify-between gap-2">' +
+            '<p id="cmp-count" class="text-xs sm:text-sm font-semibold truncate text-ink" aria-live="polite"></p>' +
+            '<div class="flex shrink-0 items-center gap-1.5"><button type="button" id="cmp-clear" class="btn btn-outline text-xs min-h-[38px] px-3">Clear</button>' +
+            '<button type="button" id="cmp-open" class="btn text-xs min-h-[38px] px-3.5">Compare</button></div>' +
           '</div>';
         document.body.appendChild(bar);
       }
@@ -125,6 +125,10 @@
         (window.HOMEBASE_AMENITIES || []).forEach(function (a) {
           addRow(a, function (r) { return { text: r.amenities.indexOf(a) !== -1 ? 'Yes' : 'No' }; });
         });
+        var bAmenities = (window.HB_BUILDING && HB_BUILDING.get) ? HB_BUILDING.get() : [];
+        if (bAmenities.length) {
+          addRow('\uD83C\uDFE2 Property perks', function () { return { text: bAmenities.join(', ') }; });
+        }
         var tr = el('tr'); var corner2 = el('th', 'border-t border-line p-3'); corner2.appendChild(el('span', 'sr-only', 'Action')); tr.appendChild(corner2);
         list.forEach(function (r) {
           var td = el('td', 'border-t border-line p-3 align-top');

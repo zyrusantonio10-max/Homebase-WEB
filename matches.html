@@ -90,43 +90,48 @@
       <!-- FORM -->
       <aside class="rounded-[20px] border border-line bg-tint p-6 lg:sticky lg:top-28">
         <h2 class="card-title">What you need</h2>
-        <form id="form" novalidate class="mt-4 space-y-5">
+        <form id="form" novalidate class="mt-3.5 space-y-3.5">
           <div>
-            <label class="label" for="budget">Monthly budget (pesos)</label>
-            <input class="field" id="budget" name="budget" type="number" inputmode="numeric" min="1" step="1" placeholder="Your limit per month" aria-describedby="budget-err" required>
-            <p id="budget-err" class="mt-1.5 hidden text-sm font-medium text-danger"></p>
+            <label class="label text-xs mb-1" for="budget">Monthly budget (pesos)</label>
+            <input class="field h-11 text-sm" id="budget" name="budget" type="number" inputmode="numeric" min="1" step="1" placeholder="Your limit per month" aria-describedby="budget-err" required>
+            <p id="budget-err" class="mt-1 hidden text-xs font-medium text-danger"></p>
           </div>
 
           <fieldset>
-            <legend class="label">Room type</legend>
-            <div class="grid grid-cols-2 gap-2">
-              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Any" checked><span class="choice">Any</span></label>
-              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Single"><span class="choice">Single</span></label>
-              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Double"><span class="choice">Double</span></label>
-              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Quad"><span class="choice">Quad</span></label>
+            <legend class="label text-xs mb-1">Room type</legend>
+            <div class="grid grid-cols-4 gap-1.5">
+              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Any" checked><span class="choice text-[11px] sm:text-xs min-h-[34px] !px-1 text-center justify-center">Any</span></label>
+              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Single"><span class="choice text-[11px] sm:text-xs min-h-[34px] !px-1 text-center justify-center">Single</span></label>
+              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Double"><span class="choice text-[11px] sm:text-xs min-h-[34px] !px-1 text-center justify-center">Double</span></label>
+              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Quad"><span class="choice text-[11px] sm:text-xs min-h-[34px] !px-1 text-center justify-center">Quad</span></label>
             </div>
           </fieldset>
 
           <fieldset>
-            <legend class="label">Preferred floor (optional)</legend>
-            <div id="floor-list" class="grid grid-cols-2 gap-2"></div>
+            <legend class="label text-xs mb-1">Preferred floor (optional)</legend>
+            <div id="floor-list" class="grid grid-cols-4 gap-1.5"></div>
           </fieldset>
 
           <fieldset>
-            <legend class="label">Amenities you need</legend>
-            <div id="amenity-list" class="grid gap-2"></div>
-          </fieldset>
-
-          <fieldset>
-            <legend class="label">What matters most to you?</legend>
-            <div class="grid grid-cols-2 gap-2">
-              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="priority" value="balanced" checked><span class="choice">Balanced</span></label>
-              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="priority" value="budget"><span class="choice">Budget</span></label>
-              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="priority" value="amenities"><span class="choice">Amenities</span></label>
-              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="priority" value="type"><span class="choice">Room type</span></label>
-              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="priority" value="floor"><span class="choice">Floor</span></label>
+            <div class="flex items-center justify-between mb-1">
+              <legend class="label text-xs mb-0">Amenities you need</legend>
+              <span id="amenity-badge" class="text-xs font-semibold text-muted">0 selected</span>
             </div>
-            <p class="mt-1.5 text-sm text-muted">Your top choice counts the most in the score.</p>
+            <div class="max-h-48 overflow-y-auto rounded-xl border border-line bg-white p-2">
+              <div id="amenity-list" class="grid grid-cols-2 gap-1.5"></div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend class="label text-xs mb-1">What matters most to you?</legend>
+            <div class="grid grid-cols-3 gap-1.5">
+              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="priority" value="balanced" checked><span class="choice text-[11px] sm:text-xs min-h-[32px] !px-1 py-1 text-center justify-center">Balanced</span></label>
+              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="priority" value="budget"><span class="choice text-[11px] sm:text-xs min-h-[32px] !px-1 py-1 text-center justify-center">Budget</span></label>
+              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="priority" value="amenities"><span class="choice text-[11px] sm:text-xs min-h-[32px] !px-1 py-1 text-center justify-center">Amenities</span></label>
+              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="priority" value="type"><span class="choice text-[11px] sm:text-xs min-h-[32px] !px-1 py-1 text-center justify-center">Room type</span></label>
+              <label class="relative block cursor-pointer col-span-2"><input class="peer sr-only" type="radio" name="priority" value="floor"><span class="choice text-[11px] sm:text-xs min-h-[32px] !px-1 py-1 text-center justify-center">Preferred floor</span></label>
+            </div>
+            <p class="mt-1 text-[11px] text-muted">Your top choice counts the most in the score.</p>
           </fieldset>
 
           <button class="btn w-full" type="submit">Find my matches</button>
@@ -188,6 +193,7 @@
 
   <script src="assets/js/rooms.js"></script>
   <script src="assets/js/reservation.js"></script>
+  <script src="assets/js/building.js"></script>
   <script src="assets/js/compare.js"></script>
   <script>
     (function () {
@@ -225,12 +231,42 @@
       var ROOMS = window.HB ? HB.getRooms() : null, AMENITIES = window.HOMEBASE_AMENITIES;
       if (!Array.isArray(ROOMS) || !Array.isArray(AMENITIES) || !window.HB) { setState('error'); return; }
 
-      AMENITIES.forEach(function (a, i) {
+      // Helper to update selected count badge
+      function updateAmenityBadge() {
+        var count = form.querySelectorAll('input[name=amenity]:checked').length;
+        var badge = $('amenity-badge');
+        if (badge) {
+          badge.textContent = count + (count === 1 ? ' selected' : ' selected');
+          badge.classList.toggle('text-forest', count > 0);
+          badge.classList.toggle('text-muted', count === 0);
+        }
+      }
+
+      function createAmenityPill(name, id) {
         var label = el('label', 'relative block cursor-pointer');
-        var input = el('input', 'peer sr-only'); input.type = 'checkbox'; input.name = 'amenity'; input.value = a; input.id = 'am-' + i;
-        var span = el('span', 'choice justify-start gap-2', a);
-        label.appendChild(input); label.appendChild(span); $('amenity-list').appendChild(label);
+        var input = el('input', 'peer sr-only'); input.type = 'checkbox'; input.name = 'amenity'; input.value = name; input.id = id;
+        var span = el('span', 'flex min-h-[32px] items-center rounded-lg border border-line/70 bg-tint/40 px-2 py-1 text-xs font-medium text-ink transition-colors hover:border-edge peer-checked:border-forest peer-checked:bg-forest peer-checked:text-white', name);
+        label.appendChild(input); label.appendChild(span);
+        input.addEventListener('change', updateAmenityBadge);
+        return label;
+      }
+
+      // Room amenities
+      var roomHead = el('p', 'col-span-2 text-[11px] font-semibold uppercase tracking-wider text-muted -mb-0.5', 'Inside the room');
+      $('amenity-list').appendChild(roomHead);
+      AMENITIES.forEach(function (a, i) {
+        $('amenity-list').appendChild(createAmenityPill(a, 'am-' + i));
       });
+
+      // Building-level amenities (parking, CCTV, water station, etc.)
+      var bCatalogue = (window.HB_BUILDING && HB_BUILDING.catalogue) ? HB_BUILDING.catalogue() : [];
+      if (bCatalogue.length) {
+        var bHead = el('p', 'col-span-2 text-[11px] font-semibold uppercase tracking-wider text-muted mt-2 -mb-0.5', '\uD83C\uDFE2 Building & property');
+        $('amenity-list').appendChild(bHead);
+        bCatalogue.forEach(function (ba, i) {
+          $('amenity-list').appendChild(createAmenityPill(ba, 'bam-' + i));
+        });
+      }
 
       // ---- floor choices ----
       var floorList = [];
@@ -239,7 +275,7 @@
       [['Any', 'Any']].concat(floorList.map(function (f) { return [String(f), 'Floor ' + f]; })).forEach(function (o, i) {
         var label = el('label', 'relative block cursor-pointer');
         var input = el('input', 'peer sr-only'); input.type = 'radio'; input.name = 'floor'; input.value = o[0]; input.checked = i === 0;
-        label.appendChild(input); label.appendChild(el('span', 'choice', o[1]));
+        label.appendChild(input); label.appendChild(el('span', 'choice text-[11px] sm:text-xs min-h-[34px] !px-1 text-center justify-center', o[1]));
         $('floor-list').appendChild(label);
       });
 
@@ -257,11 +293,18 @@
         return w;
       }
 
+      function hasAmenity(room, a) {
+        if (room.amenities && room.amenities.indexOf(a) !== -1) return true;
+        var bList = (window.HB_BUILDING && HB_BUILDING.get) ? HB_BUILDING.get() : [];
+        if (bList.indexOf(a) !== -1) return true;
+        return false;
+      }
+
       function score(room, prefs) {
         var w = weightsFor(prefs.priority);
         var over = room.price > prefs.budget;
-        var matched = prefs.amenities.filter(function (a) { return room.amenities.indexOf(a) !== -1; });
-        var missing = prefs.amenities.filter(function (a) { return room.amenities.indexOf(a) === -1; });
+        var matched = prefs.amenities.filter(function (a) { return hasAmenity(room, a); });
+        var missing = prefs.amenities.filter(function (a) { return !hasAmenity(room, a); });
         var budgetFit = over ? 0 : (room.price <= prefs.budget * 0.9 ? 1 : 0.625);
         var amenityFit = prefs.amenities.length ? matched.length / prefs.amenities.length : 1;
         var typeOk = prefs.type === 'Any' || room.type === prefs.type;
@@ -356,6 +399,10 @@
           var on = s.matched.indexOf(a) !== -1;
           chips.appendChild(el('li', 'rounded-lg border px-2.5 py-1 text-sm ' + (on ? 'border-lime bg-lime text-ink font-semibold' : 'border-white/40 text-white'), a));
         });
+        var matchedBuilding = s.matched.filter(function (a) { return s.room.amenities.indexOf(a) === -1; });
+        matchedBuilding.forEach(function (a) {
+          chips.appendChild(el('li', 'rounded-lg border border-lime bg-lime text-ink px-2.5 py-1 text-sm font-semibold', '\uD83C\uDFE2 ' + a));
+        });
         card.appendChild(chips);
         card.appendChild(el('p', 'mt-3 text-sm text-white/85', why(s)));
         card.appendChild(breakdown(s, 'mt-3 text-sm text-white/85'));
@@ -449,6 +496,10 @@
         $('page-error').classList.add('hidden');
         write(K.prefs, prefs);
         run(prefs);
+        if (window.innerWidth < 1024) {
+          var resEl = $('results');
+          if (resEl) resEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
       });
 
       // ---- restore last preferences ----
@@ -459,6 +510,7 @@
         var floorVal = typeof p.floor === 'number' ? p.floor : 'Any';
         var fr = form.querySelector('input[name=floor][value="' + floorVal + '"]'); if (fr) fr.checked = true; else floorVal = 'Any';
         form.querySelectorAll('input[name=amenity]').forEach(function (c) { c.checked = p.amenities.indexOf(c.value) !== -1; });
+        updateAmenityBadge();
         var prioVal = p.priority || 'balanced';
         var pr = form.querySelector('input[name=priority][value="' + prioVal + '"]'); if (pr) pr.checked = true; else prioVal = 'balanced';
         run({ budget: p.budget, type: radio ? p.type : 'Any', floor: floorVal, priority: prioVal, amenities: p.amenities });

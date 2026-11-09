@@ -52,7 +52,7 @@
 
 <body class="min-h-screen bg-white font-body text-ink antialiased">
 
-  <header class="px-4 pb-2 pt-4 sm:px-6">
+  <header class="sticky top-0 z-20 bg-white px-4 pb-2 pt-4 sm:px-6">
     <nav aria-label="Main" class="mx-auto flex max-w-6xl items-center justify-between gap-3 rounded-full border border-line bg-white py-2 pl-4 pr-2">
       <a href="landlord.html" aria-label="Homebase dashboard" class="inline-flex min-h-[44px] items-center gap-2.5 rounded-full font-display text-xl font-bold tracking-tight text-ink no-underline outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">
         <svg viewBox="0 0 32 32" class="h-9 w-9 shrink-0" aria-hidden="true">
@@ -60,20 +60,37 @@
         </svg>
         <span class="hidden sm:inline">Homebase</span>
       </a>
-      <ul class="flex items-center gap-1">
+      <ul class="hidden items-center gap-1 md:flex">
         <li><a class="nav-link" href="landlord.html" aria-current="page">Dashboard</a></li>
         <li><a class="nav-link" href="landlord-rooms.html">Rooms</a></li>
         <li><a class="nav-link" href="landlord-reviews.html">Reviews</a></li>
         <li><a class="nav-link" href="profile.html">Profile</a></li>
       </ul>
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2">
         <a href="profile.html" class="flex items-center gap-2 rounded-full py-1 pl-1 pr-2 hover:bg-track transition-colors outline-none focus-visible:ring-2 focus-visible:ring-forest" title="My Profile" aria-label="My Profile">
           <span id="nav-avatar" class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-forest font-display text-sm font-semibold text-white overflow-hidden" aria-hidden="true"></span>
-          <span id="nav-name" class="hidden max-w-[12rem] truncate text-sm font-medium lg:block"></span>
+          <span id="nav-name" class="hidden max-w-[10rem] truncate text-sm font-medium lg:block"></span>
         </a>
-        <button type="button" id="logout" class="btn btn-logout">Log out</button>
+        <button type="button" id="logout" class="btn btn-logout hidden md:inline-flex">Log out</button>
+        <button type="button" id="menu-btn" aria-expanded="false" aria-controls="menu"
+          class="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-forest bg-white px-4 text-base font-semibold text-forest outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 md:hidden">
+          <span id="menu-label">Menu</span>
+        </button>
       </div>
     </nav>
+
+    <!-- Mobile menu: 4 links, plus log out -->
+    <div id="menu" hidden class="mx-auto mt-2 max-w-6xl rounded-[20px] border border-line bg-white p-2 md:hidden">
+      <ul class="grid gap-1">
+        <li><a class="nav-link w-full" href="landlord.html" aria-current="page">Dashboard</a></li>
+        <li><a class="nav-link w-full" href="landlord-rooms.html">Rooms</a></li>
+        <li><a class="nav-link w-full" href="landlord-reviews.html">Reviews</a></li>
+        <li><a class="nav-link w-full" href="profile.html">Profile</a></li>
+      </ul>
+      <div class="mt-2 border-t border-line pt-2">
+        <button type="button" id="logout-m" class="btn btn-logout w-full">Log out</button>
+      </div>
+    </div>
   </header>
 
   <main class="mx-auto max-w-4xl px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
@@ -82,9 +99,11 @@
 
     <section id="glance-box" hidden aria-labelledby="glance-title" class="mt-6 rounded-[20px] border border-line bg-tint p-5 sm:p-6">
       <h2 id="glance-title" class="sr-only">At a glance</h2>
-      <dl id="glance" class="grid gap-x-6 gap-y-4 sm:grid-cols-3 lg:grid-cols-6"></dl>
+      <dl id="glance" class="grid gap-x-4 gap-y-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6"></dl>
       <div class="mt-4 flex flex-wrap items-center gap-3">
         <a href="landlord-rooms.html" class="inline-flex min-h-[44px] items-center rounded font-semibold text-forest underline underline-offset-4 outline-none hover:text-forest-deep focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">Manage rooms</a>
+        <span class="text-muted hidden sm:inline" aria-hidden="true">&#8226;</span>
+        <button type="button" id="open-building-modal" class="inline-flex min-h-[44px] items-center rounded font-semibold text-forest underline underline-offset-4 outline-none hover:text-forest-deep focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">Building amenities</button>
         <span class="text-muted hidden sm:inline" aria-hidden="true">&#8226;</span>
         <a href="#history" class="inline-flex min-h-[44px] items-center rounded font-semibold text-forest underline underline-offset-4 outline-none hover:text-forest-deep focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">History of past stays &amp; requests &darr;</a>
       </div>
@@ -153,10 +172,36 @@
       <p id="history-none" hidden class="mt-6 rounded-[20px] border border-line p-6 text-base text-muted"></p>
       <ul id="history-list" class="mt-6 space-y-4" aria-live="polite"></ul>
     </section>
+
+    <!-- BUILDING AMENITIES MODAL DIALOG -->
+    <dialog id="building-dialog" aria-labelledby="building-dialog-title" class="max-h-[90vh] w-[calc(100vw-2rem)] max-w-[560px] overflow-y-auto rounded-2xl border border-line bg-white p-0 text-ink shadow-xl backdrop:bg-ink/50">
+      <div class="p-6">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h2 id="building-dialog-title" class="font-display text-xl font-bold tracking-tight">Building amenities</h2>
+            <p class="mt-1 text-sm text-muted">Property-wide features that apply to all rooms at Ariate Dormitory. Students see these across room listings and matches.</p>
+          </div>
+          <button type="button" id="building-modal-close-x" class="-mr-2 -mt-2 grid h-10 w-10 shrink-0 place-items-center rounded-lg text-muted outline-none hover:bg-track focus-visible:ring-2 focus-visible:ring-forest" aria-label="Close">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+
+        <div id="building-list" class="mt-5 grid max-h-[50vh] gap-2 overflow-y-auto pr-1 sm:grid-cols-2"></div>
+
+        <div class="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
+          <span id="building-status" class="text-sm font-medium text-forest" role="status"></span>
+          <div class="flex items-center gap-2">
+            <button type="button" id="building-modal-cancel" class="btn btn-outline">Cancel</button>
+            <button type="button" id="building-save" class="btn">Save changes</button>
+          </div>
+        </div>
+      </div>
+    </dialog>
   </main>
 
   <script src="assets/js/rooms.js"></script>
   <script src="assets/js/reservation.js"></script>
+  <script src="assets/js/building.js"></script>
   <script>
     (function () {
       var $ = function (id) { return document.getElementById(id); };
@@ -187,6 +232,16 @@
         HB_AUTH.renderAvatar($('nav-avatar'), user);
       }
       $('logout').addEventListener('click', function () { try { localStorage.removeItem('homebase_currentUser'); } catch (e) {} window.location.href = 'index.html'; });
+      var logoutM = $('logout-m');
+      if (logoutM) {
+        logoutM.addEventListener('click', function () { try { localStorage.removeItem('homebase_currentUser'); } catch (e) {} window.location.href = 'index.html'; });
+      }
+      var menuBtn = $('menu-btn'), menu = $('menu');
+      if (menuBtn && menu) {
+        function setMenu(o) { menu.hidden = !o; menuBtn.setAttribute('aria-expanded', String(o)); $('menu-label').textContent = o ? 'Close' : 'Menu'; }
+        menuBtn.addEventListener('click', function () { setMenu(menu.hidden); });
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !menu.hidden) { setMenu(false); menuBtn.focus(); } });
+      }
       $('reload').addEventListener('click', function () { window.location.reload(); });
 
       $('loading').hidden = true;
@@ -767,6 +822,74 @@
       }
 
       render();
+    })();
+  </script>
+
+  <!-- Building amenities UI -->
+  <script>
+    (function () {
+      var $ = function (id) { return document.getElementById(id); };
+      function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+
+      if (!window.HB_BUILDING) return;
+      var catalogue = HB_BUILDING.catalogue();
+      var selected = HB_BUILDING.get();
+      var grid = $('building-list');
+
+      catalogue.forEach(function (name, i) {
+        var label = el('label', 'relative flex cursor-pointer items-center gap-3 rounded-xl border border-line bg-white px-4 py-3 transition-colors hover:border-edge');
+        var cb = document.createElement('input');
+        cb.type = 'checkbox'; cb.className = 'peer sr-only'; cb.name = 'b-amenity'; cb.value = name; cb.id = 'ba-' + i;
+        cb.checked = selected.indexOf(name) !== -1;
+        var span = el('span', 'flex-1 text-base font-medium text-ink peer-checked:text-forest select-none', name);
+        var tick = el('span', 'grid h-6 w-6 shrink-0 place-items-center rounded-md border border-line transition-colors peer-checked:border-forest peer-checked:bg-forest');
+        tick.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" class="h-4 w-4"><path d="M4.5 10.5l3 3 8-8"/></svg>';
+        label.appendChild(cb); label.appendChild(tick); label.appendChild(span);
+
+        // visual feedback on check
+        cb.addEventListener('change', function () {
+          label.classList.toggle('border-forest', cb.checked);
+          label.classList.toggle('bg-tint', cb.checked);
+        });
+        if (cb.checked) { label.classList.add('border-forest', 'bg-tint'); }
+
+        grid.appendChild(label);
+      });
+
+      var dlg = $('building-dialog');
+      var openBtn = $('open-building-modal');
+      if (openBtn && dlg) {
+        openBtn.addEventListener('click', function () {
+          $('building-status').textContent = '';
+          dlg.showModal();
+        });
+      }
+      var closeX = $('building-modal-close-x');
+      if (closeX && dlg) {
+        closeX.addEventListener('click', function () { dlg.close(); });
+      }
+      var cancelBtn = $('building-modal-cancel');
+      if (cancelBtn && dlg) {
+        cancelBtn.addEventListener('click', function () { dlg.close(); });
+      }
+      if (dlg) {
+        dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close(); });
+      }
+
+      $('building-save').addEventListener('click', function () {
+        var picks = [];
+        grid.querySelectorAll('input[name=b-amenity]:checked').forEach(function (c) { picks.push(c.value); });
+        if (HB_BUILDING.set(picks)) {
+          $('building-status').textContent = 'Saved \u2714';
+          setTimeout(function () {
+            if (dlg && dlg.open) dlg.close();
+            $('building-status').textContent = '';
+          }, 600);
+        } else {
+          $('building-status').textContent = 'Could not save. Allow site data in your browser.';
+          $('building-status').classList.replace('text-forest', 'text-danger');
+        }
+      });
     })();
   </script>
 </body>
