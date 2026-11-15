@@ -66,6 +66,7 @@
         <li><a class="nav-link" href="home.html">Home</a></li>
         <li><a class="nav-link" href="matches.html">My Matches</a></li>
         <li><a class="nav-link" href="rooms.html">Explore Rooms</a></li>
+        <li><a class="nav-link" href="messages.html">Messages<span data-msg-badge class="chip chip-warn ml-2 hidden"></span></a></li>
       </ul>
       <div class="flex items-center gap-2">
         <a href="profile.html" class="hidden items-center gap-2 pr-1 md:flex rounded-full py-1 pl-1 pr-2 hover:bg-track transition-colors outline-none focus-visible:ring-2 focus-visible:ring-forest" title="My Profile" aria-label="My Profile">
@@ -81,6 +82,7 @@
         <li><a class="nav-link w-full" href="home.html">Home</a></li>
         <li><a class="nav-link w-full" href="matches.html">My Matches</a></li>
         <li><a class="nav-link w-full" href="rooms.html">Explore Rooms</a></li>
+        <li><a class="nav-link w-full" href="messages.html">Messages<span data-msg-badge class="chip chip-warn ml-2 hidden"></span></a></li>
         <li><a class="nav-link w-full" href="profile.html">My Profile</a></li>
       </ul>
       <div class="mt-2 border-t border-line pt-2"><button type="button" data-logout class="btn btn-logout w-full">Log out</button></div>
@@ -140,6 +142,8 @@
 
   <script src="assets/js/rooms.js"></script>
   <script src="assets/js/reservation.js"></script>
+  <script src="assets/js/messages.js"></script>
+  <script>if (window.HB_MSG) HB_MSG.bindBadge();</script>
   <script src="assets/js/reviews.js"></script>
   <script>
     (function () {
@@ -248,6 +252,7 @@
         } else {
           foot.appendChild(el('p', 'text-sm text-muted', 'This room is taken, so it cannot be saved.'));
         }
+        if (window.HB_MSG) foot.appendChild(HB_MSG.askButton(r, user, 'w-full'));
         box.appendChild(foot);
       }
 

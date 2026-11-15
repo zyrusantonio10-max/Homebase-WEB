@@ -77,10 +77,3 @@ No build step or package manager is required. You can run the project using any 
 3. Keep the default settings (**Framework Preset: Other**, **Root Directory: `./`**).
 4. Deploy! The included `vercel.json` ensures clean routes such as `/home`, `/matches`, `/rooms`, and `/floorplan`.
 
-
-
-
-NOTES
-- ADD MODALS TO EACH ROOM
-- ADD REVIEWS 
-- ADD A REVIEW SYSTEM ON THE COMPARED ROOMS BY THE USER (LIKE HOW OR WHAT IS THE REASON WHY THEY FIT)

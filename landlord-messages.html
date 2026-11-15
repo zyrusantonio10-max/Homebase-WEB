@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Messages | Homebase</title>
+  <meta name="description" content="Read and answer student questions about rooms at Ariate Dormitory.">
+
+  <!--
+    Design Read: the landlord's inbox for Ariate Dormitory: "which students are waiting for my reply?"
+    Same layout as the student inbox (assets/js/messages.js). The landlord sees every student conversation, newest first.
+    - Opening this page from a request on the Dashboard (?res=...) starts a conversation with that student about that room.
+      Nothing is saved until the first message is sent, so empty conversations never pile up.
+    - Not built on purpose: attachments, deleting messages, typing indicators.
+  -->
+
+  <script>
+    // Guard: landlords only. Students go to home.html.
+    (function () {
+      try {
+        var u = JSON.parse(localStorage.getItem('homebase_currentUser') || 'null');
+        if (!u || !u.email) window.location.replace('index.html');
+        else if (u.role !== 'landlord') window.location.replace('home.html');
+      } catch (e) { window.location.replace('index.html'); }
+    })();
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+
+  <script src="assets/js/auth.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/js/tw-config.js"></script>
+  <link rel="stylesheet" href="assets/css/components.css">
+
+  <style>[hidden] { display: none !important; }</style>
+</head>
+
+<body class="min-h-screen bg-white font-body text-ink antialiased">
+
+  <header class="sticky top-0 z-20 bg-white px-4 pb-2 pt-4 sm:px-6">
+    <nav aria-label="Main" class="mx-auto flex max-w-6xl items-center justify-between gap-3 rounded-full border border-line bg-white py-2 pl-4 pr-2">
+      <a href="landlord.html" aria-label="Homebase dashboard" class="inline-flex min-h-[44px] items-center gap-2.5 rounded-full font-display text-xl font-bold tracking-tight text-ink no-underline outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">
+        <svg viewBox="0 0 32 32" class="h-9 w-9 shrink-0" aria-hidden="true">
+          <rect width="32" height="32" rx="8" fill="#0B4A2F"/><rect x="7" y="8" width="7" height="8" rx="1.5" fill="#083A25"/><rect x="18" y="8" width="7" height="8" rx="1.5" fill="#C6F24E"/><rect x="7" y="19" width="7" height="8" rx="1.5" fill="#083A25"/><rect x="18" y="19" width="7" height="8" rx="1.5" fill="#083A25"/>
+        </svg>
+        <span class="hidden sm:inline">Homebase</span>
+      </a>
+      <ul class="hidden items-center gap-1 md:flex">
+        <li><a class="nav-link" href="landlord.html">Dashboard</a></li>
+        <li><a class="nav-link" href="landlord-rooms.html">Rooms</a></li>
+        <li><a class="nav-link" href="landlord-reviews.html">Reviews</a></li>
+        <li><a class="nav-link" href="landlord-messages.html" aria-current="page">Messages<span data-msg-badge class="chip chip-warn ml-2 hidden"></span></a></li>
+        <li><a class="nav-link" href="profile.html">Profile</a></li>
+      </ul>
+      <div class="flex items-center gap-2">
+        <a href="profile.html" class="flex items-center gap-2 rounded-full py-1 pl-1 pr-2 hover:bg-track transition-colors outline-none focus-visible:ring-2 focus-visible:ring-forest" title="My Profile" aria-label="My Profile">
+          <span id="nav-avatar" class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-forest font-display text-sm font-semibold text-white overflow-hidden" aria-hidden="true"></span>
+          <span id="nav-name" class="hidden max-w-[10rem] truncate text-sm font-medium lg:block"></span>
+        </a>
+        <button type="button" id="logout" class="btn btn-logout hidden md:inline-flex">Log out</button>
+        <button type="button" id="menu-btn" aria-expanded="false" aria-controls="menu"
+          class="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-forest bg-white px-4 text-base font-semibold text-forest outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 md:hidden">
+          <span id="menu-label">Menu</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Mobile menu -->
+    <div id="menu" hidden class="mx-auto mt-2 max-w-6xl rounded-[20px] border border-line bg-white p-2 md:hidden">
+      <ul class="grid gap-1">
+        <li><a class="nav-link w-full" href="landlord.html">Dashboard</a></li>
+        <li><a class="nav-link w-full" href="landlord-rooms.html">Rooms</a></li>
+        <li><a class="nav-link w-full" href="landlord-reviews.html">Reviews</a></li>
+        <li><a class="nav-link w-full" href="landlord-messages.html" aria-current="page">Messages<span data-msg-badge class="chip chip-warn ml-2 hidden"></span></a></li>
+        <li><a class="nav-link w-full" href="profile.html">Profile</a></li>
+      </ul>
+      <div class="mt-2 border-t border-line pt-2">
+        <button type="button" id="logout-m" class="btn btn-logout w-full">Log out</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
+    <h1 class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">Messages</h1>
+    <p class="mt-2 max-w-xl text-base text-muted">Questions from students about your rooms. Reply here, or message a student from their request on the Dashboard.</p>
+
+    <div id="inbox" class="mt-6"><p class="text-base text-muted" role="status">Loading messages...</p></div>
+
+    <div id="error" hidden role="alert" class="mt-6 rounded-[20px] border border-line p-6">
+      <p class="font-display text-xl font-bold tracking-tight">We could not open the messages</p>
+      <p class="mt-2 text-base text-muted">Either your browser is blocking site data, or <code>assets/js/messages.js</code> did not load. Check that the file is where this page expects it, then reload.</p>
+      <button type="button" id="reload" class="btn btn-outline mt-4">Reload this page</button>
+    </div>
+  </main>
+
+  <script src="assets/js/rooms.js"></script>
+  <script src="assets/js/reservation.js"></script>
+  <script src="assets/js/messages.js"></script>
+  <script>
+    (function () {
+      var $ = function (id) { return document.getElementById(id); };
+      var user = {};
+      try { user = JSON.parse(localStorage.getItem('homebase_currentUser') || '{}') || {}; } catch (e) {}
+      $('nav-name').textContent = String(user.name || user.email || '');
+      if (window.HB_AUTH && HB_AUTH.renderAvatar) HB_AUTH.renderAvatar($('nav-avatar'), user);
+      else $('nav-avatar').textContent = (user.name || user.email || 'M').charAt(0).toUpperCase();
+      function logout() { try { localStorage.removeItem('homebase_currentUser'); } catch (e) {} window.location.href = 'index.html'; }
+      $('logout').addEventListener('click', logout);
+      if ($('logout-m')) $('logout-m').addEventListener('click', logout);
+      var menuBtn = $('menu-btn'), menu = $('menu');
+      function setMenu(o) { menu.hidden = !o; menuBtn.setAttribute('aria-expanded', String(o)); $('menu-label').textContent = o ? 'Close' : 'Menu'; }
+      menuBtn.addEventListener('click', function () { setMenu(menu.hidden); });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !menu.hidden) { setMenu(false); menuBtn.focus(); } });
+      $('reload').addEventListener('click', function () { window.location.reload(); });
+
+      if (!window.HB || !window.HB_MSG) { $('inbox').hidden = true; $('error').hidden = false; return; }
+      HB_MSG.bindBadge(user);
+
+      var q = new URLSearchParams(window.location.search), opts = { user: user, threadId: q.get('thread') };
+      var resId = q.get('res'); // ?res=<reservation id>: open (or start) a chat with that student about that room
+      if (resId) {
+        var r = HB.load().list.filter(function (x) { return x.id === resId; })[0];
+        if (r) opts.draft = { studentId: r.userId, studentName: r.studentName, studentEmail: r.studentEmail, roomId: r.roomId, roomName: r.roomName };
+      }
+      HB_MSG.mount($('inbox'), opts);
+    })();
+  </script>
+</body>
+</html>

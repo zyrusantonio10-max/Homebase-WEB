@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -64,6 +64,7 @@
         <li><a class="nav-link" href="landlord.html" aria-current="page">Dashboard</a></li>
         <li><a class="nav-link" href="landlord-rooms.html">Rooms</a></li>
         <li><a class="nav-link" href="landlord-reviews.html">Reviews</a></li>
+        <li><a class="nav-link" href="landlord-messages.html">Messages<span data-msg-badge class="chip chip-warn ml-2 hidden"></span></a></li>
         <li><a class="nav-link" href="profile.html">Profile</a></li>
       </ul>
       <div class="flex items-center gap-2">
@@ -85,6 +86,7 @@
         <li><a class="nav-link w-full" href="landlord.html" aria-current="page">Dashboard</a></li>
         <li><a class="nav-link w-full" href="landlord-rooms.html">Rooms</a></li>
         <li><a class="nav-link w-full" href="landlord-reviews.html">Reviews</a></li>
+        <li><a class="nav-link w-full" href="landlord-messages.html">Messages<span data-msg-badge class="chip chip-warn ml-2 hidden"></span></a></li>
         <li><a class="nav-link w-full" href="profile.html">Profile</a></li>
       </ul>
       <div class="mt-2 border-t border-line pt-2">
@@ -201,6 +203,8 @@
 
   <script src="assets/js/rooms.js"></script>
   <script src="assets/js/reservation.js"></script>
+  <script src="assets/js/messages.js"></script>
+  <script>if (window.HB_MSG) HB_MSG.bindBadge();</script>
   <script src="assets/js/building.js"></script>
   <script>
     (function () {
@@ -532,7 +536,13 @@
         viewBtn.addEventListener('click', function () {
           openResidentModal(r, prof);
         });
-        sHead.appendChild(viewBtn);
+        var btnGroup = el('div', 'flex flex-wrap gap-2');
+        btnGroup.appendChild(viewBtn);
+        var msgLink = el('a', 'btn btn-outline text-sm py-2 px-4', 'Message student');
+        msgLink.href = 'landlord-messages.html?res=' + encodeURIComponent(r.id);
+        msgLink.setAttribute('aria-label', 'Message ' + studentDisplayName + ' about ' + r.roomName);
+        btnGroup.appendChild(msgLink);
+        sHead.appendChild(btnGroup);
         sCard.appendChild(sHead);
 
         // Emergency contact highlight preview
