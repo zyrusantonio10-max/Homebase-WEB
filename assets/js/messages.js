@@ -6,14 +6,13 @@
 
   Stored in localStorage as two lists, shaped like the two tables a database would have.
 
-  "homebase_threads"   ONE conversation per student (roomId / roomName = the room they are asking about right now)
+  "homebase_threads"   one conversation per student + room
     { id, studentId, studentName, studentEmail, roomId, roomName,
       lastMessage, lastSenderRole: "student" | "landlord",
       studentLastReadAt, landlordLastReadAt, createdAt, updatedAt }
 
   "homebase_messages"
-    { id, threadId, senderId, senderName, senderRole: "student" | "landlord", body, roomId, roomName, createdAt }
-    (roomId / roomName = the room the conversation was about when the message was sent, so the chat can show where the topic changed)
+    { id, threadId, senderId, senderName, senderRole: "student" | "landlord", body, createdAt }
 
   Rules: a student sees only their own threads. The landlord sees every thread (there is one dormitory).
          A message is plain text, 1 to 1000 characters. It is always drawn with textContent, never as HTML.
@@ -117,33 +116,6 @@
   var QUICK = ['Is this room still available?', 'Can I visit the room before I request it?', 'What is included in the monthly rent?'];
   var STATE_TEXT = { available: 'Beds available', full: 'Full', taken: 'Closed' };
 
-  // Older data had one thread per student + room. Merge them into one thread per student (keeps every message, tags it with its room).
-  (function mergeOldThreads() {
-    try {
-      var threads = store.threads(), keep = {}, drop = {}, any = false;
-      threads.sort(function (a, b) { return String(a.createdAt).localeCompare(String(b.createdAt)); });
-      threads.forEach(function (t) { if (!keep[t.studentId]) keep[t.studentId] = t; else { drop[t.id] = keep[t.studentId]; any = true; } });
-      if (!any) return;
-      var msgs = store.messages();
-      msgs.forEach(function (m) {
-        var old = threads.filter(function (t) { return t.id === m.threadId; })[0];
-        if (old && !m.roomName) { m.roomId = old.roomId; m.roomName = old.roomName; }
-        if (drop[m.threadId]) m.threadId = drop[m.threadId].id;
-      });
-      var result = [];
-      Object.keys(keep).forEach(function (sid) {
-        var t = keep[sid];
-        threads.filter(function (x) { return x.studentId === sid && x !== t; }).forEach(function (x) {
-          if (String(x.updatedAt) > String(t.updatedAt)) { t.updatedAt = x.updatedAt; t.lastMessage = x.lastMessage; t.lastSenderRole = x.lastSenderRole; t.roomId = x.roomId; t.roomName = x.roomName; }
-          t.studentLastReadAt = String(x.studentLastReadAt) < String(t.studentLastReadAt) ? x.studentLastReadAt : t.studentLastReadAt;
-          t.landlordLastReadAt = String(x.landlordLastReadAt) < String(t.landlordLastReadAt) ? x.landlordLastReadAt : t.landlordLastReadAt;
-        });
-        result.push(t);
-      });
-      store.saveMessages(msgs); store.saveThreads(result);
-    } catch (e) {}
-  })();
-
   var M = {
     MAX_LEN: MAX_LEN,
     openStudentProfile: openStudentProfile,
@@ -155,20 +127,15 @@
       return all.filter(function (t) { return t.studentId === user.id; }).sort(byUpdatedDesc);
     },
     getThread: function (id) { return store.threads().filter(function (t) { return t.id === id; })[0] || null; },
-    // one thread per student, whatever the room
-    findThread: function (studentId) {
-      return store.threads().filter(function (t) { return t.studentId === studentId; })[0] || null;
+    findThread: function (studentId, roomId) {
+      return store.threads().filter(function (t) { return t.studentId === studentId && t.roomId === roomId; })[0] || null;
     },
     canAccess: function (user, thread) { return !!thread && !!user && (roleOf(user) === 'landlord' || thread.studentId === user.id); },
 
-    // info: { studentId, studentName, studentEmail, roomId, roomName }. Returns the student's existing thread (and points it at the
-    // room being asked about now) or makes a new one.
+    // info: { studentId, studentName, studentEmail, roomId, roomName }. Returns the existing thread for that student + room, or makes one.
     ensureThread: function (info) {
-      var all0 = store.threads(), hit = all0.filter(function (t) { return t.studentId === info.studentId; })[0];
-      if (hit) {
-        if (info.roomId && hit.roomId !== info.roomId) { hit.roomId = info.roomId; hit.roomName = info.roomName; store.saveThreads(all0); }
-        return hit;
-      }
+      var hit = M.findThread(info.studentId, info.roomId);
+      if (hit) return hit;
       var ts = nowIso();
       var t = {
         id: newId('thr'), studentId: info.studentId, studentName: info.studentName, studentEmail: info.studentEmail,
@@ -192,7 +159,7 @@
       var t = threads.filter(function (x) { return x.id === threadId; })[0];
       if (!M.canAccess(user, t)) return { ok: false, error: 'This conversation is not available.' };
       var role = roleOf(user), ts = nowIso();
-      var msg = { id: newId('msg'), threadId: t.id, senderId: user.id, senderName: user.name, senderRole: role, body: body, roomId: t.roomId, roomName: t.roomName, createdAt: ts };
+      var msg = { id: newId('msg'), threadId: t.id, senderId: user.id, senderName: user.name, senderRole: role, body: body, createdAt: ts };
       var msgs = store.messages(); msgs.push(msg);
       if (!store.saveMessages(msgs)) return { ok: false, error: 'Your browser is blocking site data, so the message was not sent. Allow site data and try again.' };
       t.lastMessage = body.slice(0, 120); t.lastSenderRole = role; t.updatedAt = ts; t[role + 'LastReadAt'] = ts;
@@ -258,10 +225,10 @@
         document.getElementById('hb-inq-cancel').addEventListener('click', function () { dlg.close(); });
       }
       var form = document.getElementById('hb-inq-form'), msg = document.getElementById('hb-inq-msg'), err = document.getElementById('hb-inq-error');
-      var existing = M.findThread(user.id);
+      var existing = M.findThread(user.id, room.id);
       document.getElementById('hb-inq-title').textContent = 'Ask about ' + room.name;
       document.getElementById('hb-inq-sub').textContent = existing
-        ? 'You already have a conversation with the landlord. Your message is added to it.'
+        ? 'You already have a conversation about this room. Your message is added to it.'
         : 'Floor ' + room.floor + ', ' + room.type + ' room. Ask the landlord anything before you request it.';
       var quick = document.getElementById('hb-inq-quick'); quick.innerHTML = '';
       QUICK.forEach(function (q) {
@@ -297,16 +264,18 @@
     */
     mount: function (root, opts) {
       var user = opts.user, role = roleOf(user), isLandlord = role === 'landlord';
-      var state = { activeId: null, draft: null };
+      var state = { activeId: null, draft: null, filter: 'all', open: {} }; // filter + open apply to the landlord's grouped list
       var otherName = isLandlord ? null : 'Dormitory office';
 
       if (opts.draft) {
-        var found = M.findThread(opts.draft.studentId);
-        if (found) { M.ensureThread(opts.draft); state.activeId = found.id; } else state.draft = opts.draft;
+        var found = M.findThread(opts.draft.studentId, opts.draft.roomId);
+        if (found) state.activeId = found.id; else state.draft = opts.draft;
       } else if (opts.threadId) {
         var th = M.getThread(opts.threadId);
         if (M.canAccess(user, th)) state.activeId = th.id;
       }
+
+      if (isLandlord) state.filter = M.threadsFor(user).some(function (t) { return t.lastSenderRole === 'student'; }) ? 'reply' : 'all';
 
       root.innerHTML = '';
       var wrap = el('div', 'grid gap-4 md:grid-cols-[320px_minmax(0,1fr)]');
@@ -327,6 +296,30 @@
       }
 
       // ---- left: the list of conversations ----
+      function roomSub(t) {
+        var room = (window.HB && HB.getRooms ? HB.getRooms() : []).filter(function (r) { return r.id === t.roomId; })[0];
+        return room ? room.type + ' \u00B7 ' + HB.priceLabel(room) : '';
+      }
+      function openThread(t) { state.draft = null; state.activeId = t.id; state.open[t.studentId] = true; setUrl(t.id); renderConvo(); }
+      function preview(t) {
+        if (!t.lastMessage) return 'No messages yet';
+        return (t.lastSenderRole === role ? 'You: ' : (isLandlord ? '' : 'Dormitory office: ')) + t.lastMessage;
+      }
+      function rowButton(title, sub, text, time, n, isActive, onClick) {
+        var b = el('button', 'block w-full rounded-xl border p-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-forest ' +
+          (isActive ? 'border-forest bg-tint' : 'border-line bg-white hover:border-edge')); b.type = 'button';
+        if (isActive) b.setAttribute('aria-current', 'true');
+        var top = el('div', 'flex items-start justify-between gap-2');
+        top.appendChild(el('span', 'min-w-0 truncate font-display text-base font-semibold', title));
+        top.appendChild(el('span', 'shrink-0 text-sm text-muted', time));
+        b.appendChild(top);
+        if (sub) b.appendChild(el('span', 'mt-0.5 block text-sm text-muted', sub));
+        var foot = el('div', 'mt-1 flex items-center justify-between gap-2');
+        foot.appendChild(el('span', 'min-w-0 truncate text-sm text-muted', text));
+        if (n > 0) foot.appendChild(HB.chip(n + ' new', 'warn'));
+        b.appendChild(foot); b.addEventListener('click', onClick); return b;
+      }
+
       function renderList() {
         listPane.innerHTML = '';
         var threads = M.threadsFor(user), unread = M.unreadMap(user);
@@ -339,28 +332,89 @@
           if (!isLandlord) { var a = el('a', 'textlink mt-2', 'Explore Rooms'); a.href = 'rooms.html'; empty.appendChild(a); }
           listPane.appendChild(empty); return;
         }
-        var ul = el('ul', 'space-y-2');
-        function item(name, room, preview, time, n, isActive, onClick) {
-          var li = el('li'), b = el('button', 'block w-full rounded-[20px] border p-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-forest ' +
-            (isActive ? 'border-forest bg-tint' : 'border-line bg-white hover:border-edge')); b.type = 'button';
-          if (isActive) b.setAttribute('aria-current', 'true');
-          var top = el('div', 'flex items-start justify-between gap-2');
-          top.appendChild(el('span', 'min-w-0 truncate font-display text-base font-semibold', name));
-          top.appendChild(el('span', 'shrink-0 text-sm text-muted', time));
-          b.appendChild(top);
-          b.appendChild(el('span', 'mt-0.5 block text-sm font-medium text-forest', room));
-          var foot = el('div', 'mt-1 flex items-center justify-between gap-2');
-          foot.appendChild(el('span', 'min-w-0 truncate text-sm text-muted', preview));
-          if (n > 0) foot.appendChild(HB.chip(n + ' new', 'warn'));
-          b.appendChild(foot);
-          b.addEventListener('click', onClick); li.appendChild(b); return li;
+
+        // student: one chat per room, simple list
+        if (!isLandlord) {
+          var sl = el('ul', 'space-y-2');
+          threads.forEach(function (t) {
+            var li = el('li'); li.appendChild(rowButton(t.roomName, roomSub(t), preview(t), when(t.updatedAt, false), unread[t.id] || 0, t.id === state.activeId, function () { openThread(t); }));
+            sl.appendChild(li);
+          });
+          listPane.appendChild(sl); return;
         }
-        if (state.draft) {
-          ul.appendChild(item(state.draft.studentName, state.draft.roomName, 'New conversation. Nothing sent yet.', '', 0, true, function () {}));
-        }
+
+        // landlord: one row per student, their room chats grouped inside
+        var groups = {}, order = [];
         threads.forEach(function (t) {
-          ul.appendChild(item(personName(t), t.roomName, (t.lastSenderRole === role ? 'You: ' : '') + (t.lastMessage || 'No messages yet'), when(t.updatedAt, false),
-            unread[t.id] || 0, t.id === state.activeId, function () { state.draft = null; state.activeId = t.id; setUrl(t.id); renderConvo(); }));
+          var g = groups[t.studentId];
+          if (!g) { g = groups[t.studentId] = { id: t.studentId, name: t.studentName, threads: [], unread: 0, needs: false }; order.push(g); }
+          g.threads.push(t); g.unread += unread[t.id] || 0; if (t.lastSenderRole === 'student') g.needs = true;
+        });
+        if (state.draft) {
+          var dg = groups[state.draft.studentId];
+          if (!dg) { dg = groups[state.draft.studentId] = { id: state.draft.studentId, name: state.draft.studentName, threads: [], unread: 0, needs: false }; order.unshift(dg); }
+          dg.draft = state.draft;
+        }
+        order.forEach(function (g) {
+          g.hasActive = !!g.draft || g.threads.some(function (t) { return t.id === state.activeId; });
+          if (g.hasActive && state.open[g.id] === undefined) state.open[g.id] = true;
+        });
+        var nReply = order.filter(function (g) { return g.needs; }).length, nUnread = order.filter(function (g) { return g.unread > 0; }).length;
+
+        var bar = el('div', 'mb-3 flex flex-wrap gap-2'); bar.setAttribute('role', 'group'); bar.setAttribute('aria-label', 'Filter conversations');
+        [['reply', 'Needs reply (' + nReply + ')'], ['unread', 'Unread (' + nUnread + ')'], ['all', 'All (' + order.length + ')']].forEach(function (f) {
+          var fb = el('button', 'choice !min-h-[44px] !px-3 text-sm', f[1]); fb.type = 'button';
+          fb.setAttribute('aria-pressed', String(state.filter === f[0]));
+          fb.addEventListener('click', function () { state.filter = f[0]; renderList(); });
+          bar.appendChild(fb);
+        });
+        listPane.appendChild(bar);
+
+        var shown = order.filter(function (g) {
+          if (g.hasActive) return true; // never hide the chat you are in
+          return state.filter === 'reply' ? g.needs : state.filter === 'unread' ? g.unread > 0 : true;
+        });
+        if (!shown.length) {
+          var none = el('div', 'rounded-[20px] border border-line p-6');
+          none.appendChild(el('p', 'card-title', state.filter === 'reply' ? 'Nothing needs a reply' : 'Nothing unread'));
+          none.appendChild(el('p', 'note mt-2', 'You are all caught up.'));
+          var all = el('button', 'btn btn-outline mt-3', 'Show all conversations'); all.type = 'button';
+          all.addEventListener('click', function () { state.filter = 'all'; renderList(); });
+          none.appendChild(all); listPane.appendChild(none); return;
+        }
+
+        var ul = el('ul', 'space-y-2');
+        shown.forEach(function (g) {
+          var li = el('li', 'rounded-[20px] border bg-white ' + (g.hasActive ? 'border-forest' : 'border-line'));
+          var count = g.threads.length + (g.draft ? 1 : 0), expanded = !!state.open[g.id];
+          var hb = el('button', 'flex w-full items-start justify-between gap-3 rounded-[20px] p-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-forest'); hb.type = 'button';
+          if (count > 1) hb.setAttribute('aria-expanded', String(expanded));
+          var left = el('span', 'min-w-0');
+          left.appendChild(el('span', 'block truncate font-display text-base font-semibold', g.name));
+          var latest = g.threads[0];
+          left.appendChild(el('span', 'mt-0.5 block truncate text-sm text-muted',
+            count > 1 ? count + ' room chats: ' + g.threads.map(function (t) { return t.roomName; }).join(', ')
+                      : (latest ? latest.roomName + ' \u00B7 ' + preview(latest) : g.draft.roomName + ' \u00B7 New conversation')));
+          hb.appendChild(left);
+          var right = el('span', 'flex shrink-0 flex-col items-end gap-1');
+          if (latest) right.appendChild(el('span', 'text-sm text-muted', when(latest.updatedAt, false)));
+          if (g.unread > 0) right.appendChild(HB.chip(g.unread + ' new', 'warn')); else if (g.needs) right.appendChild(HB.chip('Needs reply', 'warn'));
+          hb.appendChild(right);
+          hb.addEventListener('click', function () {
+            if (count === 1 && latest) { openThread(latest); return; }
+            state.open[g.id] = !expanded; renderList();
+          });
+          li.appendChild(hb);
+          if (count > 1 && expanded) {
+            var kids = el('ul', 'space-y-2 px-3 pb-3');
+            if (g.draft) { var dli = el('li'); dli.appendChild(rowButton(g.draft.roomName, '', 'New conversation. Nothing sent yet.', '', 0, true, function () {})); kids.appendChild(dli); }
+            g.threads.forEach(function (t) {
+              var kli = el('li'); kli.appendChild(rowButton(t.roomName, roomSub(t), preview(t), when(t.updatedAt, false), unread[t.id] || 0, t.id === state.activeId, function () { openThread(t); }));
+              kids.appendChild(kli);
+            });
+            li.appendChild(kids);
+          }
+          ul.appendChild(li);
         });
         listPane.appendChild(ul);
       }
@@ -456,9 +510,7 @@
         if (!msgs.length) {
           log.appendChild(el('p', 'note', isLandlord ? 'No messages yet. Write the first one below.' : 'No messages yet.'));
         }
-        var lastRoom = null;
         msgs.forEach(function (m) {
-          if (m.roomName && m.roomName !== lastRoom) { log.appendChild(el('p', 'py-1 text-center text-sm font-medium text-muted', 'About ' + m.roomName)); lastRoom = m.roomName; }
           var mine = m.senderRole === role;
           var item = el('div', 'flex ' + (mine ? 'justify-end' : 'justify-start'));
           var bubble = el('div', 'max-w-[85%] rounded-2xl border px-4 py-2.5 ' + (mine ? 'border-forest bg-forest text-white' : 'border-line bg-tint text-ink'));
@@ -473,7 +525,8 @@
       // live updates from another tab (a student and the landlord can have both open)
       window.addEventListener('storage', function (e) {
         if (e.key && e.key !== THREADS_KEY && e.key !== MESSAGES_KEY) return;
-        if (state.draft && M.findThread(state.draft.studentId)) { state.activeId = M.findThread(state.draft.studentId).id; state.draft = null; renderConvo(); return; }
+        var dt = state.draft && M.findThread(state.draft.studentId, state.draft.roomId);
+        if (dt) { state.activeId = dt.id; state.draft = null; renderConvo(); return; }
         renderList(); renderLog();
       });
 
