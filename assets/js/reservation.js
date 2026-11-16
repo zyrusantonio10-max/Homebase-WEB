@@ -1,4 +1,4 @@
-﻿/*
+/*
   Reservation requests: shared by Home, My Matches, Explore Rooms and the landlord pages.
   Stored in localStorage under "homebase_reservations" as a list. Each item has the same columns a MySQL
   "reservations" table would have, so the move to PHP + MySQL later only swaps load() and save():
