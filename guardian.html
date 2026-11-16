@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Parent or guardian approval | Homebase</title>
+  <meta name="description" content="A parent or legal guardian approves the Homebase account of a student under 18.">
+
+  <!--
+    Design Read: one short page for a parent or guardian, who has no account and should not need one.
+    They confirm three things the student gave at sign-up: the student's email, the approval code, and their own full name.
+    All three must match. After 5 wrong tries the code is locked and the student has to get a new one on their Home page.
+    The error message never says WHICH of the three was wrong, so nobody can use this page to find out who has an account.
+    In the finished system the code is emailed to the parent's address, so only they receive it. In this version the student
+    sees it on their Home page and gives it to the parent.
+  -->
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/js/tw-config.js"></script>
+  <link rel="stylesheet" href="assets/css/components.css">
+  <style>[hidden] { display: none !important; }</style>
+</head>
+
+<body class="min-h-screen bg-tint font-body text-ink antialiased">
+
+  <header class="px-4 pt-5 sm:px-6">
+    <div class="mx-auto flex max-w-2xl items-center justify-between gap-3">
+      <a href="index.html" aria-label="Homebase, back to log in" class="inline-flex min-h-[44px] items-center gap-2.5 rounded-full font-display text-xl font-bold tracking-tight text-ink no-underline outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">
+        <svg viewBox="0 0 32 32" class="h-9 w-9 shrink-0" aria-hidden="true">
+          <rect width="32" height="32" rx="8" fill="#0B4A2F"/><rect x="7" y="8" width="7" height="8" rx="1.5" fill="#083A25"/><rect x="18" y="8" width="7" height="8" rx="1.5" fill="#C6F24E"/><rect x="7" y="19" width="7" height="8" rx="1.5" fill="#083A25"/><rect x="18" y="19" width="7" height="8" rx="1.5" fill="#083A25"/>
+        </svg>
+        <span>Homebase</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-2xl px-4 pb-16 pt-6 sm:px-6">
+
+    <div id="card" class="rounded-[28px] border border-line bg-white p-6 sm:p-10">
+      <h1 class="font-display text-2xl font-bold tracking-tight sm:text-3xl">Parent or guardian approval</h1>
+      <p class="mt-2 text-base text-muted">A student under 18 has asked for a Homebase account to request a room at Ariate Dormitory. Because they are a minor, they need your approval first.</p>
+
+      <div id="error" role="alert" tabindex="-1" hidden class="mt-6 rounded-xl border border-danger-line bg-danger-soft px-4 py-3 text-base text-danger-deep outline-none"></div>
+
+      <form id="form" novalidate class="mt-6 space-y-4">
+        <div>
+          <label class="label" for="g-email">The student's email</label>
+          <input class="field" id="g-email" type="email" inputmode="email" autocomplete="off" aria-describedby="g-email-err" required>
+          <p class="err" id="g-email-err" hidden></p>
+        </div>
+        <div>
+          <label class="label" for="g-code">Approval code (6 digits)</label>
+          <input class="field" id="g-code" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="123456" aria-describedby="g-code-err" required>
+          <p class="err" id="g-code-err" hidden></p>
+        </div>
+        <div>
+          <label class="label" for="g-name">Your full name, as the student wrote it</label>
+          <input class="field" id="g-name" type="text" autocomplete="name" aria-describedby="g-name-err" required>
+          <p class="err" id="g-name-err" hidden></p>
+        </div>
+
+        <div class="rounded-xl border border-line bg-tint p-4">
+          <label class="flex min-h-[44px] cursor-pointer items-start gap-3 text-base">
+            <input id="g-certify" type="checkbox" class="mt-1 h-5 w-5 shrink-0 accent-forest" aria-describedby="g-certify-err">
+            <span>I am the parent or legal guardian of this student, and I am 18 or older. I agree that Ariate Dormitory may collect and use the student's information to manage their room request, as described when they signed up.</span>
+          </label>
+          <p class="err" id="g-certify-err" hidden></p>
+        </div>
+
+        <button type="submit" id="submit" class="btn w-full sm:w-auto">Approve this account</button>
+      </form>
+    </div>
+
+    <div id="ok" hidden class="rounded-[28px] border border-line bg-white p-6 sm:p-10">
+      <h1 id="ok-title" tabindex="-1" class="font-display text-2xl font-bold tracking-tight outline-none sm:text-3xl">Thank you. The account is approved.</h1>
+      <p id="ok-text" class="mt-2 text-base text-muted"></p>
+      <div class="mt-8"><a href="index.html" class="btn">Go to Homebase</a></div>
+    </div>
+  </main>
+
+  <script src="assets/js/auth.js"></script>
+  <script>
+    (function () {
+      var $ = function (id) { return document.getElementById(id); };
+      function fieldError(key, msg) {
+        var input = $('g-' + key), p = $('g-' + key + '-err');
+        if (msg) { input.setAttribute('aria-invalid', 'true'); p.textContent = msg; p.hidden = false; }
+        else { input.removeAttribute('aria-invalid'); p.textContent = ''; p.hidden = true; }
+      }
+      $('g-code').addEventListener('input', function (e) { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6); });
+
+      $('form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var email = $('g-email').value.trim(), code = $('g-code').value.trim(), name = $('g-name').value.trim().replace(/\s+/g, ' ');
+        $('error').hidden = true;
+        var problems = [];
+        fieldError('email', /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) ? '' : 'Enter the email the student signed up with.'); if ($('g-email').getAttribute('aria-invalid')) problems.push('g-email');
+        fieldError('code', /^\d{6}$/.test(code) ? '' : 'Enter the 6-digit code.'); if ($('g-code').getAttribute('aria-invalid')) problems.push('g-code');
+        fieldError('name', name.split(' ').length >= 2 ? '' : 'Enter your first and last name.'); if ($('g-name').getAttribute('aria-invalid')) problems.push('g-name');
+        fieldError('certify', $('g-certify').checked ? '' : 'Tick the box to confirm and approve.'); if ($('g-certify').getAttribute('aria-invalid')) problems.push('g-certify');
+        if (problems.length) { $(problems[0]).focus(); return; }
+
+        var res = HB_AUTH.approveGuardian(email, code, name);
+        if (!res.ok) { var b = $('error'); b.textContent = res.error; b.hidden = false; b.focus(); return; }
+        $('card').hidden = true; $('ok').hidden = false;
+        $('ok-text').textContent = res.studentName + ' can now request a room at Ariate Dormitory. You do not need to do anything else.';
+        $('ok-title').focus(); window.scrollTo(0, 0);
+      });
+    })();
+  </script>
+</body>
+</html>

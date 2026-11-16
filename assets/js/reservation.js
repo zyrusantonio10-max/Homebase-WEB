@@ -145,7 +145,29 @@
     bedsText: function (room) { var cap = HB.capacity(room); return cap > 1 ? HB.bedsInfo(room).free + ' of ' + cap + ' beds free' : ''; },
     priceLabel: function (room) { return '\u20B1' + Number(room.price).toLocaleString('en-PH') + (HB.capacity(room) > 1 ? ' per person per month' : ' per month'); },
 
+    // a student under 18 cannot request a room until a parent or guardian has approved the account
+    canRequest: function (user) {
+      var msg = (user && window.HB_AUTH && HB_AUTH.requestBlock) ? HB_AUTH.requestBlock(user.id) : '';
+      return msg ? { ok: false, error: msg } : { ok: true };
+    },
+    showBlocked: function (message) {
+      var d = document.getElementById('hb-blocked');
+      if (!d) {
+        d = document.createElement('dialog'); d.id = 'hb-blocked'; d.setAttribute('aria-labelledby', 'hb-blocked-title');
+        d.className = 'w-[calc(100vw-2rem)] max-w-md rounded-2xl border border-line bg-white p-0 text-ink shadow-xl backdrop:bg-ink/50';
+        d.innerHTML = '<div class="p-6"><h2 id="hb-blocked-title" class="font-display text-xl font-bold tracking-tight">Parent or guardian approval needed</h2>' +
+          '<p id="hb-blocked-text" class="mt-2 text-base text-muted"></p>' +
+          '<div class="mt-5 flex flex-wrap gap-2"><a href="home.html" class="btn">Go to Home</a><button type="button" id="hb-blocked-close" class="btn btn-outline">Close</button></div></div>';
+        document.body.appendChild(d);
+        d.addEventListener('click', function (e) { if (e.target === d) d.close(); });
+        document.getElementById('hb-blocked-close').addEventListener('click', function () { d.close(); });
+      }
+      document.getElementById('hb-blocked-text').textContent = message;
+      if (d.showModal) d.showModal(); else d.setAttribute('open', '');
+    },
+
     create: function (user, room, moveIn, message, rulesAccepted) {
+      var gate = HB.canRequest(user); if (!gate.ok) return gate;
       if (!rulesAccepted) return { ok: false, error: 'Please agree to the house rules first.' };
       var all = load();
       if (!all.ok) return { ok: false, error: 'Your browser is blocking site data, so the request cannot be saved. Allow site data and try again.' };
@@ -220,6 +242,7 @@
 
     // ---- the request dialog (built once, reused) ----
     openRequest: function (room, user) {
+      var gate = HB.canRequest(user); if (!gate.ok) { HB.showBlocked(gate.error); return; }
       var dlg = document.getElementById('hb-request');
       if (!dlg) {
         dlg = document.createElement('dialog');

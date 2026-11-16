@@ -60,7 +60,6 @@
         <li><a class="nav-link" href="home.html">Home</a></li>
         <li><a class="nav-link" href="matches.html" aria-current="page">My Matches</a></li>
         <li><a class="nav-link" href="rooms.html">Explore Rooms</a></li>
-        <li><a class="nav-link" href="messages.html">Messages<span data-msg-badge class="chip chip-warn ml-2 hidden"></span></a></li>
       </ul>
       <div class="flex items-center gap-2">
         <a href="profile.html" class="hidden items-center gap-2 pr-1 md:flex rounded-full py-1 pl-1 pr-2 hover:bg-track transition-colors outline-none focus-visible:ring-2 focus-visible:ring-forest" title="My Profile" aria-label="My Profile">
@@ -76,7 +75,6 @@
         <li><a class="nav-link w-full" href="home.html">Home</a></li>
         <li><a class="nav-link w-full" href="matches.html" aria-current="page">My Matches</a></li>
         <li><a class="nav-link w-full" href="rooms.html">Explore Rooms</a></li>
-        <li><a class="nav-link w-full" href="messages.html">Messages<span data-msg-badge class="chip chip-warn ml-2 hidden"></span></a></li>
         <li><a class="nav-link w-full" href="profile.html">My Profile</a></li>
       </ul>
       <div class="mt-2 border-t border-line pt-2"><button type="button" data-logout class="btn btn-logout w-full">Log out</button></div>
@@ -195,13 +193,11 @@
 
   <script src="assets/js/rooms.js"></script>
   <script src="assets/js/reservation.js"></script>
-  <script src="assets/js/messages.js"></script>
-  <script>if (window.HB_MSG) HB_MSG.bindBadge();</script>
   <script src="assets/js/building.js"></script>
   <script src="assets/js/compare.js"></script>
   <script>
     (function () {
-      var K = { user: 'homebase_currentUser', prefs: 'homebase_preferences', top: 'homebase_topMatch', saved: 'homebase_savedRooms' };
+      var K = { user: 'homebase_currentUser', prefs: HB_AUTH.userKey('homebase_preferences'), top: HB_AUTH.userKey('homebase_topMatch'), saved: HB_AUTH.userKey('homebase_savedRooms') };
       var $ = function (id) { return document.getElementById(id); };
 
       function read(key) { try { var r = localStorage.getItem(key); return { ok: true, value: r ? JSON.parse(r) : null }; } catch (e) { return { ok: false, value: null }; } }
@@ -413,7 +409,6 @@
         var actions = el('div', 'mt-5 flex flex-wrap gap-2');
         if (!hasActive) actions.appendChild(requestButton(s.room, 'btn-lime'));
         actions.appendChild(saveButton(s.room, 'btn-outline on-dark'));
-        if (window.HB_MSG) actions.appendChild(HB_MSG.askButton(s.room, user, 'on-dark'));
         card.appendChild(actions);
         card.appendChild(cmp.checkbox(s.room, { dark: true, cls: 'mt-2' }));
         box.appendChild(card);
@@ -436,7 +431,6 @@
         var btns = el('div', 'flex flex-wrap gap-2');
         if (!hasActive) btns.appendChild(requestButton(s.room, ''));
         btns.appendChild(saveButton(s.room, 'btn-outline'));
-        if (window.HB_MSG) btns.appendChild(HB_MSG.askButton(s.room, user, ''));
         li.appendChild(btns);
         return li;
       }

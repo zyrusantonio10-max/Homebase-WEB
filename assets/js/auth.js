@@ -1,4 +1,4 @@
-/*
+﻿/*
   Homebase Authentication & Session Management
   Shared across all pages: index.html, home.html, landlord.html, matches.html, rooms.html, floorplan.html, profile.html.
 
@@ -6,7 +6,7 @@
     homebase_users        List of registered user accounts: [{ id, name, email, role, password }]
     homebase_currentUser Currently active user session: { id, name, email, role }
         landlord account: manager@ariatedorm.com 
-        password        : ariate-office-2026
+        password        : set in the seed below (see README, change it before real use)
     homebase_profile_<id> User profile details: { photo, phone, bio, course, yearLevel, emergencyName, emergencyPhone, emergencyRel, sleepSchedule, studyHabit, social, ... }
 */
 (function (global) {
@@ -58,7 +58,7 @@
           name: 'Ariate Dorm Manager',
           email: 'manager@ariatedorm.com',
           role: 'landlord',
-          password: 'sha256:324edabe4fea58d0f91f5f8fc20af8ef9df416b2f14ff262216ae5a6a5617fbc'
+          password: 'sha256:6bf5236866a055acff4d82abcbe24eb25b5c899124843489658fc7dbc9ff235a'
         }
       ]);
     }
@@ -177,7 +177,8 @@
     register: function (name, email, password, role) {
       var cleanName = String(name || '').trim();
       var cleanEmail = String(email || '').trim().toLowerCase();
-      var cleanRole = role === 'landlord' ? 'landlord' : 'student';
+      // Only students can register. There is one dormitory, so the landlord (office) account is created by the system, never by sign-up.
+      var cleanRole = 'student';
       var cleanPw = String(password || '');
 
       return hashPassword(cleanPw).then(function (hash) {
@@ -341,6 +342,82 @@
       return String(val);
     },
 
+    // ---- Age and parent / guardian approval ----
+    // A student under 18 needs a parent or legal guardian to approve the account before requesting a room.
+    // (Under the Philippine Data Privacy Act a minor cannot give valid consent alone; schools ask the parent or guardian.)
+    // Date of birth is set at sign-up and cannot be edited later, so age cannot be changed to skip this step.
+    ageFromDob: function (dob) {
+      var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(dob || ''));
+      if (!m) return null;
+      var y = +m[1], mo = +m[2], d = +m[3], now = new Date();
+      var age = now.getFullYear() - y;
+      if (now.getMonth() + 1 < mo || (now.getMonth() + 1 === mo && now.getDate() < d)) age--;
+      return age;
+    },
+    getRecord: function (userId) {
+      return readStorage(USERS_KEY, []).filter(function (u) { return String(u.id) === String(userId); })[0] || null;
+    },
+    isMinor: function (userId) {
+      var r = HB_AUTH.getRecord(userId), a = r ? HB_AUTH.ageFromDob(r.dob) : null;
+      return a !== null && a < 18;
+    },
+    needsGuardian: function (userId) {
+      var r = HB_AUTH.getRecord(userId);
+      return !!r && HB_AUTH.isMinor(userId) && r.guardianStatus !== 'approved';
+    },
+    // a message if this student may not request a room yet, otherwise an empty string
+    requestBlock: function (userId) {
+      return HB_AUTH.needsGuardian(userId)
+        ? 'You are under 18, so a parent or legal guardian must approve your account before you can request a room. You can still browse, compare and save rooms. The approval code is on your Home page.'
+        : '';
+    },
+    guardianCode: function (userId) {
+      var r = HB_AUTH.getRecord(userId);
+      return r && r.guardianStatus === 'pending' ? (r.guardianCode || '') : '';
+    },
+    newGuardianCode: function (userId) {
+      var users = readStorage(USERS_KEY, []), code;
+      var arr = global.crypto && global.crypto.getRandomValues ? global.crypto.getRandomValues(new Uint32Array(1)) : [Math.floor(Math.random() * 4294967295)];
+      code = String(100000 + (arr[0] % 900000));
+      for (var i = 0; i < users.length; i++) {
+        if (String(users[i].id) === String(userId) && users[i].guardianStatus === 'pending') {
+          users[i].guardianCode = code; users[i].guardianAttempts = 0;
+          writeStorage(USERS_KEY, users);
+          return code;
+        }
+      }
+      return '';
+    },
+    // Called from the parent approval page. Three things must match: the student's email, the code, and the guardian's name.
+    approveGuardian: function (email, code, guardianName) {
+      var generic = { ok: false, error: 'That email, code and name do not match a pending approval. Please check them with the student and try again.' };
+      var norm = function (s) { return String(s || '').trim().toLowerCase().replace(/\s+/g, ' '); };
+      var users = readStorage(USERS_KEY, []), e = norm(email), rec = null;
+      for (var i = 0; i < users.length; i++) if (users[i].email === e) { rec = users[i]; break; }
+      if (!rec || rec.guardianStatus !== 'pending' || !rec.guardianCode) return generic;
+      if ((rec.guardianAttempts || 0) >= 5) return { ok: false, locked: true, error: 'Too many wrong tries. The student must get a new code on their Home page.' };
+      if (String(code || '').trim() !== rec.guardianCode || norm(guardianName) !== norm(rec.guardian && rec.guardian.name)) {
+        rec.guardianAttempts = (rec.guardianAttempts || 0) + 1;
+        writeStorage(USERS_KEY, users);
+        return generic;
+      }
+      rec.guardianStatus = 'approved'; rec.guardianApprovedAt = new Date().toISOString();
+      delete rec.guardianCode; delete rec.guardianAttempts;
+      writeStorage(USERS_KEY, users);
+      return { ok: true, studentName: rec.name };
+    },
+
+    // Safe helpers for text that comes from users. Never put user text into innerHTML: build elements instead.
+    // An <img> for a profile photo, or null when the photo is not a real image data URL.
+    safeImg: function (photo, alt) {
+      if (typeof photo !== 'string' || !/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]*$/.test(photo)) return null;
+      var img = document.createElement('img');
+      img.src = photo; img.alt = String(alt || ''); img.className = 'h-full w-full object-cover rounded-full';
+      return img;
+    },
+    // keep only the characters a phone link can safely hold
+    safeTel: function (phone) { return String(phone || '').replace(/[^0-9+*#]/g, ''); },
+
     // Render avatar into element (either image if photo set, or initial)
     renderAvatar: function (el, user) {
       if (!el) return;
@@ -351,8 +428,10 @@
       var name = String((u && u.name) || prof.name || (u && u.email) || prof.email || 'User');
       var initial = name.charAt(0).toUpperCase();
 
-      if (prof && prof.photo) {
-        el.innerHTML = '<img src="' + prof.photo + '" alt="' + name + '" class="h-full w-full object-cover rounded-full">';
+      var photoImg = (prof && prof.photo) ? HB_AUTH.safeImg(prof.photo, name) : null;
+      if (photoImg) {
+        el.textContent = '';
+        el.appendChild(photoImg);
         el.classList.add('overflow-hidden');
       } else {
         el.textContent = initial;

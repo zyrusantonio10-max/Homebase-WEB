@@ -1,4 +1,4 @@
-/*
+﻿/*
   Compare rooms: shared by Explore Rooms (rooms.html) and My Matches (matches.html).
   Needs assets/js/reservation.js (window.HB) loaded first, and the pages' .btn / .btn-outline classes.
 
@@ -12,13 +12,15 @@
   Home lists them and links back to rooms.html?compare=103,202.
 */
 (function () {
-  var MAX = 3, KEY = 'homebase_comparisons';
+  var MAX = 3;
+  // each student's comparisons are kept under their own user id (HB_AUTH is loaded first on every page)
+  function key() { return window.HB_AUTH ? HB_AUTH.userKey('homebase_comparisons') : 'homebase_comparisons'; }
   var STATUS = { available: 'Available', full: 'Full (every bed is taken)', taken: 'Taken', yours: 'Your request' };
 
   function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
   function peso(n) { return '\u20B1' + Number(n).toLocaleString('en-PH'); }
-  function readList() { try { var r = localStorage.getItem(KEY), v = r ? JSON.parse(r) : []; return Array.isArray(v) ? v : []; } catch (e) { return []; } }
-  function writeList(v) { try { localStorage.setItem(KEY, JSON.stringify(v)); return true; } catch (e) { return false; } }
+  function readList() { try { var r = localStorage.getItem(key()), v = r ? JSON.parse(r) : []; return Array.isArray(v) ? v : []; } catch (e) { return []; } }
+  function writeList(v) { try { localStorage.setItem(key(), JSON.stringify(v)); return true; } catch (e) { return false; } }
 
   window.HBCompare = {
     mount: function (cfg) {
@@ -173,4 +175,4 @@
       };
     }
   };
-})(); 
+})();

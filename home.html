@@ -83,7 +83,6 @@
         <li><a class="nav-link" href="home.html" aria-current="page">Home</a></li>
         <li><a class="nav-link" href="matches.html">My Matches</a></li>
         <li><a class="nav-link" href="rooms.html">Explore Rooms</a></li>
-        <li><a class="nav-link" href="messages.html">Messages<span data-msg-badge class="chip chip-warn ml-2 hidden"></span></a></li>
       </ul>
 
       <div class="flex items-center gap-2">
@@ -105,7 +104,6 @@
         <li><a class="nav-link w-full" href="home.html" aria-current="page">Home</a></li>
         <li><a class="nav-link w-full" href="matches.html">My Matches</a></li>
         <li><a class="nav-link w-full" href="rooms.html">Explore Rooms</a></li>
-        <li><a class="nav-link w-full" href="messages.html">Messages<span data-msg-badge class="chip chip-warn ml-2 hidden"></span></a></li>
         <li><a class="nav-link w-full" href="profile.html">My Profile</a></li>
       </ul>
       <div class="mt-2 border-t border-line pt-2">
@@ -124,6 +122,19 @@
           Welcome back, <span id="first-name" class="text-forest"></span>.
         </h1>
         <p class="note mt-2 max-w-xl">Here is where your room search at Ariate Dormitory stands.</p>
+      </section>
+
+      <!-- PARENT / GUARDIAN APPROVAL: shown to a student under 18 until a parent or guardian approves -->
+      <section id="guardian-box" hidden aria-labelledby="guardian-title" class="mt-8 rounded-[20px] border border-warn-line bg-warn-soft p-6 sm:p-8">
+        <h2 id="guardian-title" class="font-display text-xl font-bold tracking-tight text-ink">Waiting for your parent or guardian</h2>
+        <p class="mt-2 max-w-2xl text-base text-ink">You are under 18, so a parent or legal guardian has to approve your account before you can request a room. You can still browse, compare and save rooms.</p>
+        <p class="mt-4 text-sm font-medium text-muted">Approval code. Give it to <span id="guardian-name" class="font-semibold text-ink"></span>.</p>
+        <p id="guardian-code" class="mt-1 font-display text-3xl font-bold tracking-[0.3em] text-ink"></p>
+        <p class="mt-3 max-w-2xl text-sm text-muted">They open the parent approval page and enter your email, this code and their full name. In the finished system the code is emailed to them. Here it is shown on this page.</p>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <a href="guardian.html" class="btn">Open the parent approval page</a>
+          <button type="button" id="guardian-new" class="btn btn-outline">Get a new code</button>
+        </div>
       </section>
 
       <!-- WHERE TO START: only for a student who has not done anything yet -->
@@ -304,8 +315,6 @@
   </main>
 
   <script src="assets/js/reservation.js"></script>
-  <script src="assets/js/messages.js"></script>
-  <script>if (window.HB_MSG) HB_MSG.bindBadge();</script>
   <script src="assets/js/building.js"></script>
   <script src="assets/js/reviews.js"></script>
   <script>
@@ -321,10 +330,11 @@
       */
       var KEYS = {
         user: 'homebase_currentUser',
-        top: 'homebase_topMatch',
-        saved: 'homebase_savedRooms',
-        cmp: 'homebase_comparisons',
-        prefs: 'homebase_preferences'
+        // private to the signed-in student: each key ends with their user id
+        top: HB_AUTH.userKey('homebase_topMatch'),
+        saved: HB_AUTH.userKey('homebase_savedRooms'),
+        cmp: HB_AUTH.userKey('homebase_comparisons'),
+        prefs: HB_AUTH.userKey('homebase_preferences')
       };
 
       var $ = function (id) { return document.getElementById(id); };
@@ -665,6 +675,18 @@
       renderTop();
       renderPrefs();
       renderStart();
+
+      // ---- waiting for a parent or guardian (students under 18) ----
+      function renderGuardian() {
+        var box = $('guardian-box');
+        if (!window.HB_AUTH || !HB_AUTH.needsGuardian(user.id)) { box.hidden = true; return; }
+        var rec = HB_AUTH.getRecord(user.id);
+        $('guardian-name').textContent = (rec.guardian && rec.guardian.name) || 'your parent or guardian';
+        $('guardian-code').textContent = HB_AUTH.guardianCode(user.id) || '------';
+        box.hidden = false;
+      }
+      $('guardian-new').addEventListener('click', function () { HB_AUTH.newGuardianCode(user.id); renderGuardian(); });
+      renderGuardian();
       renderReservation();
       renderSaved();
       renderComparisons();

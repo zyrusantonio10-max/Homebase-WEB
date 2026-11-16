@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -257,7 +257,7 @@
 
           <div class="my-6 border-t border-line" aria-hidden="true"></div>
 
-          <button type="button" class="btn btn-outline" data-open-register>Create new account</button>
+          <a href="register.html" class="btn btn-outline">Create new account</a>
 
           <p class="mt-5 text-center">
             <button type="button" id="open-how" aria-haspopup="dialog" class="linkbtn font-medium">How matching works</button>
@@ -282,52 +282,6 @@
       </div>
     </section>
   </main>
-
-  <!-- REGISTER -->
-  <dialog id="register-dialog" aria-labelledby="register-title" class="w-[calc(100vw-2rem)] max-w-[440px] rounded-2xl border border-line bg-white p-0 text-ink shadow-xl backdrop:bg-ink/50">
-    <div class="p-6">
-      <div class="flex items-start justify-between gap-4">
-        <div>
-          <h2 id="register-title" class="font-display text-xl font-bold tracking-tight">Create a new account</h2>
-          <p class="mt-1 text-base text-muted">Tell us who you are and we will start matching.</p>
-        </div>
-        <button type="button" id="close-register" aria-label="Close"
-          class="-mr-2 -mt-2 grid h-11 w-11 shrink-0 place-items-center rounded-lg text-muted outline-none hover:bg-track focus-visible:ring-2 focus-visible:ring-forest">
-          <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-        </button>
-      </div>
-
-      <form id="form-register" novalidate class="mt-5 space-y-3">
-        <div id="register-error" role="alert" class="err hidden !mt-0 rounded-xl border border-danger/30 bg-danger-soft px-3.5 py-3"></div>
-
-        <div>
-          <div class="relative">
-            <input class="field peer" id="reg-name" name="name" type="text" autocomplete="name" placeholder=" " aria-describedby="reg-name-err" required>
-            <label class="float-label" for="reg-name">Full name</label>
-          </div>
-          <p class="err hidden" id="reg-name-err"></p>
-        </div>
-        <div>
-          <div class="relative">
-            <input class="field peer" id="reg-email" name="email" type="email" autocomplete="email" inputmode="email" placeholder=" " aria-describedby="reg-email-err" required>
-            <label class="float-label" for="reg-email">Email</label>
-          </div>
-          <p class="err hidden" id="reg-email-err"></p>
-        </div>
-        <div>
-          <div class="relative">
-            <input class="field peer pr-16" id="reg-password" name="password" type="password" autocomplete="new-password" placeholder=" " aria-describedby="reg-password-hint reg-password-err" required>
-            <label class="float-label" for="reg-password">Password</label>
-            <button type="button" data-toggle-password="reg-password" aria-controls="reg-password" aria-pressed="false"
-              class="absolute inset-y-0 right-0 my-1 mr-1 rounded-lg px-3 text-sm font-semibold text-forest outline-none hover:bg-track focus-visible:ring-2 focus-visible:ring-forest">Show</button>
-          </div>
-          <p class="mt-1.5 text-sm text-muted" id="reg-password-hint">At least 8 characters.</p>
-          <p class="err hidden" id="reg-password-err"></p>
-        </div>
-        <button class="btn" type="submit" id="register-submit">Create my account</button>
-      </form>
-    </div>
-  </dialog>
 
   <!-- HOW MATCHING WORKS -->
   <dialog id="how-dialog" aria-labelledby="how-title" class="w-[calc(100vw-2rem)] max-w-md rounded-2xl border border-line bg-white p-0 text-ink shadow-xl backdrop:bg-ink/50">
@@ -408,7 +362,6 @@
       }
 
       // ---- dialogs ----
-      var regDialog = $('register-dialog');
       var how = $('how-dialog');
       function openDialog(d) { if (d.showModal) d.showModal(); else d.setAttribute('open', ''); }
       function closeDialog(d) { if (d.close) d.close(); else d.removeAttribute('open'); }
@@ -444,10 +397,6 @@
         ['login-email', 'login-password'].forEach(function (id) { setFieldError(id, ''); });
         setFormError('login-error', '');
       }
-      function clearRegisterErrors() {
-        ['reg-name', 'reg-email', 'reg-password'].forEach(function (id) { setFieldError(id, ''); });
-        setFormError('register-error', '');
-      }
       function firstInvalid(ids) {
         for (var i = 0; i < ids.length; i++) if ($(ids[i]).getAttribute('aria-invalid') === 'true') return $(ids[i]);
         return null;
@@ -477,18 +426,6 @@
         }
         return signedIn;
       }
-
-      // ---- open / close register ----
-      document.querySelectorAll('[data-open-register]').forEach(function (b) {
-        b.addEventListener('click', function () {
-          clearRegisterErrors();
-          openDialog(regDialog);
-          $('reg-name').focus();
-        });
-      });
-      $('close-register').addEventListener('click', function () { closeDialog(regDialog); });
-      regDialog.addEventListener('click', function (e) { if (e.target === regDialog) closeDialog(regDialog); });
-      regDialog.addEventListener('close', function () { $('form-register').reset(); clearRegisterErrors(); });
 
       // ---- login ----
       $('form-login').addEventListener('submit', function (e) {
@@ -520,44 +457,6 @@
           renderSession();
           window.location.href = homeFor(match.role);
         }).then(function () { setBusy(btn, false, 'Log in', 'Logging in...'); });
-      });
-
-      // ---- register ----
-      $('form-register').addEventListener('submit', function (e) {
-        e.preventDefault();
-        clearRegisterErrors();
-        var form = e.target;
-        var name = $('reg-name').value.trim();
-        var email = $('reg-email').value.trim().toLowerCase();
-        var pw = $('reg-password').value;
-        var role = 'student'; // only students register; the landlord (office) account is created by the system
-
-        setFieldError('reg-name', !name ? 'Enter your full name.' : '');
-        setFieldError('reg-email', !email ? 'Enter your email.' : (!EMAIL_RE.test(email) ? 'That email does not look right.' : ''));
-        setFieldError('reg-password', pw.length < 8 ? 'Use at least 8 characters.' : '');
-        var bad = firstInvalid(['reg-name', 'reg-email', 'reg-password']);
-        if (bad) { bad.focus(); return; }
-
-        var btn = $('register-submit');
-        setBusy(btn, true, 'Create my account', 'Creating account...');
-        hashPassword(pw).then(function (hash) {
-          var users = read(USERS_KEY, []);
-          if (users.some(function (u) { return u.email === email; })) {
-            setFieldError('reg-email', 'An account with this email already exists. Close this window and log in instead.');
-            $('reg-email').focus();
-            return;
-          }
-          var user = { id: String(Date.now()), name: name, email: email, role: role, password: hash };
-          users.push(user);
-          if (!write(USERS_KEY, users)) {
-            setFormError('register-error', 'Your browser is blocking local storage, so we cannot save your account. Allow site data and try again.');
-            return;
-          }
-          write(CURRENT_KEY, { id: user.id, name: user.name, email: user.email, role: user.role });
-          closeDialog(regDialog);
-          renderSession();
-          window.location.href = homeFor(user.role);
-        }).then(function () { setBusy(btn, false, 'Create my account', 'Creating account...'); });
       });
 
       // ---- logout ----

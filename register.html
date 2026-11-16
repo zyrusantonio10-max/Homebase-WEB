@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Create your account | Homebase</title>
+  <meta name="description" content="Create a Homebase student account for Ariate Dormitory.">
+
+  <!--
+    Design Read: a three-step sign-up for students who want a room at Ariate Dormitory. It asks for enough to be trustworthy
+    (who you are, how to reach you, which school) and no more, one small group at a time.
+    - Step 1 account, step 2 about you (date of birth lives here), step 3 safety and consent.
+    - Step 3 changes with the student's age. 18 or older: an emergency contact. Under 18: a parent or guardian, who must approve
+      the account on the Parent approval page before a room can be requested. (Philippine Data Privacy Act: a minor cannot
+      give valid consent alone.)
+    - Every field says what is wrong in plain words, next to the field, and a summary appears at the top when Next is pressed.
+    - All the rules live in assets/js/signup.js and are checked again before the account is saved.
+  -->
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/js/tw-config.js"></script>
+  <link rel="stylesheet" href="assets/css/components.css">
+  <style>
+    [hidden] { display: none !important; }
+    /* Error lines keep their space even when empty, so a message appearing never moves the field or checkbox under the pointer. */
+    .err { min-height: 1.25rem; margin-top: .25rem; }
+  </style>
+</head>
+
+<body class="min-h-screen bg-tint font-body text-ink antialiased">
+
+  <header class="px-4 pt-5 sm:px-6">
+    <div class="mx-auto flex max-w-2xl items-center justify-between gap-3">
+      <a href="index.html" aria-label="Homebase, back to log in" class="inline-flex min-h-[44px] items-center gap-2.5 rounded-full font-display text-xl font-bold tracking-tight text-ink no-underline outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">
+        <svg viewBox="0 0 32 32" class="h-9 w-9 shrink-0" aria-hidden="true">
+          <rect width="32" height="32" rx="8" fill="#0B4A2F"/><rect x="7" y="8" width="7" height="8" rx="1.5" fill="#083A25"/><rect x="18" y="8" width="7" height="8" rx="1.5" fill="#C6F24E"/><rect x="7" y="19" width="7" height="8" rx="1.5" fill="#083A25"/><rect x="18" y="19" width="7" height="8" rx="1.5" fill="#083A25"/>
+        </svg>
+        <span>Homebase</span>
+      </a>
+      <a href="index.html" class="textlink">I already have an account</a>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-2xl px-4 pb-16 pt-6 sm:px-6">
+
+    <div id="wizard" class="rounded-[28px] border border-line bg-white p-6 sm:p-10">
+      <h1 class="font-display text-2xl font-bold tracking-tight sm:text-3xl">Create your account</h1>
+      <p class="mt-1 text-base text-muted">For students who want a room at Ariate Dormitory. It takes about two minutes.</p>
+
+      <ol id="progress" class="mt-6 grid grid-cols-3 gap-2" aria-label="Sign-up steps"></ol>
+
+      <div id="summary" role="alert" tabindex="-1" hidden class="mt-6 rounded-xl border border-danger-line bg-danger-soft px-4 py-3 text-base text-danger-deep outline-none"></div>
+
+      <form id="form" novalidate class="mt-6">
+
+        <!-- STEP 1 -->
+        <section data-step="1" aria-labelledby="t1">
+          <h2 id="t1" tabindex="-1" class="font-display text-xl font-semibold tracking-tight outline-none">Your account</h2>
+          <div class="mt-4 space-y-4">
+            <div>
+              <label class="label" for="r-name">Full name, as on your school ID</label>
+              <input class="field" id="r-name" type="text" autocomplete="name" aria-describedby="r-name-err" required>
+              <p class="err" id="r-name-err" hidden></p>
+            </div>
+            <div>
+              <label class="label" for="r-email">Email</label>
+              <input class="field" id="r-email" type="email" autocomplete="email" inputmode="email" aria-describedby="r-email-hint r-email-err" required>
+              <p class="mt-1.5 text-sm text-muted" id="r-email-hint">A school email is best. We use it to sign you in.</p>
+              <p class="err" id="r-email-err" hidden></p>
+            </div>
+            <div>
+              <label class="label" for="r-password">Password</label>
+              <div class="flex gap-2">
+                <input class="field" id="r-password" type="password" autocomplete="new-password" aria-describedby="r-password-rules r-password-err" required>
+                <button type="button" class="btn btn-outline shrink-0" data-toggle="r-password" aria-controls="r-password" aria-pressed="false">Show</button>
+              </div>
+              <ul id="r-password-rules" class="mt-2 space-y-1 text-sm text-muted" aria-live="polite"></ul>
+              <p class="err" id="r-password-err" hidden></p>
+            </div>
+            <div>
+              <label class="label" for="r-confirm">Type the password again</label>
+              <input class="field" id="r-confirm" type="password" autocomplete="new-password" aria-describedby="r-confirm-err" required>
+              <p class="err" id="r-confirm-err" hidden></p>
+            </div>
+          </div>
+        </section>
+
+        <!-- STEP 2 -->
+        <section data-step="2" aria-labelledby="t2" hidden>
+          <h2 id="t2" tabindex="-1" class="font-display text-xl font-semibold tracking-tight outline-none">About you</h2>
+          <div class="mt-4 space-y-4">
+            <div>
+              <label class="label" for="r-dob">Date of birth</label>
+              <input class="field" id="r-dob" type="date" autocomplete="bday" aria-describedby="r-dob-hint r-dob-err" required>
+              <p class="mt-1.5 text-sm text-muted" id="r-dob-hint" aria-live="polite">We use this to know if a parent or guardian needs to approve your account. You cannot change it later.</p>
+              <p class="err" id="r-dob-err" hidden></p>
+            </div>
+            <div>
+              <label class="label" for="r-mobile">Mobile number</label>
+              <input class="field" id="r-mobile" type="tel" autocomplete="tel" inputmode="tel" placeholder="0917 123 4567" aria-describedby="r-mobile-err" required>
+              <p class="err" id="r-mobile-err" hidden></p>
+            </div>
+            <div>
+              <label class="label" for="r-school">School or university</label>
+              <input class="field" id="r-school" type="text" autocomplete="organization" aria-describedby="r-school-err" required>
+              <p class="err" id="r-school-err" hidden></p>
+            </div>
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label class="label" for="r-studentId">Student ID number</label>
+                <input class="field" id="r-studentId" type="text" autocomplete="off" aria-describedby="r-studentId-err" required>
+                <p class="err" id="r-studentId-err" hidden></p>
+              </div>
+              <div>
+                <label class="label" for="r-yearLevel">Year level</label>
+                <select class="field" id="r-yearLevel" aria-describedby="r-yearLevel-err" required><option value="">Choose one</option></select>
+                <p class="err" id="r-yearLevel-err" hidden></p>
+              </div>
+            </div>
+            <div>
+              <label class="label" for="r-course">Course or program</label>
+              <input class="field" id="r-course" type="text" aria-describedby="r-course-err" required>
+              <p class="err" id="r-course-err" hidden></p>
+            </div>
+            <div>
+              <label class="label" for="r-province">Home city or province <span class="font-normal text-muted">(optional)</span></label>
+              <input class="field" id="r-province" type="text" autocomplete="address-level1" aria-describedby="r-province-err">
+              <p class="err" id="r-province-err" hidden></p>
+            </div>
+          </div>
+        </section>
+
+        <!-- STEP 3 -->
+        <section data-step="3" aria-labelledby="t3" hidden>
+          <h2 id="t3" tabindex="-1" class="font-display text-xl font-semibold tracking-tight outline-none">Safety and consent</h2>
+
+          <!-- 18 or older -->
+          <div id="adult-box" class="mt-4 space-y-4">
+            <p class="text-base text-muted">Who should the dormitory call in an emergency?</p>
+            <div>
+              <label class="label" for="r-eName">Emergency contact's full name</label>
+              <input class="field" id="r-eName" type="text" autocomplete="off" aria-describedby="r-eName-err">
+              <p class="err" id="r-eName-err" hidden></p>
+            </div>
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label class="label" for="r-eRel">Relationship to you</label>
+                <select class="field" id="r-eRel" aria-describedby="r-eRel-err"><option value="">Choose one</option></select>
+                <p class="err" id="r-eRel-err" hidden></p>
+              </div>
+              <div>
+                <label class="label" for="r-eMobile">Their mobile number</label>
+                <input class="field" id="r-eMobile" type="tel" inputmode="tel" placeholder="0918 765 4321" aria-describedby="r-eMobile-err">
+                <p class="err" id="r-eMobile-err" hidden></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- under 18 -->
+          <div id="minor-box" class="mt-4 space-y-4" hidden>
+            <div class="rounded-xl border border-warn-line bg-warn-soft px-4 py-3 text-base text-ink">
+              <p class="font-semibold">You are under 18, so a parent or legal guardian must approve your account.</p>
+              <p class="mt-1">Tell us who they are. After you finish, you get a code to give them. They enter it on the Parent approval page. Until they do, you can browse and compare rooms, but you cannot request one.</p>
+            </div>
+            <div>
+              <label class="label" for="r-gName">Parent or guardian's full name</label>
+              <input class="field" id="r-gName" type="text" autocomplete="off" aria-describedby="r-gName-err">
+              <p class="err" id="r-gName-err" hidden></p>
+            </div>
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label class="label" for="r-gRel">Relationship to you</label>
+                <select class="field" id="r-gRel" aria-describedby="r-gRel-err"><option value="">Choose one</option></select>
+                <p class="err" id="r-gRel-err" hidden></p>
+              </div>
+              <div>
+                <label class="label" for="r-gMobile">Their mobile number</label>
+                <input class="field" id="r-gMobile" type="tel" inputmode="tel" placeholder="0918 765 4321" aria-describedby="r-gMobile-err">
+                <p class="err" id="r-gMobile-err" hidden></p>
+              </div>
+            </div>
+            <div>
+              <label class="label" for="r-gEmail">Their email</label>
+              <input class="field" id="r-gEmail" type="email" inputmode="email" autocomplete="off" aria-describedby="r-gEmail-err">
+              <p class="err" id="r-gEmail-err" hidden></p>
+            </div>
+          </div>
+
+          <div class="mt-6 rounded-xl border border-line bg-tint p-4">
+            <label class="flex min-h-[44px] cursor-pointer items-start gap-3 text-base">
+              <input id="r-consent" type="checkbox" class="mt-1 h-5 w-5 shrink-0 accent-forest" aria-describedby="r-consent-err">
+              <span>I have read <button type="button" id="open-privacy" class="font-semibold text-forest underline underline-offset-4">what Homebase collects and why</button>, and I agree that Ariate Dormitory may use my information to manage my room request.</span>
+            </label>
+            <p id="minor-consent-note" class="mt-2 text-sm text-muted" hidden>Because you are under 18, your parent or guardian must also agree. That is the approval step after sign-up.</p>
+            <p class="err" id="r-consent-err" hidden></p>
+          </div>
+        </section>
+
+        <div class="mt-8 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <button type="button" id="back" class="btn btn-outline" hidden>Back</button>
+          <button type="submit" id="next" class="btn sm:ml-auto">Next</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- DONE -->
+    <div id="done" hidden class="rounded-[28px] border border-line bg-white p-6 sm:p-10">
+      <h1 id="done-title" tabindex="-1" class="font-display text-2xl font-bold tracking-tight outline-none sm:text-3xl"></h1>
+      <p id="done-text" class="mt-2 text-base text-muted"></p>
+
+      <div id="done-minor" hidden class="mt-6">
+        <div class="rounded-[20px] border border-warn-line bg-warn-soft p-5">
+          <p class="text-sm font-medium text-muted">Approval code. Give it to <span id="done-guardian" class="font-semibold text-ink"></span>.</p>
+          <p id="done-code" class="mt-1 font-display text-4xl font-bold tracking-[0.3em] text-ink"></p>
+          <button type="button" id="copy-code" class="btn btn-outline mt-3">Copy the code</button>
+          <p id="copy-note" class="mt-2 text-sm text-muted" role="status"></p>
+        </div>
+        <h2 class="mt-6 font-display text-lg font-semibold tracking-tight">What happens next</h2>
+        <ol class="mt-2 list-decimal space-y-2 pl-6 text-base">
+          <li>Ask your parent or guardian to open the <a class="font-semibold text-forest underline underline-offset-4" href="guardian.html">Parent approval page</a>.</li>
+          <li>They enter your email (<span id="done-email" class="font-semibold"></span>), the code above and their full name.</li>
+          <li>Once they approve, you can request a room. You will see the notice on your Home page disappear.</li>
+        </ol>
+        <p class="mt-4 text-sm text-muted">In the finished system the code is emailed to your parent or guardian. In this version it is shown here, and again on your Home page. You can get a new code there if you lose it.</p>
+      </div>
+
+      <div class="mt-8"><a href="home.html" class="btn">Continue to Homebase</a></div>
+    </div>
+  </main>
+
+  <!-- PRIVACY -->
+  <dialog id="privacy-dialog" aria-labelledby="privacy-title" class="max-h-[90vh] w-[calc(100vw-2rem)] max-w-lg overflow-y-auto rounded-2xl border border-line bg-white p-0 text-ink shadow-xl backdrop:bg-ink/50">
+    <div class="p-6">
+      <h2 id="privacy-title" class="font-display text-xl font-bold tracking-tight">What Homebase collects and why</h2>
+      <p class="mt-1 text-base text-muted">Only what a dormitory needs to give you a room.</p>
+      <dl class="mt-4 space-y-3 text-base">
+        <div><dt class="font-semibold">Name, email, password</dt><dd class="text-muted">To sign you in. Your password is stored scrambled, not as you typed it.</dd></div>
+        <div><dt class="font-semibold">Date of birth</dt><dd class="text-muted">To know whether you are under 18. If you are, a parent or guardian must approve your account. You cannot change it later.</dd></div>
+        <div><dt class="font-semibold">Mobile number, school, student ID, course, year level, home province</dt><dd class="text-muted">So the dormitory office can reach you and confirm you are a student. The province is optional.</dd></div>
+        <div><dt class="font-semibold">Emergency contact, or parent or guardian</dt><dd class="text-muted">Only used in an emergency, or to approve the account of a student under 18.</dd></div>
+        <div><dt class="font-semibold">Who can see it</dt><dd class="text-muted">The dormitory office sees your details and requests. Other students can see the name, photo and course of adult students staying in a room they look at. Students under 18 are never shown to other students.</dd></div>
+        <div><dt class="font-semibold">Your choices</dt><dd class="text-muted">You can correct your details on your Profile page, and delete your account there. Deleting removes your requests and reviews too.</dd></div>
+        <div><dt class="font-semibold">Where it is kept</dt><dd class="text-muted">In this version, only in your own browser. Nothing is sent to a server yet.</dd></div>
+      </dl>
+      <button type="button" id="close-privacy" class="btn mt-6">Close</button>
+    </div>
+  </dialog>
+
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/signup.js"></script>
+  <script>
+    (function () {
+      var $ = function (id) { return document.getElementById(id); };
+      var V = HB_SIGNUP.V;
+
+      // already signed in: no need to sign up again
+      var current = HB_AUTH.getUser && HB_AUTH.getUser();
+      if (current && current.email) { window.location.replace(current.role === 'landlord' ? 'landlord.html' : 'home.html'); return; }
+
+      var STEPS = ['Account', 'About you', 'Safety'];
+      var step = 1, touched = {}, busy = false;
+
+      // ---- progress ----
+      function drawProgress() {
+        var ol = $('progress'); ol.textContent = '';
+        STEPS.forEach(function (name, i) {
+          var n = i + 1, li = document.createElement('li');
+          li.className = 'rounded-xl border px-3 py-2 text-sm ' + (n === step ? 'border-forest bg-forest font-semibold text-white' : n < step ? 'border-forest/40 bg-tint text-forest-deep' : 'border-line text-muted');
+          if (n === step) li.setAttribute('aria-current', 'step');
+          li.textContent = n + '. ' + name + (n < step ? ' (done)' : '');
+          ol.appendChild(li);
+        });
+      }
+
+      // ---- fill the drop-downs ----
+      function fill(id, list) { list.forEach(function (t) { var o = document.createElement('option'); o.value = t; o.textContent = t; $(id).appendChild(o); }); }
+      fill('r-yearLevel', HB_SIGNUP.YEARS); fill('r-eRel', HB_SIGNUP.EMERGENCY_RELATIONS); fill('r-gRel', HB_SIGNUP.GUARDIAN_RELATIONS);
+      $('r-dob').max = new Date().toISOString().slice(0, 10);
+
+      // ---- the rule for each field ----
+      var minor = function () { var a = HB_AUTH.ageFromDob($('r-dob').value); return a !== null && a < 18; };
+      var val = function (id) { return $('r-' + id).value; };
+      var RULES = {
+        name: function () { return V.name(val('name')); },
+        email: function () { return V.email(val('email')); },
+        password: function () { return V.password(val('password'), val('name'), val('email')); },
+        confirm: function () { return !val('confirm') ? 'Type the password again.' : (val('confirm') !== val('password') ? 'The two passwords do not match.' : ''); },
+        dob: function () { return V.dob(val('dob')); },
+        mobile: function () { return V.mobile(val('mobile')); },
+        school: function () { return V.text(val('school'), 'your school or university', 2, 80); },
+        studentId: function () { return V.studentId(val('studentId')); },
+        course: function () { return V.text(val('course'), 'your course or program', 2, 80); },
+        yearLevel: function () { return V.choice(val('yearLevel'), HB_SIGNUP.YEARS, 'your year level'); },
+        province: function () { return V.optionalText(val('province'), 60); },
+        eName: function () { return V.name(val('eName')).replace('your full name', 'their full name').replace('your first and last name, as on your school ID', 'their first and last name'); },
+        eRel: function () { return V.choice(val('eRel'), HB_SIGNUP.EMERGENCY_RELATIONS, 'how they are related to you'); },
+        eMobile: function () { var e = V.mobile(val('eMobile')); if (e) return e.replace('Enter your mobile number', 'Enter their mobile number'); return HB_SIGNUP.normMobile(val('eMobile')) === HB_SIGNUP.normMobile(val('mobile')) ? 'Use a different number from your own, so someone else can be reached.' : ''; },
+        gName: function () { return V.name(val('gName')).replace('your full name', 'their full name').replace('your first and last name, as on your school ID', 'their first and last name'); },
+        gRel: function () { return V.choice(val('gRel'), HB_SIGNUP.GUARDIAN_RELATIONS, 'how they are related to you'); },
+        gMobile: function () { var e = V.mobile(val('gMobile')); if (e) return e.replace('Enter your mobile number', 'Enter their mobile number'); return HB_SIGNUP.normMobile(val('gMobile')) === HB_SIGNUP.normMobile(val('mobile')) ? 'Use your parent or guardian\u2019s own number, not yours.' : ''; },
+        gEmail: function () { var e = V.email(val('gEmail')); if (e) return e.replace('Enter your email', 'Enter their email'); return val('gEmail').trim().toLowerCase() === val('email').trim().toLowerCase() ? 'Use your parent or guardian\u2019s own email, not yours.' : ''; },
+        consent: function () { return $('r-consent').checked ? '' : 'Tick the box to agree before creating your account.'; }
+      };
+      function fieldsOf(n) {
+        if (n === 1) return ['name', 'email', 'password', 'confirm'];
+        if (n === 2) return ['dob', 'mobile', 'school', 'studentId', 'course', 'yearLevel', 'province'];
+        return (minor() ? ['gName', 'gRel', 'gMobile', 'gEmail'] : ['eName', 'eRel', 'eMobile']).concat(['consent']);
+      }
+      var LABELS = { name: 'Full name', email: 'Email', password: 'Password', confirm: 'Password again', dob: 'Date of birth', mobile: 'Mobile number', school: 'School', studentId: 'Student ID', course: 'Course', yearLevel: 'Year level', province: 'Home province', eName: 'Emergency contact name', eRel: 'Relationship', eMobile: 'Emergency contact number', gName: 'Parent or guardian name', gRel: 'Relationship', gMobile: 'Parent or guardian number', gEmail: 'Parent or guardian email', consent: 'Agreement' };
+
+      document.querySelectorAll('.err').forEach(function (p) { p.hidden = false; });   // always in the page, so the space is reserved
+      function showError(key, msg) {
+        var input = $('r-' + key), p = $('r-' + key + '-err');
+        if (msg) input.setAttribute('aria-invalid', 'true'); else input.removeAttribute('aria-invalid');
+        p.textContent = msg || '';
+      }
+      function check(key) { var m = RULES[key](); showError(key, m); return m; }
+
+      // check a field once it has been visited, and keep checking as they fix it
+      Object.keys(RULES).forEach(function (key) {
+        var input = $('r-' + key);
+        input.addEventListener('blur', function () { touched[key] = true; check(key); if (key === 'password' && touched.confirm) check('confirm'); });
+        input.addEventListener(input.type === 'checkbox' || input.tagName === 'SELECT' ? 'change' : 'input', function () {
+          if (touched[key] || input.getAttribute('aria-invalid')) check(key);
+          if (key === 'password' && touched.confirm) check('confirm');
+        });
+      });
+
+      // ---- live password checklist ----
+      function drawPasswordRules() {
+        var v = val('password'), ul = $('r-password-rules'); ul.textContent = '';
+        [['At least 8 characters', v.length >= 8], ['At least one letter and one number', /[A-Za-z]/.test(v) && /[0-9]/.test(v)]].forEach(function (r) {
+          var li = document.createElement('li'); li.textContent = r[0] + (r[1] ? ' (done)' : ''); li.className = r[1] ? 'font-medium text-forest' : ''; ul.appendChild(li);
+        });
+      }
+      $('r-password').addEventListener('input', drawPasswordRules); drawPasswordRules();
+      document.querySelectorAll('[data-toggle]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var i = $(b.getAttribute('data-toggle')), show = i.type === 'password';
+          i.type = show ? 'text' : 'password'; b.textContent = show ? 'Hide' : 'Show'; b.setAttribute('aria-pressed', String(show));
+        });
+      });
+
+      // ---- the age note under the date of birth ----
+      function drawAge() {
+        var v = val('dob'), p = $('r-dob-hint'), age = HB_AUTH.ageFromDob(v);
+        if (!v || age === null || V.dob(v)) { p.textContent = 'We use this to know if a parent or guardian needs to approve your account. You cannot change it later.'; return; }
+        p.textContent = age < 18 ? 'You are ' + age + '. Because you are under 18, a parent or guardian will need to approve your account in the last step.' : 'You are ' + age + '. No parent approval is needed.';
+      }
+      $('r-dob').addEventListener('input', drawAge); $('r-dob').addEventListener('change', drawAge);
+
+      // ---- moving between steps ----
+      function show(n, focusTitle) {
+        step = n;
+        document.querySelectorAll('[data-step]').forEach(function (s) { s.hidden = Number(s.getAttribute('data-step')) !== n; });
+        if (n === 3) { var m = minor(); $('adult-box').hidden = m; $('minor-box').hidden = !m; $('minor-consent-note').hidden = !m; }
+        $('back').hidden = n === 1;
+        $('next').textContent = n === 3 ? 'Create my account' : 'Next';
+        $('summary').hidden = true; drawProgress();
+        if (focusTitle) $('t' + n).focus();
+        window.scrollTo(0, 0);
+      }
+      function validateStep(n) {
+        var bad = [];
+        fieldsOf(n).forEach(function (key) { touched[key] = true; var m = check(key); if (m) bad.push(key); });
+        if (bad.length) {
+          var s = $('summary'); s.hidden = false;
+          s.textContent = 'Please fix ' + (bad.length === 1 ? 'this' : 'these ' + bad.length + ' things') + ' to continue: ' + bad.map(function (k) { return LABELS[k]; }).join(', ') + '.';
+          var first = $('r-' + bad[0]); first.focus(); first.scrollIntoView({ block: 'center' });
+          return false;
+        }
+        return true;
+      }
+      $('back').addEventListener('click', function () { show(step - 1, true); });
+
+      // ---- finishing ----
+      $('form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (busy) return;
+        if (!validateStep(step)) return;
+        if (step < 3) { show(step + 1, true); return; }
+
+        busy = true; $('next').disabled = true; $('next').textContent = 'Creating your account...';
+        var data = {
+          name: val('name'), email: val('email'), password: val('password'), confirm: val('confirm'), dob: val('dob'), mobile: val('mobile'),
+          school: val('school'), studentId: val('studentId'), course: val('course'), yearLevel: val('yearLevel'), province: val('province'),
+          consent: $('r-consent').checked,
+          emergency: { name: val('eName'), relationship: val('eRel'), mobile: val('eMobile') },
+          guardian: { name: val('gName'), relationship: val('gRel'), mobile: val('gMobile'), email: val('gEmail') }
+        };
+        HB_SIGNUP.registerStudent(data).then(function (res) {
+          busy = false; $('next').disabled = false;
+          if (!res.ok) {
+            show(res.step || 3, false);
+            if (res.field && $('r-' + res.field)) { touched[res.field] = true; showError(res.field, res.error); $('r-' + res.field).focus(); }
+            var s = $('summary'); s.hidden = false; s.textContent = res.error;
+            return;
+          }
+          $('wizard').hidden = true; $('done').hidden = false;
+          $('done-title').textContent = res.minor ? 'Almost there, ' + res.user.name.split(' ')[0] : 'Welcome, ' + res.user.name.split(' ')[0];
+          $('done-text').textContent = res.minor ? 'Your account is created. One more step: your parent or guardian has to approve it before you can request a room.' : 'Your account is ready. Let us find you a room.';
+          if (res.minor) {
+            $('done-minor').hidden = false; $('done-code').textContent = res.code; $('done-guardian').textContent = data.guardian.name; $('done-email').textContent = res.user.email;
+          }
+          $('done-title').focus(); window.scrollTo(0, 0);
+        });
+      });
+
+      $('copy-code').addEventListener('click', function () {
+        var code = $('done-code').textContent;
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(function () { $('copy-note').textContent = 'Copied.'; }, function () { $('copy-note').textContent = 'Could not copy. Select the code and copy it.'; });
+        else $('copy-note').textContent = 'Select the code and copy it.';
+      });
+
+      // ---- privacy notice ----
+      $('open-privacy').addEventListener('click', function () { $('privacy-dialog').showModal(); });
+      $('close-privacy').addEventListener('click', function () { $('privacy-dialog').close(); });
+      $('privacy-dialog').addEventListener('click', function (e) { if (e.target === $('privacy-dialog')) $('privacy-dialog').close(); });
+
+      drawProgress();
+    })();
+  </script>
+</body>
+</html>
