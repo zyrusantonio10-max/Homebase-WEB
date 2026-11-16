@@ -42,49 +42,8 @@
 </head>
 
 <body class="min-h-screen bg-white font-body text-ink antialiased">
+  <script src="assets/js/landlord-shell.js"></script>
 
-  <header class="sticky top-0 z-20 bg-white px-4 pb-2 pt-4 sm:px-6">
-    <nav aria-label="Main" class="mx-auto flex max-w-6xl items-center justify-between gap-3 rounded-full border border-line bg-white py-2 pl-4 pr-2">
-      <a href="landlord.html" aria-label="Homebase dashboard" class="inline-flex min-h-[44px] items-center gap-2.5 rounded-full font-display text-xl font-bold tracking-tight text-ink no-underline outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">
-        <svg viewBox="0 0 32 32" class="h-9 w-9 shrink-0" aria-hidden="true">
-          <rect width="32" height="32" rx="8" fill="#0B4A2F"/><rect x="7" y="8" width="7" height="8" rx="1.5" fill="#083A25"/><rect x="18" y="8" width="7" height="8" rx="1.5" fill="#C6F24E"/><rect x="7" y="19" width="7" height="8" rx="1.5" fill="#083A25"/><rect x="18" y="19" width="7" height="8" rx="1.5" fill="#083A25"/>
-        </svg>
-        <span class="hidden sm:inline">Homebase</span>
-      </a>
-      <ul class="hidden items-center gap-1 md:flex">
-        <li><a class="nav-link" href="landlord.html">Dashboard</a></li>
-        <li><a class="nav-link" href="landlord-rooms.html">Rooms</a></li>
-        <li><a class="nav-link" href="landlord-reviews.html" aria-current="page">Reviews</a></li>
-        <li><a class="nav-link" href="landlord-messages.html">Messages<span data-msg-badge class="chip chip-warn ml-2 hidden"></span></a></li>
-        <li><a class="nav-link" href="profile.html">Profile</a></li>
-      </ul>
-      <div class="flex items-center gap-2">
-        <a href="profile.html" class="flex items-center gap-2 rounded-full py-1 pl-1 pr-2 hover:bg-track transition-colors outline-none focus-visible:ring-2 focus-visible:ring-forest" title="My Profile" aria-label="My Profile">
-          <span id="nav-avatar" class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-forest font-display text-sm font-semibold text-white overflow-hidden" aria-hidden="true"></span>
-          <span id="nav-name" class="hidden max-w-[10rem] truncate text-sm font-medium lg:block"></span>
-        </a>
-        <button type="button" id="logout" class="btn btn-logout hidden md:inline-flex">Log out</button>
-        <button type="button" id="menu-btn" aria-expanded="false" aria-controls="menu"
-          class="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-forest bg-white px-4 text-base font-semibold text-forest outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 md:hidden">
-          <span id="menu-label">Menu</span>
-        </button>
-      </div>
-    </nav>
-
-    <!-- Mobile menu -->
-    <div id="menu" hidden class="mx-auto mt-2 max-w-6xl rounded-[20px] border border-line bg-white p-2 md:hidden">
-      <ul class="grid gap-1">
-        <li><a class="nav-link w-full" href="landlord.html">Dashboard</a></li>
-        <li><a class="nav-link w-full" href="landlord-rooms.html">Rooms</a></li>
-        <li><a class="nav-link w-full" href="landlord-reviews.html" aria-current="page">Reviews</a></li>
-        <li><a class="nav-link w-full" href="landlord-messages.html">Messages<span data-msg-badge class="chip chip-warn ml-2 hidden"></span></a></li>
-        <li><a class="nav-link w-full" href="profile.html">Profile</a></li>
-      </ul>
-      <div class="mt-2 border-t border-line pt-2">
-        <button type="button" id="logout-m" class="btn btn-logout w-full">Log out</button>
-      </div>
-    </div>
-  </header>
 
   <main class="mx-auto max-w-4xl px-4 pb-20 pt-6 sm:px-6 sm:pt-8">
     <h1 class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">Reviews</h1>
