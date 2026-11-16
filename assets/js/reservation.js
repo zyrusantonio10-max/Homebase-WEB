@@ -122,6 +122,11 @@
         .sort(function (a, b) { return String(b.createdAt).localeCompare(String(a.createdAt)); });
     },
     activeFor: function (userId) { return HB.forUser(userId).filter(isActive)[0] || null; },
+    // the stay a student is living in right now: paid (confirmed) and the move-in date has arrived. Concerns need this.
+    currentStay: function (userId) {
+      var d = new Date(), p = function (n) { return String(n).padStart(2, '0'); }, today = d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+      return HB.forUser(userId).filter(function (r) { return r.status === 'confirmed' && r.moveIn && r.moveIn <= today; })[0] || null;
+    },
 
     // beds in a room: a Double fits 2 students and a Quad fits 4
     capacity: function (room) { return Number(room.capacity) || { Single: 1, Double: 2, Quad: 4 }[room.type] || 1; },

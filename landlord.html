@@ -52,13 +52,23 @@
 
 <body class="min-h-screen bg-white font-body text-ink antialiased">
   <script src="assets/js/landlord-shell.js"></script>
+
+
   <main class="mx-auto max-w-4xl px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
     <h1 class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">Dashboard</h1>
     <p class="mt-2 max-w-xl text-base text-muted">Where Ariate Dormitory stands today, and the room requests waiting for your answer.</p>
 
-    <section id="glance-box" hidden aria-labelledby="glance-title" class="mt-6 rounded-[20px] border border-line bg-tint p-5 sm:p-6">
+    <section id="glance-box" hidden aria-labelledby="glance-title" class="mt-6">
       <h2 id="glance-title" class="sr-only">At a glance</h2>
-      <dl id="glance" class="grid gap-x-4 gap-y-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6"></dl>
+      <div class="stat-hero">
+        <div>
+          <p class="stat-eyebrow">Needs your answer</p>
+          <p id="hero-count" class="stat-big"></p>
+          <p id="hero-text" class="stat-text"></p>
+        </div>
+        <a id="hero-cta" href="#board" class="btn btn-lime">Review requests</a>
+      </div>
+      <dl id="glance" class="stat-grid"></dl>
       <div class="mt-4 flex flex-wrap items-center gap-3">
         <a href="landlord-rooms.html" class="inline-flex min-h-[44px] items-center rounded font-semibold text-forest underline underline-offset-4 outline-none hover:text-forest-deep focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">Manage rooms</a>
         <span class="text-muted hidden sm:inline" aria-hidden="true">&#8226;</span>
@@ -86,7 +96,7 @@
       <p class="mt-2 max-w-md text-base text-muted">When a student requests a room, it shows up here for you to answer.</p>
     </div>
 
-    <div id="board" hidden>
+    <div id="board" hidden class="scroll-mt-24">
       <form id="filters" class="mt-6" onsubmit="return false">
         <fieldset>
           <legend class="sr-only">Show active requests</legend>
@@ -160,6 +170,9 @@
 
   <script src="assets/js/rooms.js"></script>
   <script src="assets/js/reservation.js"></script>
+  <script src="assets/js/messages.js"></script>
+  <script src="assets/js/concerns.js"></script>
+  <script>if (window.HB_MSG) HB_MSG.bindBadge();</script>
   <script src="assets/js/building.js"></script>
   <script>
     (function () {
@@ -289,20 +302,6 @@
       }
 
       // ---- resident detailed dossier modal ----
-      // One line "Emergency Contact: Name (relation) • phone". Built from elements, so nothing a student typed can run as code.
-      function setEmergencyRow(row, label, prof) {
-        row.textContent = '';
-        row.appendChild(el('span', 'text-muted', label));
-        row.appendChild(document.createTextNode(' '));
-        var val = el('span', 'font-semibold text-ink', (prof.emergencyName || 'Named contact') + (prof.emergencyRel ? ' (' + prof.emergencyRel + ')' : '') + ' \u2022 ');
-        if (prof.emergencyPhone) {
-          var tel = el('a', 'text-forest underline', prof.emergencyPhone);
-          tel.href = 'tel:' + HB_AUTH.safeTel(prof.emergencyPhone);
-          val.appendChild(tel);
-        } else val.appendChild(document.createTextNode('No phone'));
-        row.appendChild(val);
-      }
-
       function openResidentModal(r, prof) {
         var dlg = document.getElementById('hb-resident-modal');
         if (!dlg) {
@@ -393,9 +392,7 @@
         var studentEmail = prof.email || r.studentEmail || '';
         var av = document.getElementById('hb-res-avatar');
         if (prof.photo) {
-          var avImg = HB_AUTH.safeImg(prof.photo, studentName);
-          av.textContent = '';
-          if (avImg) av.appendChild(avImg); else av.textContent = studentName.charAt(0).toUpperCase();
+          av.innerHTML = '<img src="' + prof.photo + '" alt="' + studentName + '" class="h-full w-full object-cover rounded-full">';
           av.classList.add('overflow-hidden');
         } else {
           av.textContent = studentName.charAt(0).toUpperCase();
@@ -407,11 +404,11 @@
 
         var emailLink = document.getElementById('hb-res-email');
         emailLink.textContent = studentEmail || 'Not provided';
-        emailLink.href = studentEmail ? ('mailto:' + encodeURIComponent(studentEmail).replace(/%40/g, '@')) : '#';
+        emailLink.href = studentEmail ? ('mailto:' + studentEmail) : '#';
 
         var phoneLink = document.getElementById('hb-res-phone');
         phoneLink.textContent = prof.phone || 'Not provided';
-        phoneLink.href = prof.phone ? ('tel:' + HB_AUTH.safeTel(prof.phone)) : '#';
+        phoneLink.href = prof.phone ? ('tel:' + prof.phone) : '#';
 
         var socialBox = document.getElementById('hb-res-social-box');
         if (prof.social && prof.social.trim()) {
@@ -425,15 +422,9 @@
         emerBox.textContent = '';
         if (prof.emergencyName || prof.emergencyPhone) {
           var d1 = el('div');
-          d1.appendChild(el('span', 'text-xs text-muted block', 'Contact Name:'));
-          d1.appendChild(el('span', 'font-semibold text-ink', (prof.emergencyName || 'Not specified') + (prof.emergencyRel ? ' (' + prof.emergencyRel + ')' : '')));
+          d1.innerHTML = '<span class="text-xs text-muted block">Contact Name:</span><span class="font-semibold text-ink">' + (prof.emergencyName || 'Not specified') + (prof.emergencyRel ? ' (' + prof.emergencyRel + ')' : '') + '</span>';
           var d2 = el('div');
-          d2.appendChild(el('span', 'text-xs text-muted block', 'Emergency Phone:'));
-          if (prof.emergencyPhone) {
-            var tel = el('a', 'font-semibold text-forest underline', prof.emergencyPhone);
-            tel.href = 'tel:' + HB_AUTH.safeTel(prof.emergencyPhone);
-            d2.appendChild(tel);
-          } else d2.appendChild(el('span', 'text-muted', 'Not provided'));
+          d2.innerHTML = '<span class="text-xs text-muted block">Emergency Phone:</span>' + (prof.emergencyPhone ? ('<a href="tel:' + prof.emergencyPhone + '" class="font-semibold text-forest underline">' + prof.emergencyPhone + '</a>') : '<span class="text-muted">Not provided</span>');
           emerBox.appendChild(d1);
           emerBox.appendChild(d2);
         } else {
@@ -489,8 +480,7 @@
         var sLeft = el('div', 'flex items-center gap-3.5');
         var sAv = el('div', 'grid h-12 w-12 shrink-0 place-items-center rounded-full bg-forest text-lg font-bold text-white shadow-sm overflow-hidden');
         if (prof.photo) {
-          var sImg = HB_AUTH.safeImg(prof.photo, studentDisplayName);
-          if (sImg) sAv.appendChild(sImg); else sAv.textContent = studentDisplayName.charAt(0).toUpperCase();
+          sAv.innerHTML = '<img src="' + prof.photo + '" alt="' + studentDisplayName + '" class="h-full w-full object-cover rounded-full">';
         } else {
           sAv.textContent = studentDisplayName.charAt(0).toUpperCase();
         }
@@ -514,13 +504,19 @@
         viewBtn.addEventListener('click', function () {
           openResidentModal(r, prof);
         });
-        sHead.appendChild(viewBtn);
+        var btnGroup = el('div', 'flex flex-wrap gap-2');
+        btnGroup.appendChild(viewBtn);
+        var msgLink = el('a', 'btn btn-outline text-sm py-2 px-4', 'Message student');
+        msgLink.href = 'landlord-messages.html?res=' + encodeURIComponent(r.id);
+        msgLink.setAttribute('aria-label', 'Message ' + studentDisplayName + ' about ' + r.roomName);
+        btnGroup.appendChild(msgLink);
+        sHead.appendChild(btnGroup);
         sCard.appendChild(sHead);
 
         // Emergency contact highlight preview
         var emerRow = el('div', 'mt-3 pt-3 border-t border-line/60 flex flex-wrap items-center justify-between gap-2 text-xs');
         if (prof.emergencyName || prof.emergencyPhone) {
-          setEmergencyRow(emerRow, 'Emergency Contact:', prof);
+          emerRow.innerHTML = '<span class="text-muted">Emergency Contact:</span> <span class="font-semibold text-ink">' + (prof.emergencyName || 'Named contact') + (prof.emergencyRel ? ' (' + prof.emergencyRel + ')' : '') + ' \u2022 ' + (prof.emergencyPhone ? ('<a href="tel:' + prof.emergencyPhone + '" class="text-forest underline">' + prof.emergencyPhone + '</a>') : 'No phone') + '</span>';
         } else {
           emerRow.innerHTML = '<span class="text-muted">Emergency Contact:</span> <span class="text-muted italic">Not yet provided by student</span>';
         }
@@ -587,8 +583,7 @@
         var sLeft = el('div', 'flex items-center gap-3.5');
         var sAv = el('div', 'grid h-12 w-12 shrink-0 place-items-center rounded-full bg-forest text-lg font-bold text-white shadow-sm overflow-hidden');
         if (prof.photo) {
-          var sImg = HB_AUTH.safeImg(prof.photo, studentDisplayName);
-          if (sImg) sAv.appendChild(sImg); else sAv.textContent = studentDisplayName.charAt(0).toUpperCase();
+          sAv.innerHTML = '<img src="' + prof.photo + '" alt="' + studentDisplayName + '" class="h-full w-full object-cover rounded-full">';
         } else {
           sAv.textContent = studentDisplayName.charAt(0).toUpperCase();
         }
@@ -618,7 +613,7 @@
         // Emergency contact highlight preview
         var emerRow = el('div', 'mt-3 pt-3 border-t border-line/60 flex flex-wrap items-center justify-between gap-2 text-xs');
         if (prof.emergencyName || prof.emergencyPhone) {
-          setEmergencyRow(emerRow, 'Emergency Contact on file:', prof);
+          emerRow.innerHTML = '<span class="text-muted">Emergency Contact on file:</span> <span class="font-semibold text-ink">' + (prof.emergencyName || 'Named contact') + (prof.emergencyRel ? ' (' + prof.emergencyRel + ')' : '') + ' \u2022 ' + (prof.emergencyPhone ? ('<a href="tel:' + prof.emergencyPhone + '" class="text-forest underline">' + prof.emergencyPhone + '</a>') : 'No phone') + '</span>';
         } else {
           emerRow.innerHTML = '<span class="text-muted">Emergency Contact on file:</span> <span class="text-muted italic">Not recorded in profile</span>';
         }
@@ -765,18 +760,26 @@
         var pending = list.filter(function (r) { return r.status === 'pending'; }).length;
         var activeRes = list.filter(function (r) { return r.status === 'confirmed'; }).length;
         var pastStays = list.filter(function (r) { return r.status === 'ended'; }).length;
+        // the banner: the one number that is the landlord's job today
+        $('hero-count').textContent = String(pending);
+        $('hero-text').textContent = pending === 0 ? 'No room requests are waiting. You are all caught up.'
+          : (pending === 1 ? 'room request is waiting. Approve or decline it so the student can plan.' : 'room requests are waiting. Approve or decline each one so students can plan.');
+        $('hero-cta').hidden = pending === 0;
+        var chats = window.HB_MSG ? HB_MSG.threadsFor(user).filter(function (t) { return t.lastSenderRole === 'student'; }).length : null;
         var items = [
-          ['Requests to answer', pending, true],
           ['Active residents', activeRes],
           ['Beds free', c.freeBeds],
           ['Beds requested', c.requested],
           ['Rooms full', c.full],
+          ['Chats to answer', chats],
+          ['Open concerns', window.HB_CONCERNS ? HB_CONCERNS.openCount() : null],
           ['Past stays ended', pastStays]
         ];
         var dl = $('glance'); dl.textContent = '';
         items.forEach(function (it) {
-          var d = el('div'); d.appendChild(el('dt', 'text-sm font-medium text-muted', it[0]));
-          d.appendChild(el('dd', 'font-display text-2xl font-bold tracking-tight ' + (it[2] ? 'text-forest' : 'text-ink'), String(it[1])));
+          if (it[1] == null) return;
+          var d = el('div', 'stat-tile'); d.appendChild(el('dt', null, it[0]));
+          d.appendChild(el('dd', null, String(it[1])));
           dl.appendChild(d);
         });
         $('glance-box').hidden = false;

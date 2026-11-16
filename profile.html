@@ -21,6 +21,9 @@
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="assets/js/tw-config.js"></script>
+  <script src="assets/js/rooms.js"></script>
+  <script src="assets/js/reservation.js"></script>
+  <script src="assets/js/messages.js"></script>
   <link rel="stylesheet" href="assets/css/components.css">
 
   <style type="text/tailwindcss">
@@ -443,12 +446,14 @@
           '<li><a class="nav-link" href="landlord.html">Dashboard</a></li>' +
           '<li><a class="nav-link" href="landlord-rooms.html">Rooms</a></li>' +
           '<li><a class="nav-link" href="landlord-reviews.html">Reviews</a></li>' +
+          '<li><a class="nav-link" href="landlord-messages.html">Messages<span data-msg-badge class=\"chip chip-warn ml-2 hidden\"></span></a></li>' +
           '<li><a class="nav-link" href="profile.html" aria-current="page">Profile</a></li>';
 
         menuLinks.innerHTML =
           '<li><a class="nav-link w-full" href="landlord.html">Dashboard</a></li>' +
           '<li><a class="nav-link w-full" href="landlord-rooms.html">Rooms</a></li>' +
           '<li><a class="nav-link w-full" href="landlord-reviews.html">Reviews</a></li>' +
+          '<li><a class="nav-link w-full" href="landlord-messages.html">Messages<span data-msg-badge class=\"chip chip-warn ml-2 hidden\"></span></a></li>' +
           '<li><a class="nav-link w-full" href="profile.html" aria-current="page">Profile</a></li>';
 
         // Hide student specific blocks
@@ -464,17 +469,24 @@
           '<li><a class="nav-link" href="home.html">Home</a></li>' +
           '<li><a class="nav-link" href="matches.html">My Matches</a></li>' +
           '<li><a class="nav-link" href="rooms.html">Explore Rooms</a></li>' +
+          '<li><a class="nav-link" href="messages.html">Messages<span data-msg-badge class=\"chip chip-warn ml-2 hidden\"></span></a></li>' +
+          '<li data-concerns-nav style="display:none"><a class="nav-link" href="concerns.html">Concerns</a></li>' +
           '<li><a class="nav-link" href="profile.html" aria-current="page">Profile</a></li>';
 
         menuLinks.innerHTML =
           '<li><a class="nav-link w-full" href="home.html">Home</a></li>' +
           '<li><a class="nav-link w-full" href="matches.html">My Matches</a></li>' +
           '<li><a class="nav-link w-full" href="rooms.html">Explore Rooms</a></li>' +
+          '<li><a class="nav-link w-full" href="messages.html">Messages<span data-msg-badge class=\"chip chip-warn ml-2 hidden\"></span></a></li>' +
+          '<li data-concerns-nav style="display:none"><a class="nav-link w-full" href="concerns.html">Concerns</a></li>' +
           '<li><a class="nav-link w-full" href="profile.html" aria-current="page">Profile</a></li>';
       }
 
       // Logout buttons
       HB_AUTH.bindLogout();
+
+      // Unread messages badge (the nav links above were just built)
+      if (window.HB_MSG) HB_MSG.bindBadge();
 
       // Mobile Menu
       var menuBtn = $('menu-btn');

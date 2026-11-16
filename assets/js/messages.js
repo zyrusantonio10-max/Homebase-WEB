@@ -194,6 +194,15 @@
         var n = M.unreadTotal(u);
         document.querySelectorAll('[data-msg-badge]').forEach(function (b) { b.textContent = n + ' new'; b.classList.toggle('hidden', n === 0); });
       }
+      // students see the Concerns link only while they live here, or if they already have concerns on record
+      function paintConcernsNav() {
+        var items = document.querySelectorAll('[data-concerns-nav]'); if (!items.length) return;
+        var show = false;
+        try { show = !!(window.HB && HB.currentStay && HB.currentStay(u.id)); } catch (e) {}
+        if (!show) { try { show = JSON.parse(localStorage.getItem('homebase_concerns') || '[]').some(function (c) { return c.userId === u.id; }); } catch (e) {} }
+        items.forEach(function (li) { li.style.display = show ? '' : 'none'; });
+      }
+      paintConcernsNav();
       paint();
       M.refreshBadge = paint; // call after this tab changes read state (the storage event only fires in OTHER tabs)
       window.addEventListener('storage', function (e) { if (!e.key || e.key === THREADS_KEY || e.key === MESSAGES_KEY) paint(); });

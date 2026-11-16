@@ -99,7 +99,7 @@
 .choice:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--forest); }
 
 /* the unread badge hides itself with the "hidden" class even where Tailwind has not run yet */
-[data-msg-badge].hidden { display: none; }
+[data-msg-badge].hidden, [data-concern-badge].hidden { display: none; }
 
 /* ---------- landlord shell (assets/js/landlord-shell.js) ----------
    Laptops: a fixed sidebar on the left. Phones: a slim top bar plus a bottom tab bar, the way people hold the phone.

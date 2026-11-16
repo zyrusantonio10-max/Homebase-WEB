@@ -83,6 +83,8 @@
         <li><a class="nav-link" href="home.html" aria-current="page">Home</a></li>
         <li><a class="nav-link" href="matches.html">My Matches</a></li>
         <li><a class="nav-link" href="rooms.html">Explore Rooms</a></li>
+        <li><a class="nav-link" href="messages.html">Messages<span data-msg-badge class="chip chip-warn ml-2 hidden"></span></a></li>
+        <li data-concerns-nav style="display:none"><a class="nav-link" href="concerns.html">Concerns</a></li>
       </ul>
 
       <div class="flex items-center gap-2">
@@ -104,6 +106,8 @@
         <li><a class="nav-link w-full" href="home.html" aria-current="page">Home</a></li>
         <li><a class="nav-link w-full" href="matches.html">My Matches</a></li>
         <li><a class="nav-link w-full" href="rooms.html">Explore Rooms</a></li>
+        <li><a class="nav-link w-full" href="messages.html">Messages<span data-msg-badge class="chip chip-warn ml-2 hidden"></span></a></li>
+        <li data-concerns-nav style="display:none"><a class="nav-link w-full" href="concerns.html">Concerns</a></li>
         <li><a class="nav-link w-full" href="profile.html">My Profile</a></li>
       </ul>
       <div class="mt-2 border-t border-line pt-2">
@@ -315,6 +319,8 @@
   </main>
 
   <script src="assets/js/reservation.js"></script>
+  <script src="assets/js/messages.js"></script>
+  <script>if (window.HB_MSG) HB_MSG.bindBadge();</script>
   <script src="assets/js/building.js"></script>
   <script src="assets/js/reviews.js"></script>
   <script>
