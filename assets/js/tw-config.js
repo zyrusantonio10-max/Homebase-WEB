@@ -1,12 +1,13 @@
 /*
   The ONE place for the palette. Change a color here and every page follows.
 
-  1) Tailwind reads it, so classes like bg-forest, text-danger, border-warn-line, hover:bg-lime-deep work.
-  2) The same colors are also published as CSS variables (--forest, --danger-soft, ...) for assets/css/components.css.
+  1) Tailwind reads it, so classes like bg-forest, text-danger, border-warn-line, hover:bg-lime-deep, bg-paper work.
+  2) The same colors are also published as CSS variables (--forest, --danger-soft, --paper, ...) for the CSS files.
 
   How the colors are used:
-    forest   brand green: primary buttons, focus, the active nav item, "good" states
-    lime     the single accent: the lit window and the button on the best-match card
+    forest   brand green: primary buttons, focus, the sidebar, "good" states
+    lime     the single accent: the lit window in the logo, the current page in the sidebar, the best-match button
+    paper    warm off-white page ground (new). Cards stay white on top of it, so they read as cards
     mint     soft greens used on the landing page
     ink      main text           muted    secondary text
     line     borders             edge     hover border on fields
@@ -19,6 +20,7 @@
   var colors = {
     forest: { DEFAULT: '#0B4A2F', deep: '#083A25', body: '#0E5435' },
     lime:   { DEFAULT: '#C6F24E', deep: '#B5E03F' },
+    paper:  '#F7F5EE',
     mint:   { DEFAULT: '#E3EEE7', deep: '#CFE3D6' },
     ink: '#14211A',
     muted: '#46564D',
