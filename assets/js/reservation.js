@@ -103,13 +103,37 @@
     return h.slice(0, 8) + '-' + h.slice(8, 12) + '-' + h.slice(12, 16) + '-' + h.slice(16, 20) + '-' + h.slice(20);
   }
   function roomToRow(r) {
+    var img = null;
+    if (r.images && Array.isArray(r.images) && r.images.length) {
+      img = r.images.length === 1 ? r.images[0] : JSON.stringify(r.images);
+    } else if (r.image) {
+      img = r.image;
+    }
     return { id: String(r.id), name: r.name, floor: Number(r.floor), type: r.type, price: Number(r.price), amenities: r.amenities || [],
-      available: !!r.available, beds_taken: Number(r.bedsTaken) || 0, capacity: r.capacity ? Number(r.capacity) : null, image: r.image || null, images: r.images || [] };
+      available: !!r.available, beds_taken: Number(r.bedsTaken) || 0, capacity: r.capacity ? Number(r.capacity) : null, image: img };
   }
   function rowToRoom(x) {
     var r = { id: x.id, name: x.name, floor: x.floor, type: x.type, price: x.price, amenities: x.amenities || [], available: x.available };
-    if (x.beds_taken) r.bedsTaken = x.beds_taken; if (x.capacity) r.capacity = x.capacity; if (x.image) r.image = x.image;
-    if (x.images && x.images.length) r.images = x.images;
+    if (x.beds_taken) r.bedsTaken = x.beds_taken;
+    if (x.capacity) r.capacity = x.capacity;
+    if (x.image) {
+      var s = String(x.image);
+      if (s.charAt(0) === '[') {
+        try {
+          r.images = JSON.parse(s);
+          r.image = r.images[0] || null;
+        } catch (e) {
+          r.image = s;
+          r.images = [s];
+        }
+      } else {
+        r.image = s;
+        r.images = [s];
+      }
+    } else if (x.images && Array.isArray(x.images)) {
+      r.images = x.images;
+      r.image = x.images[0] || null;
+    }
     return r;
   }
   function resToRow(r) {
