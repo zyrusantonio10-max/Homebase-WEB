@@ -12,7 +12,10 @@
     Dial ENERGY 2 / RHYTHM 2 / MOTION 1.
   -->
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase.js"></script>
   <script src="assets/js/auth.js"></script>
+  <script src="assets/js/dbsync.js"></script>
   <script>HB_AUTH.requireAuth();</script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -788,26 +791,20 @@
 
         if (!valid) return;
 
-        HB_AUTH.hashPassword(currPass).then(function (currHash) {
-          var users = JSON.parse(localStorage.getItem('homebase_users') || '[]');
-          var userObj = null;
-          for (var i = 0; i < users.length; i++) {
-            if (users[i].id === user.id) {
-              userObj = users[i];
-              break;
-            }
-          }
-
-          if (!userObj || userObj.password !== currHash) {
+        var sb = window.HB_DB;
+        if (!sb) { $('f-curr-pass-err').textContent = 'Cannot reach the database right now. Try again.'; $('f-curr-pass-err').hidden = false; return; }
+        sb.auth.signInWithPassword({ email: user.email, password: currPass }).then(function (r) {
+          if (r.error) {
             $('f-curr-pass-err').textContent = 'Current password is incorrect.';
             $('f-curr-pass-err').hidden = false;
             return;
           }
-
-          HB_AUTH.hashPassword(newPass).then(function (newHash) {
-            userObj.password = newHash;
-            localStorage.setItem('homebase_users', JSON.stringify(users));
-
+          return sb.auth.updateUser({ password: newPass }).then(function (u) {
+            if (u.error) {
+              $('f-new-pass-err').textContent = u.error.message || 'The password could not be changed.';
+              $('f-new-pass-err').hidden = false;
+              return;
+            }
             $('f-curr-pass').value = '';
             $('f-new-pass').value = '';
             $('f-confirm-pass').value = '';
@@ -837,6 +834,16 @@
         });
 
         $('btn-delete-confirm').addEventListener('click', function () {
+          var sb = window.HB_DB;
+          if (!sb) { alert('Cannot reach the database right now. Try again.'); return; }
+          sb.rpc('delete_my_account').then(function (r) {
+            if (r.error) { alert('We could not delete your account. Please try again.'); return; }
+            sb.auth.signOut();
+            wipeLocal();
+          });
+        });
+
+        function wipeLocal() {
           var users = JSON.parse(localStorage.getItem('homebase_users') || '[]');
           users = users.filter(function (u) { return u.id !== user.id; });
           localStorage.setItem('homebase_users', JSON.stringify(users));
@@ -859,7 +866,7 @@
           } catch (e) {}
 
           window.location.replace('index.html');
-        });
+        }
       });
 
     })();

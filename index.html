@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -298,6 +298,9 @@
     </div>
   </dialog>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/auth.js"></script>
   <script>
     (function () {
       var USERS_KEY = 'homebase_users';
@@ -318,48 +321,6 @@
         catch (e) { return false; }
       }
       function clear(key) { try { localStorage.removeItem(key); } catch (e) {} }
-
-      // The dormitory office (landlord) account. There is only one dormitory, so the landlord cannot register here:
-      // this one account is created by the system. Demo password: ariate-office-2026
-      // To change it, replace the hash below with sha256 of "homebase:" + your new password.
-      var OFFICE = {
-        id: 'demo-manager',
-        name: 'Ariate Dorm Manager',
-        email: 'manager@ariatedorm.com',
-        role: 'landlord',
-        password: 'sha256:6bf5236866a055acff4d82abcbe24eb25b5c899124843489658fc7dbc9ff235a'
-      };
-
-      // Seed the demo student if nothing is stored yet
-      if (!read(USERS_KEY, null)) {
-        write(USERS_KEY, [
-          {
-            id: 'demo-student',
-            name: 'Alex Santos',
-            email: 'alex@unc.edu.ph',
-            role: 'student',
-            password: 'sha256:2a6747e1b382015051cf9d7d23f72ed87ffa924d52b234b2b7e8e803c6f42188'
-          }
-        ]);
-      }
-
-      // Always keep the office account present and current, even in browsers that saved an older version of it
-      (function () {
-        var users = read(USERS_KEY, []);
-        var i = users.map(function (u) { return u.id; }).indexOf(OFFICE.id);
-        if (i === -1) users.push(OFFICE); else users[i] = OFFICE;
-        write(USERS_KEY, users);
-      })();
-
-      // Prototype only: hashing in the browser is not real security. Move this to the server in the PHP/MySQL phase.
-      function hashPassword(pw) {
-        if (window.crypto && crypto.subtle && window.TextEncoder) {
-          return crypto.subtle.digest('SHA-256', new TextEncoder().encode('homebase:' + pw)).then(function (buf) {
-            return 'sha256:' + Array.prototype.map.call(new Uint8Array(buf), function (b) { return b.toString(16).padStart(2, '0'); }).join('');
-          });
-        }
-        return Promise.resolve('plain:' + pw);
-      }
 
       // ---- dialogs ----
       var how = $('how-dialog');
@@ -441,27 +402,18 @@
 
         var btn = $('login-submit');
         setBusy(btn, true, 'Log in', 'Logging in...');
-        hashPassword(pw).then(function (hash) {
-          var users = read(USERS_KEY, []);
-          var match = users.filter(function (u) { return u.email === email && u.password === hash; })[0];
-          if (!match) {
-            setFormError('login-error', 'That email and password do not match. Check both and try again, or create an account.');
-            $('login-password').focus();
-            return;
-          }
-          if (!write(CURRENT_KEY, { id: match.id, name: match.name, email: match.email, role: match.role })) {
-            setFormError('login-error', 'Your browser is blocking local storage, so we cannot keep you logged in. Allow site data and try again.');
-            return;
-          }
+        HB_AUTH.login(email, pw).then(function (res) {
+          if (!res.ok) { setFormError('login-error', res.error); $('login-password').focus(); return; }
           $('form-login').reset();
           renderSession();
-          window.location.href = homeFor(match.role);
+          window.location.href = homeFor(res.user.role);
         }).then(function () { setBusy(btn, false, 'Log in', 'Logging in...'); });
       });
 
       // ---- logout ----
       $('logout').addEventListener('click', function () {
         clear(CURRENT_KEY);
+        if (window.HB_DB) HB_DB.auth.signOut();
         renderSession();
         clearLoginErrors();
         $('login-email').focus();

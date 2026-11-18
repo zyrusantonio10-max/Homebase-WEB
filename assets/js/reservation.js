@@ -88,6 +88,76 @@
     return o + '</svg>';
   }
 
+  // ============================================================
+  // Supabase sync. The pages read rooms and requests from localStorage (fast, synchronous).
+  // sync() copies the database into localStorage, and every change is also written to the database.
+  // ============================================================
+  var SNAP_KEY = 'homebase_sync_snapshot', OCC_KEY = 'homebase_occupancy';
+  var pending = [];
+  function db() { return window.HB_DB || null; }
+  function me() { return (window.HB_AUTH && HB_AUTH.getUser) ? HB_AUTH.getUser() : null; }
+  function newId() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    var b = crypto.getRandomValues(new Uint8Array(16)); b[6] = (b[6] & 15) | 64; b[8] = (b[8] & 63) | 128;
+    var h = Array.prototype.map.call(b, function (x) { return ('0' + x.toString(16)).slice(-2); }).join('');
+    return h.slice(0, 8) + '-' + h.slice(8, 12) + '-' + h.slice(12, 16) + '-' + h.slice(16, 20) + '-' + h.slice(20);
+  }
+  function roomToRow(r) {
+    return { id: String(r.id), name: r.name, floor: Number(r.floor), type: r.type, price: Number(r.price), amenities: r.amenities || [],
+      available: !!r.available, beds_taken: Number(r.bedsTaken) || 0, capacity: r.capacity ? Number(r.capacity) : null, image: r.image || null, images: r.images || [] };
+  }
+  function rowToRoom(x) {
+    var r = { id: x.id, name: x.name, floor: x.floor, type: x.type, price: x.price, amenities: x.amenities || [], available: x.available };
+    if (x.beds_taken) r.bedsTaken = x.beds_taken; if (x.capacity) r.capacity = x.capacity; if (x.image) r.image = x.image;
+    if (x.images && x.images.length) r.images = x.images;
+    return r;
+  }
+  function resToRow(r) {
+    return { id: r.id, user_id: r.userId, student_name: r.studentName, student_email: r.studentEmail, room_id: r.roomId, room_name: r.roomName,
+      floor: r.floor, type: r.type, price: r.price, move_in: r.moveIn || null, message: r.message || null, status: r.status,
+      rules_accepted_at: r.rulesAcceptedAt || null, created_at: r.createdAt, updated_at: r.updatedAt };
+  }
+  function rowToRes(x) {
+    var r = { id: x.id, userId: x.user_id, studentName: x.student_name, studentEmail: x.student_email, roomId: x.room_id, roomName: x.room_name,
+      floor: x.floor, type: x.type, price: x.price, moveIn: x.move_in || '', message: x.message || '', status: x.status,
+      createdAt: x.created_at, updatedAt: x.updated_at };
+    if (x.payment_days != null) r.paymentDays = x.payment_days;
+    if (x.payment_due_at) r.paymentDueAt = x.payment_due_at;
+    if (x.approved_at) r.approvedAt = x.approved_at;
+    if (x.confirmed_at) r.confirmedAt = x.confirmed_at;
+    if (x.ended_at) r.endedAt = x.ended_at;
+    if (x.rules_accepted_at) r.rulesAcceptedAt = x.rules_accepted_at;
+    return r;
+  }
+  function track(p) {
+    var q = Promise.resolve(p).then(function (r) { return r; }, function (e) { return { error: e }; });
+    pending.push(q);
+    q.then(function () { var i = pending.indexOf(q); if (i > -1) pending.splice(i, 1); });
+    return q;
+  }
+  // a save failed: put the page back in line with the database
+  function failed(text, err) {
+    try { console.error('Homebase:', text, err); } catch (e) {}
+    try { localStorage.removeItem(SNAP_KEY); } catch (e) {}
+    HB.sync({ noReload: true }).then(function () { window.alert(text + ' The page will reload with what is really saved.'); window.location.reload(); });
+  }
+  function push(id, fields) {
+    var d = db(); if (!d) return;
+    fields.updated_at = nowIso();
+    track(d.from('reservations').update(fields).eq('id', id).select().then(function (r) {
+      if (r.error || !r.data || !r.data.length) failed('That change could not be saved.', r.error);
+    }));
+  }
+  function canReload() {
+    try {
+      var last = Number(sessionStorage.getItem('hb_reload_at') || 0);
+      if (Date.now() - last < 3000) return false;
+      sessionStorage.setItem('hb_reload_at', String(Date.now()));
+    } catch (e) {}
+    return true;
+  }
+  function readOcc() { try { var v = JSON.parse(localStorage.getItem(OCC_KEY) || 'null'); return v && typeof v === 'object' ? v : null; } catch (e) { return null; } }
+
   var HB = {
     load: load,
 
@@ -107,12 +177,66 @@
       } catch (e) {}
       return JSON.parse(JSON.stringify(window.HOMEBASE_ROOMS || []));
     },
-    usingSampleRooms: function () { try { return !localStorage.getItem(ROOMS_KEY); } catch (e) { return true; } },
-    saveRooms: function (list) { try { localStorage.setItem(ROOMS_KEY, JSON.stringify(list)); return true; } catch (e) { return false; } },
-    resetRooms: function () { try { localStorage.removeItem(ROOMS_KEY); return true; } catch (e) { return false; } },
+    // Copy rooms, requests and bed counts from the database into this browser. Reloads once if something changed.
+    sync: function (opts) {
+      var d = db(), u = me(); opts = opts || {};
+      if (!d || !u) return Promise.resolve(false);
+      return Promise.all([d.from('rooms').select('*'), d.from('reservations').select('*'), d.rpc('room_occupancy')]).then(function (res) {
+        for (var i = 0; i < res.length; i++) if (res[i].error) throw res[i].error;
+        var rooms = res[0].data.map(rowToRoom), list = res[1].data.map(rowToRes), occ = {};
+        (res[2].data || []).forEach(function (o) { occ[o.room_id] = o.taken; });
+        var snap = JSON.stringify([rooms, list, occ]), prev = null;
+        try { prev = localStorage.getItem(SNAP_KEY); } catch (e) {}
+        var changed = snap !== prev;
+        if (changed || opts.force) {
+          try {
+            localStorage.setItem(ROOMS_KEY, JSON.stringify(rooms)); localStorage.setItem(KEY, JSON.stringify(list));
+            localStorage.setItem(OCC_KEY, JSON.stringify(occ)); localStorage.setItem(SNAP_KEY, snap);
+          } catch (e) { return false; }
+        }
+        // the office records requests that were not paid in time
+        if (u.role === 'landlord') {
+          var now = Date.now();
+          list.forEach(function (r) { if (r.status === 'approved' && r.paymentDueAt && Date.parse(r.paymentDueAt) < now) push(r.id, { status: 'expired' }); });
+        }
+        if (changed && !opts.noReload && canReload()) window.location.reload();
+        return changed;
+      }).catch(function (e) { try { console.warn('Homebase sync failed', e); } catch (x) {} return false; });
+    },
+    // resolves when every save to the database has finished
+    flush: function () { return Promise.all(pending.slice()); },
 
-    // a real photo if the room has an "image" path, otherwise the drawn illustration
-    roomImage: function (room) { return room.image || ('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(roomArt(room))); },
+    usingSampleRooms: function () { try { return !localStorage.getItem(ROOMS_KEY); } catch (e) { return true; } },
+    saveRooms: function (list) {
+      var prevIds = HB.getRooms().map(function (r) { return String(r.id); });
+      try { localStorage.setItem(ROOMS_KEY, JSON.stringify(list)); } catch (e) { return false; }
+      var d = db();
+      if (d) {
+        var ids = list.map(function (r) { return String(r.id); });
+        var gone = prevIds.filter(function (x) { return ids.indexOf(x) === -1; });
+        track(d.from('rooms').upsert(list.map(roomToRow)).then(function (r) { if (r.error) failed('The rooms could not be saved.', r.error); }));
+        if (gone.length) track(d.from('rooms').delete().in('id', gone).then(function (r) { if (r.error) failed('A room could not be deleted.', r.error); }));
+      }
+      return true;
+    },
+    resetRooms: function () {
+      try { localStorage.removeItem(ROOMS_KEY); } catch (e) { return false; }
+      var d = db(), sample = (window.HOMEBASE_ROOMS || []);
+      if (d && sample.length) {
+        var ids = sample.map(function (r) { return String(r.id); });
+        track(d.from('rooms').upsert(sample.map(roomToRow)).then(function (r) {
+          if (r.error) { failed('The rooms could not be reset.', r.error); return; }
+          return d.from('rooms').delete().not('id', 'in', '(' + ids.join(',') + ')').then(function (r2) { if (r2.error) failed('The rooms could not be reset.', r2.error); });
+        }));
+      }
+      return true;
+    },
+
+    // a real photo if the room has images, an "image" path, or the drawn illustration
+    roomImage: function (room) {
+      if (room.images && room.images.length) return room.images[0];
+      return room.image || ('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(roomArt(room)));
+    },
 
     isActive: isActive,
 
@@ -134,9 +258,10 @@
       var cap = HB.capacity(room);
       var active = load().list.filter(function (r) { return r.roomId === room.id && isActive(r); });
       var outside = Math.max(0, Math.min(cap, Number(room.bedsTaken) || 0));
+      var occ = readOcc(), requested = occ ? Math.max(Number(occ[room.id]) || 0, active.length) : active.length;
       return {
-        capacity: cap, outside: outside, requested: active.length, active: active,
-        free: room.available ? Math.max(0, cap - outside - active.length) : 0,
+        capacity: cap, outside: outside, requested: requested, active: active,
+        free: room.available ? Math.max(0, cap - outside - requested) : 0,
         mine: !!userId && active.some(function (r) { return r.userId === userId; })
       };
     },
@@ -179,14 +304,26 @@
       if (HB.activeFor(user.id)) return { ok: false, error: 'You already have an active request. Cancel it on Home before requesting another room.' };
       if (HB.roomState(room, user.id) !== 'available') return { ok: false, error: 'This room is no longer available.' };
       var rec = {
-        id: 'res-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7), userId: user.id, studentName: user.name, studentEmail: user.email,
+        id: newId(), userId: user.id, studentName: user.name, studentEmail: user.email,
         roomId: room.id, roomName: room.name, floor: room.floor, type: room.type, price: room.price,
         moveIn: moveIn, message: String(message || '').trim().slice(0, 300),
         status: 'pending', rulesAcceptedAt: nowIso(), createdAt: nowIso(), updatedAt: nowIso()
       };
       all.list.push(rec);
       if (!save(all.list)) return { ok: false, error: 'Your browser blocked saving the request. Allow site data and try again.' };
-      return { ok: true, reservation: rec };
+      var d = db(), saved = Promise.resolve({ ok: true });
+      if (d) {
+        saved = track(d.from('reservations').insert(resToRow(rec)).then(function (r) {
+          if (!r.error) return { ok: true };
+          var back = load(); back.list = back.list.filter(function (x) { return x.id !== rec.id; }); save(back.list);
+          var m = String(r.error.message || ''), text;
+          if (r.error.code === '23505') text = 'You already have an active request. Cancel it on Home before requesting another room.';
+          else if (/full|available|row-level|policy/i.test(m)) text = /full/i.test(m) ? 'This room is full.' : (/available/i.test(m) ? 'This room is no longer available.' : 'This request is not allowed. If you are under 18, your parent or guardian must approve your account first.');
+          else text = 'We could not save your request. Check your internet and try again.';
+          return { ok: false, error: text };
+        }));
+      }
+      return { ok: true, reservation: rec, saved: saved };
     },
 
     setStatus: function (id, status) {
@@ -194,7 +331,8 @@
       var hit = all.list.filter(function (r) { return r.id === id; })[0];
       if (!hit) return false;
       hit.status = status; hit.updatedAt = nowIso();
-      return save(all.list);
+      var okSave = save(all.list); if (okSave) push(id, { status: status });
+      return okSave;
     },
 
     // landlord approves and sets the payment window (1 to 30 days)
@@ -206,7 +344,9 @@
       if (!hit) return false;
       hit.status = 'approved'; hit.paymentDays = days; hit.approvedAt = nowIso(); hit.updatedAt = nowIso();
       hit.paymentDueAt = new Date(Date.now() + days * 86400000).toISOString();
-      return save(all.list);
+      var okSave = save(all.list);
+      if (okSave) push(id, { status: 'approved', payment_days: days, approved_at: hit.approvedAt, payment_due_at: hit.paymentDueAt });
+      return okSave;
     },
     // landlord marks that the office received payment
     confirmPayment: function (id) {
@@ -214,7 +354,8 @@
       var hit = all.list.filter(function (r) { return r.id === id && r.status === 'approved'; })[0];
       if (!hit) return false;
       hit.status = 'confirmed'; hit.confirmedAt = nowIso(); hit.updatedAt = nowIso();
-      return save(all.list);
+      var okSave = save(all.list); if (okSave) push(id, { status: 'confirmed', confirmed_at: hit.confirmedAt });
+      return okSave;
     },
     // landlord ends the stay, the room becomes available again
     endStay: function (id) {
@@ -222,7 +363,8 @@
       var hit = all.list.filter(function (r) { return r.id === id && r.status === 'confirmed'; })[0];
       if (!hit) return false;
       hit.status = 'ended'; hit.endedAt = nowIso(); hit.updatedAt = nowIso();
-      return save(all.list);
+      var okSave = save(all.list); if (okSave) push(id, { status: 'ended', ended_at: hit.endedAt });
+      return okSave;
     },
 
     // ---- the house rules window ----
@@ -313,7 +455,12 @@
         if (!agree.checked) { agreeErr.textContent = 'Tick the box to confirm you have read the house rules.'; agreeErr.classList.remove('hidden'); agree.focus(); return; }
         var res = HB.create(user, room, date.value, document.getElementById('hb-req-msg').value, true);
         if (!res.ok) { formErr.textContent = res.error; formErr.classList.remove('hidden'); return; }
-        window.location.href = 'home.html#reservation';
+        var go = form.querySelector('[type=submit]'); if (go) go.disabled = true;
+        (res.saved || Promise.resolve({ ok: true })).then(function (s) {
+          if (go) go.disabled = false;
+          if (!s.ok) { formErr.textContent = s.error; formErr.classList.remove('hidden'); return; }
+          window.location.href = 'home.html#reservation';
+        });
       };
 
       if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
@@ -322,4 +469,5 @@
   };
 
   window.HB = HB;
+  document.addEventListener('DOMContentLoaded', function () { if (!window.HB_SYNC && db() && me()) HB.sync(); });
 })();

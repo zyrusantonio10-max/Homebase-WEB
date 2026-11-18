@@ -34,13 +34,13 @@
   function writeList(key, list) { try { localStorage.setItem(key, JSON.stringify(list)); return true; } catch (e) { return false; } }
   var store = {
     threads: function () { return readList(THREADS_KEY); },
-    saveThreads: function (list) { return writeList(THREADS_KEY, list); },
+    saveThreads: function (list) { var ok = writeList(THREADS_KEY, list); if (ok && window.HB_SYNC) HB_SYNC.saved('threads', list); return ok; },
     messages: function () { return readList(MESSAGES_KEY); },
-    saveMessages: function (list) { return writeList(MESSAGES_KEY, list); }
+    saveMessages: function (list) { var ok = writeList(MESSAGES_KEY, list); if (ok && window.HB_SYNC) HB_SYNC.saved('messages', list); return ok; }
   };
 
   function nowIso() { return new Date().toISOString(); }
-  function newId(p) { return p + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7); }
+  function newId(p) { return (window.crypto && crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) { var r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); })); }
   function roleOf(user) { return user && user.role === 'landlord' ? 'landlord' : 'student'; }
   function byUpdatedDesc(a, b) { return String(b.updatedAt).localeCompare(String(a.updatedAt)); }
   function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
