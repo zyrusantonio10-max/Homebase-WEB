@@ -203,7 +203,29 @@
       function readFileAsDataURL(file) {
         return new Promise(function (resolve, reject) {
           var reader = new FileReader();
-          reader.onload = function () { resolve(reader.result); };
+          reader.onload = function (e) {
+            var raw = e.target.result;
+            var img = new Image();
+            img.onload = function () {
+              try {
+                var maxDim = 1000;
+                var w = img.width, h = img.height;
+                if (w > maxDim || h > maxDim) {
+                  if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+                  else { w = Math.round((w * maxDim) / h); h = maxDim; }
+                }
+                var canvas = document.createElement('canvas');
+                canvas.width = w; canvas.height = h;
+                var ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+                resolve(canvas.toDataURL('image/jpeg', 0.8));
+              } catch (err) {
+                resolve(raw);
+              }
+            };
+            img.onerror = function () { resolve(raw); };
+            img.src = raw;
+          };
           reader.onerror = function () { reject(reader.error); };
           reader.readAsDataURL(file);
         });

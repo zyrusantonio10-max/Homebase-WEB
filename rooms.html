@@ -330,9 +330,30 @@
         x.addEventListener('click', function () { detailDlg.close(); });
         head.appendChild(x); box.appendChild(head);
 
-        var pic = el('img', 'mt-4 aspect-[8/5] w-full rounded-xl bg-track object-cover');
-        pic.src = HB.roomImage(room); pic.alt = room.name + ', ' + room.type.toLowerCase() + ' room on floor ' + room.floor + ' (illustration)'; pic.width = 640; pic.height = 400; pic.decoding = 'async';
-        box.appendChild(pic); box.appendChild(el('p', 'mt-1 text-sm text-muted', 'Illustration, not a photo of the real room.'));
+        var rPhotos = room.images && room.images.length ? room.images : (room.image ? [room.image] : [HB.roomImage(room)]);
+        var isArt = !room.image && (!room.images || !room.images.length);
+        if (rPhotos.length === 1) {
+          var pic = el('img', 'mt-4 aspect-[8/5] w-full rounded-xl bg-track object-cover');
+          pic.src = rPhotos[0]; pic.alt = room.name + ', ' + room.type.toLowerCase() + ' room on floor ' + room.floor; pic.width = 640; pic.height = 400; pic.decoding = 'async';
+          box.appendChild(pic);
+          if (isArt) box.appendChild(el('p', 'mt-1 text-sm text-muted', 'Illustration, not a photo of the real room.'));
+        } else {
+          var gal = el('div', 'relative mt-4 aspect-[8/5] w-full overflow-hidden rounded-xl bg-track');
+          var pIdx = 0;
+          var gImg = el('img', 'h-full w-full object-cover');
+          gImg.src = rPhotos[0]; gImg.alt = room.name; gImg.loading = 'lazy'; gImg.decoding = 'async';
+          gal.appendChild(gImg);
+          var count = el('span', 'absolute bottom-2 right-2 rounded-lg bg-ink/60 px-2 py-0.5 text-xs font-semibold text-white', '1 / ' + rPhotos.length);
+          gal.appendChild(count);
+          var pBtn = el('button', 'absolute left-1 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-ink/40 text-white text-base hover:bg-ink/60', '\u2039');
+          pBtn.type = 'button';
+          var nBtn = el('button', 'absolute right-1 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-ink/40 text-white text-base hover:bg-ink/60', '\u203A');
+          nBtn.type = 'button';
+          pBtn.addEventListener('click', function () { pIdx = (pIdx - 1 + rPhotos.length) % rPhotos.length; gImg.src = rPhotos[pIdx]; count.textContent = (pIdx + 1) + ' / ' + rPhotos.length; });
+          nBtn.addEventListener('click', function () { pIdx = (pIdx + 1) % rPhotos.length; gImg.src = rPhotos[pIdx]; count.textContent = (pIdx + 1) + ' / ' + rPhotos.length; });
+          gal.appendChild(pBtn); gal.appendChild(nBtn);
+          box.appendChild(gal);
+        }
 
         var dl = el('dl', 'mt-5 grid gap-4 text-base sm:grid-cols-2');
         [['Floor', 'Floor ' + room.floor], ['Room type', room.type + ' room'],
