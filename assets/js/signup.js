@@ -127,46 +127,41 @@
     return null;
   }
 
-  // Create the account. Resolves to { ok: true, user, minor, code } or { ok: false, step, field, error }.
+  // Create the account in Supabase. Resolves to { ok: true, user, minor, code } or { ok: false, step, field, error }.
   function registerStudent(d) {
     var problem = validate(d);
     if (problem) return Promise.resolve({ ok: false, step: problem.step, field: problem.field, error: problem.error });
+    if (!global.HB_DB) return Promise.resolve({ ok: false, step: 3, field: null, error: 'Cannot reach the database right now. Check your internet connection and try again.' });
 
-    var email = String(d.email).trim().toLowerCase(), sid = squash(d.studentId).toLowerCase();
-    var users = readUsers();
-    if (users.some(function (u) { return u.email === email; })) return Promise.resolve({ ok: false, step: 1, field: 'email', error: 'An account with this email already exists. Log in instead.' });
-    if (users.some(function (u) { return u.studentId && String(u.studentId).toLowerCase() === sid; })) return Promise.resolve({ ok: false, step: 2, field: 'studentId', error: 'An account with this student ID already exists. Log in instead, or ask the dormitory office for help.' });
+    var email = String(d.email).trim().toLowerCase();
+    var minor = HB_AUTH.ageFromDob(d.dob) < 18, guardian = {}, emergency;
+    if (minor) {
+      var g = d.guardian;
+      guardian = { name: squash(g.name), relationship: g.relationship, mobile: normMobile(g.mobile), email: String(g.email).trim().toLowerCase() };
+      emergency = { name: guardian.name, relationship: guardian.relationship, mobile: guardian.mobile };   // a minor's guardian is also the emergency contact
+    } else {
+      emergency = { name: squash(d.emergency.name), relationship: d.emergency.relationship, mobile: normMobile(d.emergency.mobile) };
+    }
+    // This metadata is read by the database trigger (handle_new_user), which creates the profile row.
+    var meta = {
+      name: squash(d.name), dob: d.dob, mobile: normMobile(d.mobile), school: squash(d.school), student_id: squash(d.studentId),
+      course: squash(d.course), year_level: d.yearLevel, province: squash(d.province), emergency: emergency, guardian: guardian
+    };
+    var netErr = { ok: false, step: 3, field: null, error: 'Cannot reach the database right now. Check your internet connection and try again.' };
 
-    var minor = HB_AUTH.ageFromDob(d.dob) < 18;
-    return HB_AUTH.hashPassword(String(d.password)).then(function (hash) {
-      var id = String(Date.now()) + Math.random().toString(36).slice(2, 5), now = new Date().toISOString();
-      var rec = {
-        id: id, name: squash(d.name), email: email, role: 'student', password: hash,
-        dob: d.dob, mobile: normMobile(d.mobile), school: squash(d.school), studentId: squash(d.studentId),
-        course: squash(d.course), yearLevel: d.yearLevel, province: squash(d.province),
-        guardianStatus: minor ? 'pending' : 'not_needed', acceptedTermsAt: now, createdAt: now
-      };
-      var emergency;
-      if (minor) {
-        var g = d.guardian;
-        rec.guardian = { name: squash(g.name), relationship: g.relationship, mobile: normMobile(g.mobile), email: String(g.email).trim().toLowerCase() };
-        emergency = { name: rec.guardian.name, rel: rec.guardian.relationship, phone: rec.guardian.mobile };   // a minor's guardian is also the emergency contact
-      } else {
-        emergency = { name: squash(d.emergency.name), rel: d.emergency.relationship, phone: normMobile(d.emergency.mobile) };
+    return global.HB_DB.auth.signUp({ email: email, password: String(d.password), options: { data: meta } }).then(function (r) {
+      if (r.error) {
+        if (/already|registered|exists/i.test(r.error.message || '')) return { ok: false, step: 1, field: 'email', error: 'An account with this email already exists. Log in instead.' };
+        return { ok: false, step: 3, field: null, error: 'We could not create your account: ' + (r.error.message || 'unknown error') };
       }
-      users.push(rec);
-      try { localStorage.setItem(USERS_KEY, JSON.stringify(users)); }
-      catch (e) { return { ok: false, step: 3, field: null, error: 'Your browser is blocking site data, so the account cannot be saved. Allow site data and try again.' }; }
-
-      HB_AUTH.saveProfile({
-        name: rec.name, email: rec.email, phone: rec.mobile, course: rec.course, yearLevel: rec.yearLevel,
-        emergencyName: emergency.name, emergencyRel: emergency.rel, emergencyPhone: emergency.phone
-      }, id);
-      var code = minor ? HB_AUTH.newGuardianCode(id) : '';
-      var session = { id: id, name: rec.name, email: rec.email, role: 'student' };
-      try { localStorage.setItem(CURRENT_KEY, JSON.stringify(session)); } catch (e) {}
-      return { ok: true, user: session, minor: minor, code: code };
-    });
+      if (!r.data || !r.data.user) return netErr;
+      if (!r.data.session) return { ok: false, step: 3, field: null, error: 'Your account was created, but email confirmation is switched on in Supabase. Turn off "Confirm email" (Authentication, Sign In / Providers, Email) or confirm the email, then log in.' };
+      return HB_AUTH.loadProfile(r.data.user.id).then(function (pr) {
+        if (pr.error || !pr.data) return { ok: false, step: 3, field: null, error: 'Your account was created, but the profile could not be loaded. Try logging in.' };
+        var session = HB_AUTH.cacheProfile(pr.data);
+        return { ok: true, user: session || { name: pr.data.name, email: pr.data.email }, minor: minor, code: pr.data.guardian_code || '' };
+      });
+    }, function () { return netErr; });
   }
 
   global.HB_SIGNUP = { V: V, YEARS: YEARS, GUARDIAN_RELATIONS: GUARDIAN_RELATIONS, EMERGENCY_RELATIONS: EMERGENCY_RELATIONS, normMobile: normMobile, validate: validate, registerStudent: registerStudent };
