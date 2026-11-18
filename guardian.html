@@ -81,6 +81,8 @@
     </div>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase.js"></script>
   <script src="assets/js/auth.js"></script>
   <script>
     (function () {
@@ -103,11 +105,12 @@
         fieldError('certify', $('g-certify').checked ? '' : 'Tick the box to confirm and approve.'); if ($('g-certify').getAttribute('aria-invalid')) problems.push('g-certify');
         if (problems.length) { $(problems[0]).focus(); return; }
 
-        var res = HB_AUTH.approveGuardian(email, code, name);
-        if (!res.ok) { var b = $('error'); b.textContent = res.error; b.hidden = false; b.focus(); return; }
-        $('card').hidden = true; $('ok').hidden = false;
-        $('ok-text').textContent = res.studentName + ' can now request a room at Ariate Dormitory. You do not need to do anything else.';
-        $('ok-title').focus(); window.scrollTo(0, 0);
+        HB_AUTH.approveGuardian(email, code, name).then(function (res) {
+          if (!res.ok) { var b = $('error'); b.textContent = res.error; b.hidden = false; b.focus(); return; }
+          $('card').hidden = true; $('ok').hidden = false;
+          $('ok-text').textContent = res.studentName + ' can now request a room at Ariate Dormitory. You do not need to do anything else.';
+          $('ok-title').focus(); window.scrollTo(0, 0);
+        });
       });
     })();
   </script>

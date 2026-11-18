@@ -1,4 +1,4 @@
-﻿/*
+/*
   Homebase Authentication & Session Management
   Shared across all pages: index.html, home.html, landlord.html, matches.html, rooms.html, floorplan.html, profile.html.
 
@@ -83,7 +83,7 @@
       });
     }
   }
-  seedDefaultUsers();
+  // (demo accounts removed: accounts now live in Supabase)
 
   // ---- Client-side password hashing (prototype layer before PHP/MySQL) ----
   function hashPassword(pw) {
@@ -101,7 +101,41 @@
     return role === 'landlord' ? 'landlord.html' : 'home.html';
   }
 
+  // ---- Supabase glue ----
+  // Supabase holds the real accounts. We keep a copy of the logged-in profile in localStorage so the pages
+  // that are not migrated yet can still read the user synchronously.
+  function db() { return global.HB_DB || null; }
+  function loadProfile(uid) { return db().from('profiles').select('*').eq('id', uid).single(); }
+  function rowToRecord(p) {
+    return { id: p.id, name: p.name, email: p.email, role: p.role, dob: p.dob || '', mobile: p.mobile || '', school: p.school || '',
+      studentId: p.student_id || '', course: p.course || '', yearLevel: p.year_level || '', province: p.province || '',
+      guardian: p.guardian || {}, guardianStatus: p.guardian_status, guardianCode: p.guardian_code || '' };
+  }
+  function cacheProfile(p) {
+    var rec = rowToRecord(p);
+    var users = readStorage(USERS_KEY, []).filter(function (u) { return String(u.id) !== String(rec.id); });
+    users.push(rec);
+    writeStorage(USERS_KEY, users);
+    var sess = { id: rec.id, name: rec.name, email: rec.email, role: rec.role };
+    var prev = readStorage(CURRENT_KEY, null);
+    if (prev && String(prev.id) === String(rec.id) && prev.photo) sess.photo = prev.photo;
+    if (!writeStorage(CURRENT_KEY, sess)) return null;
+    if (!readStorage('homebase_profile_' + rec.id, null)) {
+      var e = p.emergency || {}, h = p.habits || {}, prof = {
+        name: rec.name, email: rec.email, phone: rec.mobile, course: rec.course, yearLevel: rec.yearLevel,
+        bio: p.bio || '', emergencyName: e.name || '', emergencyRel: e.relationship || '', emergencyPhone: e.mobile || ''
+      };
+      if (p.photo) prof.photo = p.photo;
+      for (var k in h) prof[k] = h[k];
+      writeStorage('homebase_profile_' + rec.id, prof);
+    }
+    return sess;
+  }
+  var NO_DB = 'Cannot reach the database right now. Check your internet connection and try again.';
+
   var HB_AUTH = {
+    loadProfile: loadProfile,
+    cacheProfile: cacheProfile,
     USERS_KEY: USERS_KEY,
     CURRENT_KEY: CURRENT_KEY,
     hashPassword: hashPassword,
@@ -143,34 +177,25 @@
       return u;
     },
 
-    // Login with email and password
+    // Login with email and password (Supabase Auth)
     login: function (email, password) {
       var cleanEmail = String(email || '').trim().toLowerCase();
       var cleanPw = String(password || '');
-
-      return hashPassword(cleanPw).then(function (hash) {
-        var users = readStorage(USERS_KEY, []);
-        var match = users.filter(function (u) {
-          return u.email === cleanEmail && u.password === hash;
-        })[0];
-
-        if (!match) {
-          return {
-            ok: false,
-            error: 'That email and password do not match. Check both and try again, or create an account.'
-          };
+      if (!db()) return Promise.resolve({ ok: false, error: NO_DB });
+      return db().auth.signInWithPassword({ email: cleanEmail, password: cleanPw }).then(function (r) {
+        if (r.error || !r.data || !r.data.user) {
+          var m = r.error && r.error.message || '';
+          if (/confirm/i.test(m)) return { ok: false, error: 'Please confirm your email first, then log in.' };
+          if (/fetch|network/i.test(m)) return { ok: false, error: NO_DB };
+          return { ok: false, error: 'That email and password do not match. Check both and try again, or create an account.' };
         }
-
-        var sessionUser = { id: match.id, name: match.name, email: match.email, role: match.role };
-        if (!writeStorage(CURRENT_KEY, sessionUser)) {
-          return {
-            ok: false,
-            error: 'Your browser is blocking local storage, so we cannot keep you logged in. Allow site data and try again.'
-          };
-        }
-
-        return { ok: true, user: sessionUser };
-      });
+        return loadProfile(r.data.user.id).then(function (pr) {
+          if (pr.error || !pr.data) return { ok: false, error: 'You are signed in, but your profile could not be loaded. Please try again.' };
+          var sess = cacheProfile(pr.data);
+          if (!sess) return { ok: false, error: 'Your browser is blocking local storage, so we cannot keep you logged in. Allow site data and try again.' };
+          return { ok: true, user: sess };
+        });
+      }, function () { return { ok: false, error: NO_DB }; });
     },
 
     // Register a new account
@@ -216,9 +241,8 @@
     // Log out and clear session
     logout: function (redirectUrl) {
       clearStorage(CURRENT_KEY);
-      if (redirectUrl !== false) {
-        global.location.href = redirectUrl || 'index.html';
-      }
+      var done = function () { if (redirectUrl !== false) global.location.href = redirectUrl || 'index.html'; };
+      if (db()) Promise.resolve(db().auth.signOut()).then(done, done); else done();
     },
 
     // Attach click listener to all [data-logout] and #logout elements
@@ -375,36 +399,25 @@
       var r = HB_AUTH.getRecord(userId);
       return r && r.guardianStatus === 'pending' ? (r.guardianCode || '') : '';
     },
+    // The student asks for a fresh code. Resolves to the new code, or '' when it could not be made.
     newGuardianCode: function (userId) {
-      var users = readStorage(USERS_KEY, []), code;
-      var arr = global.crypto && global.crypto.getRandomValues ? global.crypto.getRandomValues(new Uint32Array(1)) : [Math.floor(Math.random() * 4294967295)];
-      code = String(100000 + (arr[0] % 900000));
-      for (var i = 0; i < users.length; i++) {
-        if (String(users[i].id) === String(userId) && users[i].guardianStatus === 'pending') {
-          users[i].guardianCode = code; users[i].guardianAttempts = 0;
-          writeStorage(USERS_KEY, users);
-          return code;
-        }
-      }
-      return '';
+      if (!db()) return Promise.resolve('');
+      return db().rpc('new_guardian_code').then(function (r) {
+        if (r.error || !r.data) return '';
+        return loadProfile(userId).then(function (pr) { if (pr.data) cacheProfile(pr.data); return r.data; });
+      }, function () { return ''; });
     },
-    // Called from the parent approval page. Three things must match: the student's email, the code, and the guardian's name.
+    // Called from the parent approval page (no login). Resolves to { ok, studentName } or { ok: false, error }.
     approveGuardian: function (email, code, guardianName) {
       var generic = { ok: false, error: 'That email, code and name do not match a pending approval. Please check them with the student and try again.' };
-      var norm = function (s) { return String(s || '').trim().toLowerCase().replace(/\s+/g, ' '); };
-      var users = readStorage(USERS_KEY, []), e = norm(email), rec = null;
-      for (var i = 0; i < users.length; i++) if (users[i].email === e) { rec = users[i]; break; }
-      if (!rec || rec.guardianStatus !== 'pending' || !rec.guardianCode) return generic;
-      if ((rec.guardianAttempts || 0) >= 5) return { ok: false, locked: true, error: 'Too many wrong tries. The student must get a new code on their Home page.' };
-      if (String(code || '').trim() !== rec.guardianCode || norm(guardianName) !== norm(rec.guardian && rec.guardian.name)) {
-        rec.guardianAttempts = (rec.guardianAttempts || 0) + 1;
-        writeStorage(USERS_KEY, users);
+      if (!db()) return Promise.resolve({ ok: false, error: NO_DB });
+      return db().rpc('approve_guardian', { p_email: String(email || '').trim(), p_code: String(code || '').trim(), p_name: String(guardianName || '') }).then(function (r) {
+        if (r.error) return { ok: false, error: 'Something went wrong. Please try again in a moment.' };
+        var v = String(r.data || '');
+        if (v.indexOf('ok|') === 0) return { ok: true, studentName: v.slice(3) };
+        if (v === 'locked') return { ok: false, locked: true, error: 'Too many wrong tries. The student must get a new code on their Home page.' };
         return generic;
-      }
-      rec.guardianStatus = 'approved'; rec.guardianApprovedAt = new Date().toISOString();
-      delete rec.guardianCode; delete rec.guardianAttempts;
-      writeStorage(USERS_KEY, users);
-      return { ok: true, studentName: rec.name };
+      }, function () { return { ok: false, error: NO_DB }; });
     },
 
     // Safe helpers for text that comes from users. Never put user text into innerHTML: build elements instead.
@@ -441,4 +454,25 @@
   };
 
   global.HB_AUTH = HB_AUTH;
+
+  // On every page load: confirm the Supabase session is still valid, and refresh the cached profile.
+  // If something important changed (guardian approval, role), reload once so the page shows it.
+  (function () {
+    var cached = readStorage(CURRENT_KEY, null);
+    if (!cached || !cached.id || !db()) return;
+    db().auth.getSession().then(function (r) {
+      var sess = r && r.data && r.data.session;
+      if (!sess) {
+        clearStorage(CURRENT_KEY);
+        if (!/(^|\/)(index\.html)?$/.test(global.location.pathname)) global.location.replace('index.html');
+        return;
+      }
+      var before = HB_AUTH.getRecord(cached.id);
+      loadProfile(sess.user.id).then(function (pr) {
+        if (!pr.data) return;
+        cacheProfile(pr.data);
+        if (before && (before.guardianStatus !== pr.data.guardian_status || before.role !== pr.data.role)) global.location.reload();
+      });
+    }).catch(function () {});
+  })();
 })(window);
