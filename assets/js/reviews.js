@@ -25,7 +25,7 @@
   var LINK = 'inline-flex min-h-[44px] items-center rounded font-semibold text-forest underline underline-offset-4 outline-none hover:text-forest-deep focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2';
 
   function readAll() { try { var r = localStorage.getItem(KEY), v = r ? JSON.parse(r) : []; return Array.isArray(v) ? v : []; } catch (e) { return []; } }
-  function writeAll(v) { try { localStorage.setItem(KEY, JSON.stringify(v)); return true; } catch (e) { return false; } }
+  function writeAll(v) { try { localStorage.setItem(KEY, JSON.stringify(v)); } catch (e) { return false; } if (window.HB_SYNC) HB_SYNC.saved('reviews', v); return true; }
   function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
   function today() { var d = new Date(), p = function (n) { return String(n).padStart(2, '0'); }; return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); }
   function fmt(s) { var d = new Date(s && String(s).length === 10 ? s + 'T00:00:00' : s); return isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' }); }
@@ -103,7 +103,7 @@
       if (hit) {
         if (hit.comment !== text) delete hit.hidden;      // a changed comment is a new comment: the office can look at it again
         hit.ratings = ratings; hit.comment = text; hit.updatedAt = now; hit.authorName = shortName(user.name);
-      } else all.push({ id: 'rev-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7), reservationId: res.id, userId: user.id, authorName: shortName(user.name), roomId: res.roomId, roomName: res.roomName, ratings: ratings, comment: text, createdAt: now, updatedAt: now });
+      } else all.push({ id: (window.crypto && crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) { var r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); })), reservationId: res.id, userId: user.id, authorName: shortName(user.name), roomId: res.roomId, roomName: res.roomName, ratings: ratings, comment: text, createdAt: now, updatedAt: now });
       return writeAll(all) ? { ok: true } : { ok: false, error: 'Your browser blocked saving the review. Allow site data and try again.' };
     },
 

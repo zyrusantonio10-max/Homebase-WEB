@@ -34,13 +34,14 @@
     all: function () { try { var v = JSON.parse(localStorage.getItem(KEY) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } },
     save: function (list) {
       try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) { return false; }
+      if (window.HB_SYNC) HB_SYNC.saved('concerns', list);
       try { window.dispatchEvent(new Event('hb-concerns')); } catch (e) {} // the storage event only reaches OTHER tabs
       return true;
     }
   };
 
   function nowIso() { return new Date().toISOString(); }
-  function newId(p) { return p + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7); }
+  function newId(p) { return (window.crypto && crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) { var r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); })); }
   function roleOf(u) { return u && u.role === 'landlord' ? 'landlord' : 'student'; }
   function isClosed(c) { return c.status === 'resolved' && !!c.confirmedAt; }
   function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }

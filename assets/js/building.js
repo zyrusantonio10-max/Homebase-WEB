@@ -67,15 +67,17 @@ function _loadBA() {
     if (raw) { var p = JSON.parse(raw); if (Array.isArray(p)) return p; }
     if (raw === null) {
       // First run: seed defaults for Ariate Dormitory
-      _saveBA(DEFAULT_ARIATE_BUILDING_AMENITIES);
+      _saveBA(DEFAULT_ARIATE_BUILDING_AMENITIES, true);
       return DEFAULT_ARIATE_BUILDING_AMENITIES.slice();
     }
   } catch (e) { /* swallow */ }
   return DEFAULT_ARIATE_BUILDING_AMENITIES.slice();
 }
-function _saveBA(list) {
-  try { localStorage.setItem(HB_BUILDING_KEY, JSON.stringify(list)); return true; }
+function _saveBA(list, noSync) {
+  try { localStorage.setItem(HB_BUILDING_KEY, JSON.stringify(list)); }
   catch (e) { return false; }
+  if (!noSync && window.HB_SYNC) HB_SYNC.saved('building', list);
+  return true;
 }
 
 /* ---- public API ---- */
