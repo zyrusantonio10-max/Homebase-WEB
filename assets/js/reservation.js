@@ -104,11 +104,12 @@
   }
   function roomToRow(r) {
     return { id: String(r.id), name: r.name, floor: Number(r.floor), type: r.type, price: Number(r.price), amenities: r.amenities || [],
-      available: !!r.available, beds_taken: Number(r.bedsTaken) || 0, capacity: r.capacity ? Number(r.capacity) : null, image: r.image || null };
+      available: !!r.available, beds_taken: Number(r.bedsTaken) || 0, capacity: r.capacity ? Number(r.capacity) : null, image: r.image || null, images: r.images || [] };
   }
   function rowToRoom(x) {
     var r = { id: x.id, name: x.name, floor: x.floor, type: x.type, price: x.price, amenities: x.amenities || [], available: x.available };
     if (x.beds_taken) r.bedsTaken = x.beds_taken; if (x.capacity) r.capacity = x.capacity; if (x.image) r.image = x.image;
+    if (x.images && x.images.length) r.images = x.images;
     return r;
   }
   function resToRow(r) {
@@ -231,8 +232,11 @@
       return true;
     },
 
-    // a real photo if the room has an "image" path, otherwise the drawn illustration
-    roomImage: function (room) { return room.image || ('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(roomArt(room))); },
+    // a real photo if the room has images, an "image" path, or the drawn illustration
+    roomImage: function (room) {
+      if (room.images && room.images.length) return room.images[0];
+      return room.image || ('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(roomArt(room)));
+    },
 
     isActive: isActive,
 
