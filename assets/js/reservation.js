@@ -131,6 +131,7 @@
     return r;
   }
   function track(p) {
+    if (window.HB) HB.lastWriteAt = Date.now();
     var q = Promise.resolve(p).then(function (r) { return r; }, function (e) { return { error: e }; });
     pending.push(q);
     q.then(function () { var i = pending.indexOf(q); if (i > -1) pending.splice(i, 1); });

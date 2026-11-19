@@ -137,7 +137,7 @@
   // the last copy we know is in the database (starts as what this browser already holds)
   var snap = {};
   NAMES.forEach(function (n) { try { snap[n] = REG[n].toRows(readLocal(REG[n].key)); } catch (e) { snap[n] = {}; } });
-  var queue = Promise.resolve();
+  var queue = Promise.resolve(), lastWrite = 0;
 
   // ---- pull: database to browser ----
   function pull(name, force) {
@@ -149,10 +149,11 @@
       var changed = canon(reg, norm) !== canon(reg, reg.toRows(readLocal(reg.key)));
       if (changed || force) { try { localStorage.setItem(reg.key, JSON.stringify(list)); } catch (e) {} }
       snap[name] = norm;
-      return changed;
-    }).catch(function (e) { try { console.warn('Homebase sync failed for', name, e); } catch (x) {} return false; });
+      return changed ? reg.key : null;
+    }).catch(function (e) { try { console.warn('Homebase sync failed for', name, e); } catch (x) {} return null; });
   }
-  function pullAll(force) { return Promise.all(NAMES.map(function (n) { return pull(n, force); })).then(function (rs) { return rs.some(Boolean); }); }
+  // resolves to the list of localStorage keys that changed
+  function pullAll(force) { return Promise.all(NAMES.map(function (n) { return pull(n, force); })).then(function (rs) { return rs.filter(Boolean); }); }
 
   // ---- push: browser to database ----
   function failed(text, err) {
@@ -193,6 +194,7 @@
     if (!reg || !db() || !me() || !Array.isArray(list)) return;
     var prev = snap[name] || {}, next = reg.toRows(list);
     snap[name] = next;
+    lastWrite = Date.now();
     queue = queue.then(function () { return applyDiff(reg, prev, next); }).catch(function (e) { failed('That could not be saved.', e); });
   }
 
@@ -200,9 +202,53 @@
     if (!me() || !db()) return;
     var jobs = [queue.then(function () { return pullAll(false); })];
     if (window.HB && HB.sync) jobs.push(HB.sync({ noReload: true }));
-    Promise.all(jobs).then(function (rs) { if (rs.some(Boolean) && canReload()) window.location.reload(); });
+    Promise.all(jobs).then(function (rs) { if (((rs[0] && rs[0].length) || rs[1]) && canReload()) window.location.reload(); });
+  }
+
+  // ---------------- live updates (Supabase Realtime) ----------------
+  // When anyone changes a table, we copy the new data into this browser and tell the page.
+  //  - Messages and concerns screens already redraw on a "storage" event, so we send them one.
+  //  - Other pages (requests, rooms, reviews) refresh quietly: never while a form is open or you are typing.
+  var LIVE_TABLES = ['rooms', 'reservations', 'reviews', 'threads', 'messages', 'concerns', 'concern_updates', 'building_perks'];
+  var RELOAD_KEYS = ['homebase_rooms', 'homebase_reservations', 'homebase_reviews', 'homebase_building_amenities'];
+  var liveTimer = null, liveBusy = false, liveAgain = false;
+
+  function selfHandled() { return /(messages|concerns)/i.test(window.location.pathname); }
+  function quietReload() {
+    var tries = 0;
+    (function wait() {
+      var a = document.activeElement;
+      var busy = document.hidden || document.querySelector('dialog[open]') || (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName));
+      if (!busy) { if (canReload()) window.location.reload(); return; }
+      if (++tries < 60) setTimeout(wait, 2000);   // keep waiting up to 2 minutes; the next page load syncs anyway
+    })();
+  }
+  function refreshLive() {
+    if (liveBusy) { liveAgain = true; return; }
+    liveBusy = true;
+    var mine = Date.now() - Math.max(lastWrite, (window.HB && HB.lastWriteAt) || 0) < 4000;   // an echo of our own save
+    Promise.all([queue.then(function () { return pullAll(false); }), (window.HB && HB.sync) ? HB.sync({ noReload: true }) : false]).then(function (rs) {
+      var keys = rs[0].slice();
+      if (rs[1]) keys.push('homebase_rooms', 'homebase_reservations');
+      if (mine || !keys.length) return;
+      keys.forEach(function (k) { try { window.dispatchEvent(new StorageEvent('storage', { key: k })); } catch (e) {} });
+      if (!selfHandled() && keys.some(function (k) { return RELOAD_KEYS.indexOf(k) !== -1; })) quietReload();
+    }).catch(function () {}).then(function () { liveBusy = false; if (liveAgain) { liveAgain = false; scheduleLive(); } });
+  }
+  function scheduleLive() { clearTimeout(liveTimer); liveTimer = setTimeout(refreshLive, 500); }
+  function startLive() {
+    var d = db(); if (!d || !d.channel || !me()) return;
+    d.auth.getSession().then(function (r) {
+      var s = r && r.data && r.data.session; if (!s) return;
+      try { d.realtime.setAuth(s.access_token); } catch (e) {}
+      var ch = d.channel('homebase-live');
+      LIVE_TABLES.forEach(function (t) { ch.on('postgres_changes', { event: '*', schema: 'public', table: t }, scheduleLive); });
+      ch.subscribe();
+      document.addEventListener('visibilitychange', function () { if (!document.hidden) scheduleLive(); });   // catch up after the phone slept
+    }).catch(function () {});
   }
 
   window.HB_SYNC = { saved: saved, pull: pullAll, flush: function () { return queue; }, run: run };
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run); else run();
+  function boot() { run(); startLive(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();
