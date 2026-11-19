@@ -50,7 +50,7 @@
               '<button type="button" id="cmp-x" aria-label="Close" class="-mr-2 -mt-2 grid h-11 w-11 shrink-0 place-items-center rounded-lg text-muted outline-none hover:bg-track focus-visible:ring-2 focus-visible:ring-forest">' +
                 '<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
             '<div class="mt-5 overflow-x-auto"><table id="cmp-table" class="w-full min-w-[560px] border-collapse text-left text-base"></table></div>' +
-            '<p class="mt-4 text-sm text-muted">Sample rooms. Prices and availability are placeholders. Pictures are illustrations, not photos.</p>' +
+            '<p class="mt-4 text-sm text-muted">Sample rooms. Prices and availability are placeholders. Rooms without a photo show an illustration.</p>' +
             '<button type="button" id="cmp-close" class="btn mt-5">Close</button>' +
           '</div>';
         document.body.appendChild(dlg);

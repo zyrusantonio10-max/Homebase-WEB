@@ -103,37 +103,14 @@
     return h.slice(0, 8) + '-' + h.slice(8, 12) + '-' + h.slice(12, 16) + '-' + h.slice(16, 20) + '-' + h.slice(20);
   }
   function roomToRow(r) {
-    var img = null;
-    if (r.images && Array.isArray(r.images) && r.images.length) {
-      img = r.images.length === 1 ? r.images[0] : JSON.stringify(r.images);
-    } else if (r.image) {
-      img = r.image;
-    }
     return { id: String(r.id), name: r.name, floor: Number(r.floor), type: r.type, price: Number(r.price), amenities: r.amenities || [],
-      available: !!r.available, beds_taken: Number(r.bedsTaken) || 0, capacity: r.capacity ? Number(r.capacity) : null, image: img };
+      available: !!r.available, beds_taken: Number(r.bedsTaken) || 0, capacity: r.capacity ? Number(r.capacity) : null, image: r.image || null, images: r.images || [] };
   }
   function rowToRoom(x) {
     var r = { id: x.id, name: x.name, floor: x.floor, type: x.type, price: x.price, amenities: x.amenities || [], available: x.available };
-    if (x.beds_taken) r.bedsTaken = x.beds_taken;
-    if (x.capacity) r.capacity = x.capacity;
-    if (x.image) {
-      var s = String(x.image);
-      if (s.charAt(0) === '[') {
-        try {
-          r.images = JSON.parse(s);
-          r.image = r.images[0] || null;
-        } catch (e) {
-          r.image = s;
-          r.images = [s];
-        }
-      } else {
-        r.image = s;
-        r.images = [s];
-      }
-    } else if (x.images && Array.isArray(x.images)) {
-      r.images = x.images;
-      r.image = x.images[0] || null;
-    }
+    if (x.beds_taken) r.bedsTaken = x.beds_taken; if (x.capacity) r.capacity = x.capacity;
+    if (x.images && x.images.length) r.images = x.images;
+    if (x.image) r.image = x.image; else if (r.images) r.image = r.images[0];
     return r;
   }
   function resToRow(r) {
@@ -256,11 +233,9 @@
       return true;
     },
 
-    // a real photo if the room has images, an "image" path, or the drawn illustration
-    roomImage: function (room) {
-      if (room.images && room.images.length) return room.images[0];
-      return room.image || ('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(roomArt(room)));
-    },
+    // a real photo if the room has an "image" path, otherwise the drawn illustration
+    hasPhoto: function (room) { return !!(room && (room.image || (room.images && room.images.length))); },
+    roomImage: function (room) { return room.image || ('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(roomArt(room))); },
 
     isActive: isActive,
 
