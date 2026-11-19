@@ -4,7 +4,7 @@
 
   What it draws (the styles are in assets/css/components.css, the ".ll-" section):
     laptops (768px and wider)  a sidebar on the left: logo, six links, then the landlord's name and Log out
-    phones                     a slim top bar (logo, profile, Log out) and a bottom tab bar with the first five links (Profile is the avatar)
+    phones                     a slim top bar with a menu to access all pages and Log out
 
   How to use it: put <script src="assets/js/landlord-shell.js"></script> as the FIRST thing inside <body>, and do not add a navbar to the page.
   It does nothing for students, so profile.html can load it for everyone.
@@ -35,7 +35,7 @@
     { href: 'landlord-messages.html', label: 'Messages', icon: 'messages', badge: true },
     { href: 'landlord-concerns.html', label: 'Concerns', icon: 'concerns', concerns: true },
     { href: 'landlord-reviews.html', label: 'Reviews', icon: 'reviews' },
-    { href: 'profile.html', label: 'Profile', icon: 'profile', noTab: true } // phones open it from the avatar in the top bar
+    { href: 'profile.html', label: 'Profile', icon: 'profile' }
   ];
   var here = (location.pathname.split('/').pop() || '').toLowerCase();
 
@@ -79,7 +79,8 @@
   meLink.appendChild(avatar('nav-avatar'));
   var who = el('span', 'll-who'); var nm = el('span', 'll-name', String(user.name || user.email || '')); nm.id = 'nav-name';
   who.appendChild(nm); who.appendChild(el('span', 'll-role', 'Landlord')); meLink.appendChild(who);
-  var out = el('button', 'btn btn-logout', 'Log out'); out.type = 'button'; out.id = 'logout'; out.addEventListener('click', logout);
+  var out = el('button', 'btn btn-logout', 'Log out'); out.type = 'button'; out.id = 'logout'; out.setAttribute('data-logout', '');
+  out.addEventListener('click', logout);
   me.appendChild(meLink); me.appendChild(out); side.appendChild(me);
 
   // ---- top bar (phones) ----
@@ -87,23 +88,42 @@
   top.appendChild(brand());
   var right = el('div', 'll-top-right');
   var pl = el('a', 'rounded-full'); pl.href = 'profile.html'; pl.setAttribute('aria-label', 'My profile'); pl.className = 'll-user-link'; pl.style.padding = '0'; pl.appendChild(avatar(null));
-  var out2 = el('button', 'btn btn-logout', 'Log out'); out2.type = 'button'; out2.id = 'logout-m'; out2.addEventListener('click', logout);
-  right.appendChild(pl); right.appendChild(out2); top.appendChild(right);
+  var menuBtn = el('button', 'btn btn-outline text-sm !min-h-[38px] !px-3', 'Menu');
+  menuBtn.type = 'button'; menuBtn.id = 'menu-btn'; menuBtn.setAttribute('aria-expanded', 'false');
+  right.appendChild(pl); right.appendChild(menuBtn); top.appendChild(right);
 
-  // ---- bottom tabs (phones) ----
-  var tabs = el('nav', 'll-tabs'); tabs.setAttribute('aria-label', 'Main');
-  var tul = el('ul');
+  // ---- mobile menu dropdown (phones) ----
+  var menu = el('div', 'll-menu');
+  menu.id = 'menu'; menu.hidden = true;
+  var mul = el('ul');
   NAV.forEach(function (item) {
-    if (item.noTab) return;
-    var li = el('li'), a = el('a', 'll-tab'); a.href = item.href; mark(a, item);
-    var pill = el('span', 'll-pill'); pill.innerHTML = ICONS[item.icon]; if (item.badge) pill.appendChild(badge()); if (item.concerns) pill.appendChild(badge('data-concern-badge'));
-    a.appendChild(pill); a.appendChild(el('span', null, item.label));
-    li.appendChild(a); tul.appendChild(li);
+    var li = el('li'), a = el('a', 'll-link'); a.href = item.href; mark(a, item);
+    a.innerHTML = ICONS[item.icon]; a.appendChild(el('span', null, item.label));
+    if (item.badge) a.appendChild(badge());
+    if (item.concerns) a.appendChild(badge('data-concern-badge'));
+    li.appendChild(a); mul.appendChild(li);
   });
-  tabs.appendChild(tul);
+  menu.appendChild(mul);
+  var out2 = el('button', 'btn btn-logout', 'Log out'); out2.type = 'button'; out2.id = 'logout-m'; out2.setAttribute('data-logout', '');
+  out2.addEventListener('click', logout);
+  menu.appendChild(out2);
+
+  menuBtn.addEventListener('click', function () {
+    menu.hidden = !menu.hidden;
+    menuBtn.setAttribute('aria-expanded', String(!menu.hidden));
+    menuBtn.textContent = menu.hidden ? 'Menu' : 'Close';
+  });
+
+  document.addEventListener('click', function (e) {
+    if (!menu.hidden && !menu.contains(e.target) && !menuBtn.contains(e.target)) {
+      menu.hidden = true;
+      menuBtn.setAttribute('aria-expanded', 'false');
+      menuBtn.textContent = 'Menu';
+    }
+  });
 
   var frag = document.createDocumentFragment();
-  [skip, side, top, tabs].forEach(function (n) { frag.appendChild(n); });
+  [skip, side, top, menu].forEach(function (n) { frag.appendChild(n); });
   document.body.insertBefore(frag, document.body.firstChild);
 
   // the Concerns badge: how many are new (status "received", same rule as HB_CONCERNS.newCount)

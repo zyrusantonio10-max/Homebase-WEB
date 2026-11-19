@@ -2,9 +2,9 @@
   The navigation for every signed-in page, for students AND the landlord. It replaces assets/js/landlord-shell.js.
 
   Laptops (768px and wider): a dark green sidebar on the left (logo, links, your name, Log out).
-  Phones: a slim top bar, plus a bottom tab bar.
-    Students:  Home, Matches, Rooms, Messages and a Menu tab. The Menu tab opens a sheet with Concerns, Profile and Log out.
-    Landlord:  Dashboard, Rooms, Messages, Concerns, Reviews. Profile and Log out are in the top bar.
+  Phones: a slim top bar with a menu to access all pages and Log out.
+    Students:  Home, Matches, Rooms, Messages, Concerns, Profile and Log out.
+    Landlord:  Dashboard, Rooms, Messages, Concerns, Reviews, Profile and Log out.
 
   How to use it: put <script src="assets/js/app-shell.js"></script> as the FIRST thing inside <body>.
   It loads assets/css/shell.css by itself and removes the page's old navbar, if there is one.
@@ -40,19 +40,19 @@
     menu: icon('<path d="M4 7h16M4 12h16M4 17h16"/>')
   };
 
-  // tab: shows in the phone tab bar. concerns: students see it only when messages.js says so.
+  // concerns: students see it only when messages.js says so.
   var NAV = isLL ? [
-    { href: 'landlord.html', label: 'Dashboard', icon: 'dashboard', tab: true },
-    { href: 'landlord-rooms.html', label: 'Rooms', icon: 'rooms', tab: true },
-    { href: 'landlord-messages.html', label: 'Messages', icon: 'messages', tab: true, badge: 'data-msg-badge' },
-    { href: 'landlord-concerns.html', label: 'Concerns', icon: 'concerns', tab: true, badge: 'data-concern-badge' },
-    { href: 'landlord-reviews.html', label: 'Reviews', icon: 'reviews', tab: true },
+    { href: 'landlord.html', label: 'Dashboard', icon: 'dashboard' },
+    { href: 'landlord-rooms.html', label: 'Rooms', icon: 'rooms' },
+    { href: 'landlord-messages.html', label: 'Messages', icon: 'messages', badge: 'data-msg-badge' },
+    { href: 'landlord-concerns.html', label: 'Concerns', icon: 'concerns', badge: 'data-concern-badge' },
+    { href: 'landlord-reviews.html', label: 'Reviews', icon: 'reviews' },
     { href: 'profile.html', label: 'Profile', icon: 'profile' }
   ] : [
-    { href: 'home.html', label: 'Home', icon: 'home', tab: true },
-    { href: 'matches.html', label: 'My Matches', short: 'Matches', icon: 'matches', tab: true },
-    { href: 'rooms.html', label: 'Explore Rooms', short: 'Rooms', icon: 'explore', tab: true },
-    { href: 'messages.html', label: 'Messages', icon: 'messages', tab: true, badge: 'data-msg-badge' },
+    { href: 'home.html', label: 'Home', icon: 'home' },
+    { href: 'matches.html', label: 'My Matches', short: 'Matches', icon: 'matches' },
+    { href: 'rooms.html', label: 'Explore Rooms', short: 'Rooms', icon: 'explore' },
+    { href: 'messages.html', label: 'Messages', icon: 'messages', badge: 'data-msg-badge' },
     { href: 'concerns.html', label: 'Concerns', icon: 'concerns', studentConcerns: true },
     { href: 'profile.html', label: 'Profile', icon: 'profile' }
   ];
@@ -117,48 +117,34 @@
   var right = el('div', 'hb-top-right');
   var pl = el('a', 'hb-user-link'); pl.href = 'profile.html'; pl.setAttribute('aria-label', 'My profile'); pl.appendChild(avatar(null));
   right.appendChild(pl);
-  if (isLL) {
-    var out2 = el('button', 'btn btn-logout', 'Log out'); out2.type = 'button'; out2.id = 'logout-m'; out2.addEventListener('click', logout);
-    right.appendChild(out2);
-  }
+  var mb = el('button', 'btn btn-outline text-sm !min-h-[38px] !px-3', 'Menu');
+  mb.type = 'button'; mb.id = 'menu-btn'; mb.setAttribute('aria-expanded', 'false'); mb.setAttribute('aria-controls', 'menu');
+  right.appendChild(mb);
   top.appendChild(right);
 
-  // ---- bottom tabs (phones) ----
-  var tabs = el('nav', 'hb-tabs'); tabs.setAttribute('aria-label', 'Main');
-  var tul = el('ul');
-  NAV.forEach(function (item) {
-    if (!item.tab) return;
-    var a = el('a', 'hb-tab'); a.href = item.href; current(a, item);
-    var pill = el('span', 'hb-pill'); pill.innerHTML = ICONS[item.icon]; if (item.badge) pill.appendChild(badge(item.badge));
-    a.appendChild(pill); a.appendChild(el('span', null, item.short || item.label));
-    tul.appendChild(li(a));
+  // ---- mobile menu dropdown (phones) ----
+  var sheet = el('div', 'hb-sheet'); sheet.id = 'menu'; sheet.hidden = true;
+  var sul = el('ul'); sul.id = 'menu-links';
+  NAV.forEach(function (item) { sul.appendChild(li(link(item, 'hb-link'), item)); });
+  sheet.appendChild(sul);
+  var out3 = el('button', 'btn btn-logout', 'Log out'); out3.type = 'button'; out3.id = 'logout-m'; out3.setAttribute('data-logout', '');
+  out3.addEventListener('click', logout); sheet.appendChild(out3);
+
+  mb.addEventListener('click', function () {
+    sheet.hidden = !sheet.hidden;
+    mb.setAttribute('aria-expanded', String(!sheet.hidden));
+    mb.textContent = sheet.hidden ? 'Menu' : 'Close';
   });
-  var parts = [skip, side, top, tabs];
 
-  // students: a Menu tab that opens a sheet (the page's own script toggles #menu and closes it with Escape)
-  if (!isLL) {
-    var mb = el('button', 'hb-tab'); mb.type = 'button'; mb.id = 'menu-btn';
-    mb.setAttribute('aria-expanded', 'false'); mb.setAttribute('aria-controls', 'menu');
-    var mp = el('span', 'hb-pill'); mp.innerHTML = ICONS.menu;
-    mb.appendChild(mp); var ml = el('span', null, 'Menu'); ml.id = 'menu-label'; mb.appendChild(ml);
-    tul.appendChild(li(mb));
+  document.addEventListener('click', function (e) {
+    if (!sheet.hidden && !sheet.contains(e.target) && !mb.contains(e.target)) {
+      sheet.hidden = true;
+      mb.setAttribute('aria-expanded', 'false');
+      mb.textContent = 'Menu';
+    }
+  });
 
-    var sheet = el('div', 'hb-sheet'); sheet.id = 'menu'; sheet.hidden = true;
-    var sul = el('ul'); sul.id = 'menu-links';
-    NAV.forEach(function (item) { if (!item.tab) sul.appendChild(li(link(item, 'hb-link'), item)); });
-    sheet.appendChild(sul);
-    var out3 = el('button', 'btn btn-logout', 'Log out'); out3.type = 'button'; out3.setAttribute('data-logout', '');
-    out3.addEventListener('click', logout); sheet.appendChild(out3);
-    parts.push(sheet);
-
-    // a tap outside the sheet closes it, the same way the Menu tab does
-    document.addEventListener('click', function (e) {
-      var m = document.getElementById('menu'), b = document.getElementById('menu-btn');
-      if (!m || !b || m.hidden || m.contains(e.target) || b.contains(e.target)) return;
-      b.click();
-    });
-  }
-  tabs.appendChild(tul);
+  var parts = [skip, side, top, sheet];
 
   var frag = document.createDocumentFragment();
   parts.forEach(function (n) { frag.appendChild(n); });

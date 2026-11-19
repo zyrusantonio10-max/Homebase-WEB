@@ -1,4 +1,4 @@
-﻿/*
+/*
   Compare rooms: shared by Explore Rooms (rooms.html) and My Matches (matches.html).
   Needs assets/js/reservation.js (window.HB) loaded first, and the pages' .btn / .btn-outline classes.
 
@@ -26,7 +26,7 @@
     mount: function (cfg) {
       var rooms = cfg.rooms, user = cfg.user, hasActive = !!cfg.hasActive, picked = [];
 
-      // ---- the bar at the bottom of the page and the comparison window ----
+      // ---- comparison bar and the comparison window ----
       var bar = document.getElementById('cmp-bar'), dlg = document.getElementById('cmp-dialog');
       if (!bar) {
         bar = el('div', 'fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white/95 backdrop-blur-md px-4 py-2.5 sm:px-6 shadow-lg');
