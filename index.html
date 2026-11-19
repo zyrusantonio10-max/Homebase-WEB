@@ -106,22 +106,9 @@
 
       <!-- TOP-LEFT: LOGO AREA -->
       <header class="relative z-20">
-        <!-- 
-          LOGO LINK:
-          You can drop your official logo image here inside the <a> tag.
-          Example: <img src="assets/images/logo.png" alt="Homebase Logo" class="h-12 w-auto">
-        -->
-        <a href="index.html" class="inline-flex items-center gap-3.5 no-underline outline-none focus-visible:ring-2 focus-visible:ring-[#1E4D36] rounded-xl" aria-label="Homebase Home">
-          
-          <!-- Logo Emblem (Emblem matching the design) -->
-          <div class="relative flex items-center justify-center w-12 h-12 rounded-full border-2 border-[#2F6A4F]/25 bg-white shadow-sm overflow-hidden text-[#1E4D36]">
-            <!-- Subtle home & roof symbol -->
-            <svg viewBox="0 0 40 40" class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M6 18.5L20 7l14 11.5V33a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z"/>
-              <path d="M15 35V20h10v15"/>
-            </svg>
-          </div>
-
+        <a href="index.html" class="inline-flex items-center gap-3.5 no-underline outline-none focus-visible:ring-2 focus-visible:ring-[#1E4D36] rounded-xl group" aria-label="Homebase Home">
+          <!-- Official Homebase Logo -->
+          <img src="assets/images/logo.png" alt="Homebase Logo" class="w-12 h-12 rounded-full object-contain shadow-sm transition-transform group-hover:scale-105">
           <!-- Brand Wordmark -->
           <span class="font-display text-2xl sm:text-[1.75rem] font-bold text-[#143826] tracking-tight">Homebase</span>
         </a>

@@ -25,7 +25,7 @@
   css.rel = 'stylesheet'; css.href = 'assets/css/shell.css';
   document.head.appendChild(css);
 
-  var LOGO = '<svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#0B4A2F"/><rect x="7" y="8" width="7" height="8" rx="1.5" fill="#083A25"/><rect x="18" y="8" width="7" height="8" rx="1.5" fill="#C6F24E"/><rect x="7" y="19" width="7" height="8" rx="1.5" fill="#083A25"/><rect x="18" y="19" width="7" height="8" rx="1.5" fill="#083A25"/></svg>';
+  var LOGO = '<img src="assets/images/logo.png" alt="Homebase" class="h-9 w-9 rounded-full object-contain shrink-0">';
   function icon(p) { return '<svg class="hb-ico" viewBox="0 0 24 24" aria-hidden="true">' + p + '</svg>'; }
   var ICONS = {
     home: icon('<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>'),
