@@ -42,17 +42,17 @@
 
   // every rule returns '' when the value is fine, or a plain sentence saying what to fix
   var V = {
-    name: function (v) {
+    name: function (v, label) {
       v = squash(v);
       if (!v) return 'Enter your full name.';
-      if (v.split(' ').length < 2) return 'Enter your first and last name, as on your school ID.';
+      if (v.split(' ').length < 2) return 'Enter your first and last name, as on ' + (label || 'your ID') + '.';
       if (!/^[\p{L}][\p{L} .'\-]{1,59}$/u.test(v)) return 'Use letters only. Spaces, dots, hyphens and apostrophes are fine.';
       return '';
     },
     email: function (v) {
       v = String(v || '').trim();
       if (!v) return 'Enter your email.';
-      if (v.length > 120 || !EMAIL_RE.test(v)) return 'That email does not look right. It should look like name@school.edu.ph.';
+      if (v.length > 120 || !EMAIL_RE.test(v)) return 'That email does not look right. It should look like name@example.com.';
       return '';
     },
     password: function (v, name, email) {
@@ -71,7 +71,7 @@
       var age = HB_AUTH.ageFromDob(v);
       if (age === null || isNaN(new Date(v + 'T00:00:00').getTime())) return 'Enter a real date.';
       if (new Date(v + 'T00:00:00') > new Date()) return 'Your date of birth cannot be in the future.';
-      if (age < 15) return 'Homebase is for students aged 15 and above. Please contact the dormitory office.';
+      if (age < 15) return 'Homebase is for residents aged 15 and above. Please contact the dormitory office.';
       if (age > 70) return 'Please check the year.';
       return '';
     },
@@ -96,21 +96,27 @@
   // Check every field. Returns null when all is fine, or { step, field, error } for the first problem.
   function validate(d) {
     var e, bad = function (step, field, error) { return { step: step, field: field, error: error }; };
-    if ((e = V.name(d.name))) return bad(1, 'name', e);
+    var isStudent = d.isStudent !== false && d.userType !== 'non_student';
+    if ((e = V.name(d.name, isStudent ? 'your school ID' : 'your ID'))) return bad(1, 'name', e);
     if ((e = V.email(d.email))) return bad(1, 'email', e);
     if ((e = V.password(d.password, d.name, d.email))) return bad(1, 'password', e);
     if (d.password !== d.confirm) return bad(1, 'confirm', 'The two passwords do not match.');
     if ((e = V.dob(d.dob))) return bad(2, 'dob', e);
     if ((e = V.mobile(d.mobile))) return bad(2, 'mobile', e);
-    if ((e = V.text(d.school, 'your school or university', 2, 80))) return bad(2, 'school', e);
-    if ((e = V.studentId(d.studentId))) return bad(2, 'studentId', e);
-    if ((e = V.text(d.course, 'your course or program', 2, 80))) return bad(2, 'course', e);
-    if ((e = V.choice(d.yearLevel, YEARS, 'your year level'))) return bad(2, 'yearLevel', e);
+    if (isStudent) {
+      if ((e = V.text(d.school, 'your school or university', 2, 80))) return bad(2, 'school', e);
+      if ((e = V.studentId(d.studentId))) return bad(2, 'studentId', e);
+      if ((e = V.text(d.course, 'your course or program', 2, 80))) return bad(2, 'course', e);
+      if ((e = V.choice(d.yearLevel, YEARS, 'your year level'))) return bad(2, 'yearLevel', e);
+    } else {
+      if ((e = V.text(d.occupation, 'your occupation or profession', 2, 80))) return bad(2, 'occupation', e);
+      if ((e = V.optionalText(d.workplace, 80))) return bad(2, 'workplace', e);
+    }
     if ((e = V.optionalText(d.province, 60))) return bad(2, 'province', e);
     var minor = HB_AUTH.ageFromDob(d.dob) < 18, myMobile = normMobile(d.mobile);
     if (minor) {
       var g = d.guardian || {};
-      if ((e = V.name(g.name))) return bad(3, 'gName', e.replace('your full name', 'their full name').replace('your first and last name, as on your school ID', 'their first and last name'));
+      if ((e = V.name(g.name))) return bad(3, 'gName', e.replace('your full name', 'their full name').replace('your first and last name, as on your school ID', 'their first and last name').replace('your first and last name, as on your ID', 'their first and last name'));
       if ((e = V.choice(g.relationship, GUARDIAN_RELATIONS, 'how they are related to you'))) return bad(3, 'gRel', e);
       if ((e = V.mobile(g.mobile))) return bad(3, 'gMobile', e.replace('Enter your mobile number', 'Enter their mobile number'));
       if (normMobile(g.mobile) === myMobile) return bad(3, 'gMobile', 'Use your parent or guardian\u2019s own number, not yours.');
@@ -118,7 +124,7 @@
       if (String(g.email).trim().toLowerCase() === String(d.email).trim().toLowerCase()) return bad(3, 'gEmail', 'Use your parent or guardian\u2019s own email, not yours.');
     } else {
       var m = d.emergency || {};
-      if ((e = V.name(m.name))) return bad(3, 'eName', e.replace('your full name', 'their full name').replace('your first and last name, as on your school ID', 'their first and last name'));
+      if ((e = V.name(m.name))) return bad(3, 'eName', e.replace('your full name', 'their full name').replace('your first and last name, as on your school ID', 'their first and last name').replace('your first and last name, as on your ID', 'their first and last name'));
       if ((e = V.choice(m.relationship, EMERGENCY_RELATIONS, 'how they are related to you'))) return bad(3, 'eRel', e);
       if ((e = V.mobile(m.mobile))) return bad(3, 'eMobile', e.replace('Enter your mobile number', 'Enter their mobile number'));
       if (normMobile(m.mobile) === myMobile) return bad(3, 'eMobile', 'Use a different number from your own, so someone else can be reached.');
@@ -133,6 +139,7 @@
     if (problem) return Promise.resolve({ ok: false, step: problem.step, field: problem.field, error: problem.error });
     if (!global.HB_DB) return Promise.resolve({ ok: false, step: 3, field: null, error: 'Cannot reach the database right now. Check your internet connection and try again.' });
 
+    var isStudent = d.isStudent !== false && d.userType !== 'non_student';
     var email = String(d.email).trim().toLowerCase();
     var minor = HB_AUTH.ageFromDob(d.dob) < 18, guardian = {}, emergency;
     if (minor) {
@@ -142,10 +149,28 @@
     } else {
       emergency = { name: squash(d.emergency.name), relationship: d.emergency.relationship, mobile: normMobile(d.emergency.mobile) };
     }
+
+    var schoolVal = isStudent ? squash(d.school) : (squash(d.workplace) || null);
+    var studentIdVal = isStudent ? squash(d.studentId) : null;
+    var courseVal = isStudent ? squash(d.course) : squash(d.occupation);
+    var yearLevelVal = isStudent ? d.yearLevel : 'Working Professional';
+
     // This metadata is read by the database trigger (handle_new_user), which creates the profile row.
     var meta = {
-      name: squash(d.name), dob: d.dob, mobile: normMobile(d.mobile), school: squash(d.school), student_id: squash(d.studentId),
-      course: squash(d.course), year_level: d.yearLevel, province: squash(d.province), emergency: emergency, guardian: guardian
+      name: squash(d.name),
+      dob: d.dob,
+      mobile: normMobile(d.mobile),
+      school: schoolVal,
+      student_id: studentIdVal,
+      course: courseVal,
+      year_level: yearLevelVal,
+      province: squash(d.province),
+      emergency: emergency,
+      guardian: guardian,
+      user_type: isStudent ? 'student' : 'non_student',
+      occupation: !isStudent ? squash(d.occupation) : null,
+      workplace: !isStudent ? squash(d.workplace) : null,
+      role: 'student'
     };
     var netErr = { ok: false, step: 3, field: null, error: 'Cannot reach the database right now. Check your internet connection and try again.' };
 
@@ -159,11 +184,20 @@
       if (!r.data.session) return { ok: false, step: 3, field: null, error: 'Your account was created, but email confirmation is switched on in Supabase. Turn off "Confirm email" (Authentication, Sign In / Providers, Email) or confirm the email, then log in.' };
       return HB_AUTH.loadProfile(r.data.user.id).then(function (pr) {
         if (pr.error || !pr.data) return { ok: false, step: 3, field: null, error: 'Your account was created, but the profile could not be loaded. Try logging in.' };
+        if (!isStudent && !pr.data.course && courseVal) {
+          pr.data.course = courseVal;
+        }
+        if (!isStudent) {
+          pr.data.user_type = 'non_student';
+          pr.data.occupation = squash(d.occupation);
+          if (d.workplace) pr.data.workplace = squash(d.workplace);
+        }
         var session = HB_AUTH.cacheProfile(pr.data);
-        return { ok: true, user: session || { name: pr.data.name, email: pr.data.email }, minor: minor, code: pr.data.guardian_code || '' };
+        if (session && !isStudent) session.userType = 'non_student';
+        return { ok: true, user: session || { name: pr.data.name, email: pr.data.email, userType: isStudent ? 'student' : 'non_student' }, minor: minor, code: pr.data.guardian_code || '' };
       });
     }, function () { return netErr; });
   }
 
-  global.HB_SIGNUP = { V: V, YEARS: YEARS, GUARDIAN_RELATIONS: GUARDIAN_RELATIONS, EMERGENCY_RELATIONS: EMERGENCY_RELATIONS, normMobile: normMobile, validate: validate, registerStudent: registerStudent };
+  global.HB_SIGNUP = { V: V, YEARS: YEARS, GUARDIAN_RELATIONS: GUARDIAN_RELATIONS, EMERGENCY_RELATIONS: EMERGENCY_RELATIONS, normMobile: normMobile, validate: validate, registerStudent: registerStudent, registerUser: registerStudent };
 })(window);

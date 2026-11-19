@@ -107,23 +107,26 @@
   function db() { return global.HB_DB || null; }
   function loadProfile(uid) { return db().from('profiles').select('*').eq('id', uid).single(); }
   function rowToRecord(p) {
+    var userType = p.user_type || (!p.school && !p.student_id ? 'non_student' : 'student');
     return { id: p.id, name: p.name, email: p.email, role: p.role, dob: p.dob || '', mobile: p.mobile || '', school: p.school || '',
       studentId: p.student_id || '', course: p.course || '', yearLevel: p.year_level || '', province: p.province || '',
-      guardian: p.guardian || {}, guardianStatus: p.guardian_status, guardianCode: p.guardian_code || '' };
+      guardian: p.guardian || {}, guardianStatus: p.guardian_status, guardianCode: p.guardian_code || '',
+      userType: userType, occupation: p.occupation || (userType === 'non_student' ? p.course : ''), workplace: p.workplace || '' };
   }
   function cacheProfile(p) {
     var rec = rowToRecord(p);
     var users = readStorage(USERS_KEY, []).filter(function (u) { return String(u.id) !== String(rec.id); });
     users.push(rec);
     writeStorage(USERS_KEY, users);
-    var sess = { id: rec.id, name: rec.name, email: rec.email, role: rec.role };
+    var sess = { id: rec.id, name: rec.name, email: rec.email, role: rec.role, userType: rec.userType };
     var prev = readStorage(CURRENT_KEY, null);
     if (prev && String(prev.id) === String(rec.id) && prev.photo) sess.photo = prev.photo;
     if (!writeStorage(CURRENT_KEY, sess)) return null;
     if (!readStorage('homebase_profile_' + rec.id, null)) {
       var e = p.emergency || {}, h = p.habits || {}, prof = {
         name: rec.name, email: rec.email, phone: rec.mobile, course: rec.course, yearLevel: rec.yearLevel,
-        bio: p.bio || '', emergencyName: e.name || '', emergencyRel: e.relationship || '', emergencyPhone: e.mobile || ''
+        bio: p.bio || '', emergencyName: e.name || '', emergencyRel: e.relationship || '', emergencyPhone: e.mobile || '',
+        userType: rec.userType, occupation: rec.occupation, workplace: rec.workplace
       };
       if (p.photo) prof.photo = p.photo;
       for (var k in h) prof[k] = h[k];
@@ -211,12 +214,13 @@
     },
 
     // Register a new account
-    register: function (name, email, password, role) {
+    register: function (name, email, password, role, extra) {
       var cleanName = String(name || '').trim();
       var cleanEmail = String(email || '').trim().toLowerCase();
-      // Only students can register. There is one dormitory, so the landlord (office) account is created by the system, never by sign-up.
-      var cleanRole = 'student';
+      // Landlord (office) accounts are system provisioned; public registration is student or non-student resident
+      var cleanRole = role === 'landlord' ? 'landlord' : 'student';
       var cleanPw = String(password || '');
+      extra = extra || {};
 
       return hashPassword(cleanPw).then(function (hash) {
         var users = readStorage(USERS_KEY, []);
@@ -233,8 +237,10 @@
           name: cleanName,
           email: cleanEmail,
           role: cleanRole,
+          userType: extra.userType || (role === 'non_student' ? 'non_student' : 'student'),
           password: hash
         };
+        for (var k in extra) { if (!newUser.hasOwnProperty(k)) newUser[k] = extra[k]; }
 
         users.push(newUser);
         if (!writeStorage(USERS_KEY, users)) {
@@ -244,7 +250,7 @@
           };
         }
 
-        var sessionUser = { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role };
+        var sessionUser = { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role, userType: newUser.userType };
         writeStorage(CURRENT_KEY, sessionUser);
         return { ok: true, user: sessionUser };
       });

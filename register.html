@@ -48,7 +48,7 @@
 
     <div id="wizard" class="rounded-[28px] border border-line bg-white p-6 sm:p-10">
       <h1 class="font-display text-2xl font-bold tracking-tight sm:text-3xl">Create your account</h1>
-      <p class="mt-1 text-base text-muted">For students who want a room at Ariate Dormitory. It takes about two minutes.</p>
+      <p class="mt-1 text-base text-muted">For students and residents who want a room at Ariate Dormitory. It takes about two minutes.</p>
 
       <ol id="progress" class="mt-6 grid grid-cols-3 gap-2" aria-label="Sign-up steps"></ol>
 
@@ -61,7 +61,26 @@
           <h2 id="t1" tabindex="-1" class="font-display text-xl font-semibold tracking-tight outline-none">Your account</h2>
           <div class="mt-4 space-y-4">
             <div>
-              <label class="label" for="r-name">Full name, as on your school ID</label>
+              <label class="label" id="r-type-label">I am registering as</label>
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2" role="radiogroup" aria-labelledby="r-type-label">
+                <label id="type-student-card" class="relative flex cursor-pointer items-start gap-3 rounded-2xl border-2 border-forest bg-tint/60 p-4 transition-all">
+                  <input type="radio" name="accountType" id="type-student" value="student" checked class="mt-1 h-4 w-4 accent-forest">
+                  <div>
+                    <span class="block font-display text-base font-semibold text-ink">Student</span>
+                    <span class="block text-xs text-muted">Enrolled in college, university, or school</span>
+                  </div>
+                </label>
+                <label id="type-non-student-card" class="relative flex cursor-pointer items-start gap-3 rounded-2xl border-2 border-line bg-white p-4 transition-all hover:border-[#8FA397]">
+                  <input type="radio" name="accountType" id="type-non-student" value="non_student" class="mt-1 h-4 w-4 accent-forest">
+                  <div>
+                    <span class="block font-display text-base font-semibold text-ink">Non-student</span>
+                    <span class="block text-xs text-muted">Working professional, reviewee, or other resident</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+            <div>
+              <label class="label" for="r-name" id="r-name-label">Full name, as on your school ID</label>
               <input class="field" id="r-name" type="text" autocomplete="name" aria-describedby="r-name-err" required>
               <p class="err" id="r-name-err" hidden></p>
             </div>
@@ -103,28 +122,48 @@
               <input class="field" id="r-mobile" type="tel" autocomplete="tel" inputmode="tel" placeholder="0917 123 4567" aria-describedby="r-mobile-err" required>
               <p class="err" id="r-mobile-err" hidden></p>
             </div>
-            <div>
-              <label class="label" for="r-school">School or university</label>
-              <input class="field" id="r-school" type="text" autocomplete="organization" aria-describedby="r-school-err" required>
-              <p class="err" id="r-school-err" hidden></p>
-            </div>
-            <div class="grid gap-4 sm:grid-cols-2">
+
+            <!-- STUDENT-ONLY FIELDS -->
+            <div id="student-fields" class="space-y-4">
               <div>
-                <label class="label" for="r-studentId">Student ID number</label>
-                <input class="field" id="r-studentId" type="text" autocomplete="off" aria-describedby="r-studentId-err" required>
-                <p class="err" id="r-studentId-err" hidden></p>
+                <label class="label" for="r-school">School or university</label>
+                <input class="field" id="r-school" type="text" autocomplete="organization" aria-describedby="r-school-err">
+                <p class="err" id="r-school-err" hidden></p>
+              </div>
+              <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label class="label" for="r-studentId">Student ID number</label>
+                  <input class="field" id="r-studentId" type="text" autocomplete="off" aria-describedby="r-studentId-err">
+                  <p class="err" id="r-studentId-err" hidden></p>
+                </div>
+                <div>
+                  <label class="label" for="r-yearLevel">Year level</label>
+                  <select class="field" id="r-yearLevel" aria-describedby="r-yearLevel-err"><option value="">Choose one</option></select>
+                  <p class="err" id="r-yearLevel-err" hidden></p>
+                </div>
               </div>
               <div>
-                <label class="label" for="r-yearLevel">Year level</label>
-                <select class="field" id="r-yearLevel" aria-describedby="r-yearLevel-err" required><option value="">Choose one</option></select>
-                <p class="err" id="r-yearLevel-err" hidden></p>
+                <label class="label" for="r-course">Course or program</label>
+                <input class="field" id="r-course" type="text" aria-describedby="r-course-err">
+                <p class="err" id="r-course-err" hidden></p>
               </div>
             </div>
-            <div>
-              <label class="label" for="r-course">Course or program</label>
-              <input class="field" id="r-course" type="text" aria-describedby="r-course-err" required>
-              <p class="err" id="r-course-err" hidden></p>
+
+            <!-- NON-STUDENT FIELDS -->
+            <div id="non-student-fields" class="space-y-4" hidden>
+              <div>
+                <label class="label" for="r-occupation">Occupation or profession</label>
+                <input class="field" id="r-occupation" type="text" placeholder="e.g. Software Engineer, Nurse, Reviewee" aria-describedby="r-occupation-hint r-occupation-err">
+                <p class="mt-1.5 text-sm text-muted" id="r-occupation-hint">What you do or your current professional status.</p>
+                <p class="err" id="r-occupation-err" hidden></p>
+              </div>
+              <div>
+                <label class="label" for="r-workplace">Company, employer or workplace <span class="font-normal text-muted">(optional)</span></label>
+                <input class="field" id="r-workplace" type="text" placeholder="e.g. TechCorp PH, Self-employed, Review Center" aria-describedby="r-workplace-err">
+                <p class="err" id="r-workplace-err" hidden></p>
+              </div>
             </div>
+
             <div>
               <label class="label" for="r-province">Home city or province <span class="font-normal text-muted">(optional)</span></label>
               <input class="field" id="r-province" type="text" autocomplete="address-level1" aria-describedby="r-province-err">
@@ -239,9 +278,9 @@
       <dl class="mt-4 space-y-3 text-base">
         <div><dt class="font-semibold">Name, email, password</dt><dd class="text-muted">To sign you in. Your password is stored scrambled, not as you typed it.</dd></div>
         <div><dt class="font-semibold">Date of birth</dt><dd class="text-muted">To know whether you are under 18. If you are, a parent or guardian must approve your account. You cannot change it later.</dd></div>
-        <div><dt class="font-semibold">Mobile number, school, student ID, course, year level, home province</dt><dd class="text-muted">So the dormitory office can reach you and confirm you are a student. The province is optional.</dd></div>
-        <div><dt class="font-semibold">Emergency contact, or parent or guardian</dt><dd class="text-muted">Only used in an emergency, or to approve the account of a student under 18.</dd></div>
-        <div><dt class="font-semibold">Who can see it</dt><dd class="text-muted">The dormitory office sees your details and requests. Other students can see the name, photo and course of adult students staying in a room they look at. Students under 18 are never shown to other students.</dd></div>
+        <div><dt class="font-semibold">Mobile number, school or occupation, student ID (if student), home province</dt><dd class="text-muted">So the dormitory office can reach you and know who is staying in the rooms. The province is optional.</dd></div>
+        <div><dt class="font-semibold">Emergency contact, or parent or guardian</dt><dd class="text-muted">Only used in an emergency, or to approve the account of a resident under 18.</dd></div>
+        <div><dt class="font-semibold">Who can see it</dt><dd class="text-muted">The dormitory office sees your details and requests. Other residents can see the name, photo and course or profession of adult residents staying in a room they look at. Residents under 18 are never shown to other residents.</dd></div>
         <div><dt class="font-semibold">Your choices</dt><dd class="text-muted">You can correct your details on your Profile page, and delete your account there. Deleting removes your requests and reviews too.</dd></div>
         <div><dt class="font-semibold">Where it is kept</dt><dd class="text-muted">In this version, only in your own browser. Nothing is sent to a server yet.</dd></div>
       </dl>
@@ -284,23 +323,32 @@
 
       // ---- the rule for each field ----
       var minor = function () { var a = HB_AUTH.ageFromDob($('r-dob').value); return a !== null && a < 18; };
-      var val = function (id) { return $('r-' + id).value; };
+      var val = function (id) { var el = $('r-' + id); return el ? el.value : ''; };
+      var isStudent = function () {
+        var el = document.querySelector('input[name="accountType"]:checked');
+        return !el || el.value === 'student';
+      };
       var RULES = {
-        name: function () { return V.name(val('name')); },
+        name: function () {
+          var label = isStudent() ? 'your school ID' : 'your ID';
+          return V.name(val('name'), label);
+        },
         email: function () { return V.email(val('email')); },
         password: function () { return V.password(val('password'), val('name'), val('email')); },
         confirm: function () { return !val('confirm') ? 'Type the password again.' : (val('confirm') !== val('password') ? 'The two passwords do not match.' : ''); },
         dob: function () { return V.dob(val('dob')); },
         mobile: function () { return V.mobile(val('mobile')); },
-        school: function () { return V.text(val('school'), 'your school or university', 2, 80); },
-        studentId: function () { return V.studentId(val('studentId')); },
-        course: function () { return V.text(val('course'), 'your course or program', 2, 80); },
-        yearLevel: function () { return V.choice(val('yearLevel'), HB_SIGNUP.YEARS, 'your year level'); },
+        school: function () { return isStudent() ? V.text(val('school'), 'your school or university', 2, 80) : ''; },
+        studentId: function () { return isStudent() ? V.studentId(val('studentId')) : ''; },
+        course: function () { return isStudent() ? V.text(val('course'), 'your course or program', 2, 80) : ''; },
+        yearLevel: function () { return isStudent() ? V.choice(val('yearLevel'), HB_SIGNUP.YEARS, 'your year level') : ''; },
+        occupation: function () { return !isStudent() ? V.text(val('occupation'), 'your occupation or profession', 2, 80) : ''; },
+        workplace: function () { return !isStudent() ? V.optionalText(val('workplace'), 80) : ''; },
         province: function () { return V.optionalText(val('province'), 60); },
-        eName: function () { return V.name(val('eName')).replace('your full name', 'their full name').replace('your first and last name, as on your school ID', 'their first and last name'); },
+        eName: function () { return V.name(val('eName')).replace('your full name', 'their full name').replace('your first and last name, as on your school ID', 'their first and last name').replace('your first and last name, as on your ID', 'their first and last name'); },
         eRel: function () { return V.choice(val('eRel'), HB_SIGNUP.EMERGENCY_RELATIONS, 'how they are related to you'); },
         eMobile: function () { var e = V.mobile(val('eMobile')); if (e) return e.replace('Enter your mobile number', 'Enter their mobile number'); return HB_SIGNUP.normMobile(val('eMobile')) === HB_SIGNUP.normMobile(val('mobile')) ? 'Use a different number from your own, so someone else can be reached.' : ''; },
-        gName: function () { return V.name(val('gName')).replace('your full name', 'their full name').replace('your first and last name, as on your school ID', 'their first and last name'); },
+        gName: function () { return V.name(val('gName')).replace('your full name', 'their full name').replace('your first and last name, as on your school ID', 'their first and last name').replace('your first and last name, as on your ID', 'their first and last name'); },
         gRel: function () { return V.choice(val('gRel'), HB_SIGNUP.GUARDIAN_RELATIONS, 'how they are related to you'); },
         gMobile: function () { var e = V.mobile(val('gMobile')); if (e) return e.replace('Enter your mobile number', 'Enter their mobile number'); return HB_SIGNUP.normMobile(val('gMobile')) === HB_SIGNUP.normMobile(val('mobile')) ? 'Use your parent or guardian\u2019s own number, not yours.' : ''; },
         gEmail: function () { var e = V.email(val('gEmail')); if (e) return e.replace('Enter your email', 'Enter their email'); return val('gEmail').trim().toLowerCase() === val('email').trim().toLowerCase() ? 'Use your parent or guardian\u2019s own email, not yours.' : ''; },
@@ -308,27 +356,68 @@
       };
       function fieldsOf(n) {
         if (n === 1) return ['name', 'email', 'password', 'confirm'];
-        if (n === 2) return ['dob', 'mobile', 'school', 'studentId', 'course', 'yearLevel', 'province'];
+        if (n === 2) {
+          return isStudent()
+            ? ['dob', 'mobile', 'school', 'studentId', 'course', 'yearLevel', 'province']
+            : ['dob', 'mobile', 'occupation', 'workplace', 'province'];
+        }
         return (minor() ? ['gName', 'gRel', 'gMobile', 'gEmail'] : ['eName', 'eRel', 'eMobile']).concat(['consent']);
       }
-      var LABELS = { name: 'Full name', email: 'Email', password: 'Password', confirm: 'Password again', dob: 'Date of birth', mobile: 'Mobile number', school: 'School', studentId: 'Student ID', course: 'Course', yearLevel: 'Year level', province: 'Home province', eName: 'Emergency contact name', eRel: 'Relationship', eMobile: 'Emergency contact number', gName: 'Parent or guardian name', gRel: 'Relationship', gMobile: 'Parent or guardian number', gEmail: 'Parent or guardian email', consent: 'Agreement' };
+      var LABELS = {
+        name: 'Full name', email: 'Email', password: 'Password', confirm: 'Password again',
+        dob: 'Date of birth', mobile: 'Mobile number', school: 'School', studentId: 'Student ID',
+        course: 'Course', yearLevel: 'Year level', occupation: 'Occupation', workplace: 'Company or workplace',
+        province: 'Home province', eName: 'Emergency contact name', eRel: 'Relationship',
+        eMobile: 'Emergency contact number', gName: 'Parent or guardian name', gRel: 'Relationship',
+        gMobile: 'Parent or guardian number', gEmail: 'Parent or guardian email', consent: 'Agreement'
+      };
 
       document.querySelectorAll('.err').forEach(function (p) { p.hidden = false; });   // always in the page, so the space is reserved
       function showError(key, msg) {
         var input = $('r-' + key), p = $('r-' + key + '-err');
-        if (msg) input.setAttribute('aria-invalid', 'true'); else input.removeAttribute('aria-invalid');
-        p.textContent = msg || '';
+        if (input) {
+          if (msg) input.setAttribute('aria-invalid', 'true'); else input.removeAttribute('aria-invalid');
+        }
+        if (p) p.textContent = msg || '';
       }
-      function check(key) { var m = RULES[key](); showError(key, m); return m; }
+      function check(key) { var m = RULES[key] ? RULES[key]() : ''; showError(key, m); return m; }
 
       // check a field once it has been visited, and keep checking as they fix it
       Object.keys(RULES).forEach(function (key) {
         var input = $('r-' + key);
+        if (!input) return;
         input.addEventListener('blur', function () { touched[key] = true; check(key); if (key === 'password' && touched.confirm) check('confirm'); });
         input.addEventListener(input.type === 'checkbox' || input.tagName === 'SELECT' ? 'change' : 'input', function () {
           if (touched[key] || input.getAttribute('aria-invalid')) check(key);
           if (key === 'password' && touched.confirm) check('confirm');
         });
+      });
+
+      // ---- account type switch ----
+      function updateAccountTypeUI() {
+        var student = isStudent();
+        $('student-fields').hidden = !student;
+        $('non-student-fields').hidden = student;
+        $('r-name-label').textContent = student ? 'Full name, as on your school ID' : 'Full name, as on your valid ID';
+        $('r-email-hint').textContent = student ? 'A school email is best. We use it to sign you in.' : 'Your personal or work email. We use it to sign you in.';
+        var sCard = $('type-student-card'), nsCard = $('type-non-student-card');
+        if (student) {
+          sCard.className = 'relative flex cursor-pointer items-start gap-3 rounded-2xl border-2 border-forest bg-tint/60 p-4 transition-all';
+          nsCard.className = 'relative flex cursor-pointer items-start gap-3 rounded-2xl border-2 border-line bg-white p-4 transition-all hover:border-[#8FA397]';
+          showError('occupation', '');
+          showError('workplace', '');
+        } else {
+          nsCard.className = 'relative flex cursor-pointer items-start gap-3 rounded-2xl border-2 border-forest bg-tint/60 p-4 transition-all';
+          sCard.className = 'relative flex cursor-pointer items-start gap-3 rounded-2xl border-2 border-line bg-white p-4 transition-all hover:border-[#8FA397]';
+          showError('school', '');
+          showError('studentId', '');
+          showError('course', '');
+          showError('yearLevel', '');
+        }
+        $('summary').hidden = true;
+      }
+      document.querySelectorAll('input[name="accountType"]').forEach(function (r) {
+        r.addEventListener('change', updateAccountTypeUI);
       });
 
       // ---- live password checklist ----
@@ -386,9 +475,18 @@
         if (step < 3) { show(step + 1, true); return; }
 
         busy = true; $('next').disabled = true; $('next').textContent = 'Creating your account...';
+        var student = isStudent();
         var data = {
+          isStudent: student,
+          userType: student ? 'student' : 'non_student',
           name: val('name'), email: val('email'), password: val('password'), confirm: val('confirm'), dob: val('dob'), mobile: val('mobile'),
-          school: val('school'), studentId: val('studentId'), course: val('course'), yearLevel: val('yearLevel'), province: val('province'),
+          school: student ? val('school') : '',
+          studentId: student ? val('studentId') : '',
+          course: student ? val('course') : '',
+          yearLevel: student ? val('yearLevel') : '',
+          occupation: !student ? val('occupation') : '',
+          workplace: !student ? val('workplace') : '',
+          province: val('province'),
           consent: $('r-consent').checked,
           emergency: { name: val('eName'), relationship: val('eRel'), mobile: val('eMobile') },
           guardian: { name: val('gName'), relationship: val('gRel'), mobile: val('gMobile'), email: val('gEmail') }
@@ -423,6 +521,7 @@
       $('privacy-dialog').addEventListener('click', function (e) { if (e.target === $('privacy-dialog')) $('privacy-dialog').close(); });
 
       drawProgress();
+      updateAccountTypeUI();
     })();
   </script>
 </body>
