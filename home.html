@@ -7,30 +7,11 @@
   <meta name="description" content="Your Homebase home: best room match, saved rooms and recent comparisons.">
 
   <!--
-    Design Read: signed-in student home screen for students choosing a room at Ariate Dormitory, same forest green + lime
-    language as index.html, dial ENERGY 2 / RHYTHM 2 / MOTION 1.
-
-    The one decision on this screen: "what is my best room right now, and what do I do next?"
-    So the best-match card is the page. Everything else supports it.
-
-    Reasons (R-31):
-    - Layout: pill navbar on top, no sidebar (your decision). Row 1 = best match (wide, dark green, the focal point) + profile.
-      Row 2 = saved rooms (wide) + recent comparisons (narrow). The widths change on purpose so the rows do not repeat.
-    - Palette: only the colors in assets/js/tw-config.js. Forest for the focal card and primary actions, tint for the quiet profile card,
-      white for lists. Lime is used ONLY on the lit window and the button inside the match card (one accent, one card).
-    - Identity motif: the dorm with one lit window from the landing page. Empty state = all windows dark ("waiting for a match").
-      When a match exists, one window lights up. Same idea as the landing page, so the two pages belong together.
-    - Radius: pill for the navbar and buttons, 28px for the focal card, 20px for other cards, 12px for rows inside cards.
-    - Shadow and glow: none. Flat cards with a thin border. Nothing here sits on top of anything else.
-    - Numbers: NONE are invented. Every number comes from localStorage (written later by My Matches / Explore Rooms).
-      No data yet = honest empty state that says what to do next (R-17, R-27, R-38).
-    - Avatar: initials in a circle. This is a placeholder, there are no profile photos yet (R-23).
-    - Motion: the lit window fades on once. Turned off under prefers-reduced-motion.
-    - Commute and safety are not shown anywhere on this page (your decision: they only appear inside reviews).
-
-    TODO (for the other pages and the PHP + MySQL phase):
-    - The three storage keys below are the "contract" between this page and the pages you build next.
-      When you move to PHP + MySQL, replace the read() calls in the script with fetch() calls and keep the render functions.
+    Design Read: signed-in home for anyone choosing a room at Ariate Dormitory. Same forest green + lime language as index.html.
+    Less text, more picture: a progress bar, a score ring on the best match, number tiles, picture cards for saved rooms,
+    chips for preferences, and a connected stepper for the room request. The profile card was removed (the navbar already has it).
+    Numbers are never invented: every one comes from localStorage (see the storage contract in the script).
+    Lime is used only on the score ring and on the button inside the best-match card.
   -->
 
   <script>
@@ -57,10 +38,12 @@
 
 
   <style>
-    /* The dorm motif: all windows dark, one lights up when a best match exists. */
+    /* The dorm motif: all windows dark while there is no match yet. */
     .win { fill: #083A25; }
-    .win.lit { fill: #C6F24E; transition: fill 600ms ease-out; }
-    @media (prefers-reduced-motion: reduce) { .win.lit { transition: none; } }
+    
+    @media (prefers-reduced-motion: reduce) { #ring { transition: none !important; } }
+    html { scroll-behavior: smooth; }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
     [hidden] { display: none !important; }
   </style>
 </head>
@@ -119,201 +102,217 @@
 
   <main class="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
 
-    <!-- STUDENT -->
+    <!-- STUDENT / RESIDENT -->
     <div id="student-view">
 
-      <section aria-labelledby="welcome-title">
+      <!-- Greeting -->
+      <section aria-labelledby="welcome-title" class="flex flex-wrap items-center justify-between gap-3">
         <h1 id="welcome-title" class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
-          Welcome back, <span id="first-name" class="text-forest"></span>.
+          Hi, <span id="first-name" class="text-forest"></span>
         </h1>
-        <p class="note mt-2 max-w-xl">Here is where your room search at Ariate Dormitory stands.</p>
+        <button type="button" id="open-rules" class="btn btn-outline gap-2">
+          <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 012-2h13v15H6a2 2 0 00-2 2z"/><path d="M4 20a2 2 0 012-2h13v3H6a2 2 0 01-2-1z"/></svg>
+          House rules
+        </button>
       </section>
 
       <!-- PARENT / GUARDIAN APPROVAL: shown to a student under 18 until a parent or guardian approves -->
-      <section id="guardian-box" hidden aria-labelledby="guardian-title" class="mt-8 rounded-[20px] border border-warn-line bg-warn-soft p-6 sm:p-8">
-        <h2 id="guardian-title" class="font-display text-xl font-bold tracking-tight text-ink">Waiting for your parent or guardian</h2>
-        <p class="mt-2 max-w-2xl text-base text-ink">You are under 18, so a parent or legal guardian has to approve your account before you can request a room. You can still browse, compare and save rooms.</p>
-        <p class="mt-4 text-sm font-medium text-muted">Approval code. Give it to <span id="guardian-name" class="font-semibold text-ink"></span>.</p>
-        <p id="guardian-code" class="mt-1 font-display text-3xl font-bold tracking-[0.3em] text-ink"></p>
-        <p class="mt-3 max-w-2xl text-sm text-muted">They open the parent approval page and enter your email, this code and their full name. In the finished system the code is emailed to them. Here it is shown on this page.</p>
+      <section id="guardian-box" hidden aria-labelledby="guardian-title" class="mt-6 rounded-[20px] border border-warn-line bg-warn-soft p-5 sm:p-6">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div class="min-w-0">
+            <h2 id="guardian-title" class="font-display text-xl font-bold tracking-tight text-ink">Waiting for your parent or guardian</h2>
+            <p class="mt-1 text-base text-ink">Give this code to <span id="guardian-name" class="font-semibold"></span>. You can browse and save rooms, but not request one yet.</p>
+          </div>
+          <p id="guardian-code" class="font-display text-3xl font-bold tracking-[0.3em] text-ink"></p>
+        </div>
         <div class="mt-4 flex flex-wrap gap-2">
-          <a href="guardian.html" class="btn">Open the parent approval page</a>
-          <button type="button" id="guardian-new" class="btn btn-outline">Get a new code</button>
+          <a href="guardian.html" class="btn">Parent approval page</a>
+          <button type="button" id="guardian-new" class="btn btn-outline">New code</button>
         </div>
       </section>
 
-      <!-- WHERE TO START: only for a student who has not done anything yet -->
-      <section id="start" hidden aria-labelledby="start-title" class="mt-8 rounded-[20px] border border-line bg-tint p-6 sm:p-8">
-        <h2 id="start-title" class="font-display text-xl font-bold tracking-tight">Where do you want to start?</h2>
-        <p class="note mt-1">Choose what suits you. You can switch at any time.</p>
-        <ul class="mt-5 grid gap-3 md:grid-cols-2">
-          <li><a href="matches.html" class="block h-full rounded-xl border border-line bg-white p-4 no-underline outline-none transition-colors hover:border-forest focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2"><span class="block font-display text-lg font-semibold tracking-tight text-ink">Match me with a room</span><span class="mt-1 block text-base text-muted">Tell us your budget and needs. We rank the rooms for you.</span></a></li>
-          <li><a href="rooms.html" class="block h-full rounded-xl border border-line bg-white p-4 no-underline outline-none transition-colors hover:border-forest focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2"><span class="block font-display text-lg font-semibold tracking-tight text-ink">Browse all rooms</span><span class="mt-1 block text-base text-muted">Look at every room and compare the ones you like.</span></a></li>
+      <!-- YOUR PROGRESS: one glance, no reading -->
+      <section aria-labelledby="journey-title" class="mt-6 rounded-[20px] border border-line bg-tint px-4 py-5 sm:px-6">
+        <h2 id="journey-title" class="sr-only">Your progress</h2>
+        <div id="journey"></div>
+      </section>
+
+      <!-- WHERE TO START: only for someone who has not done anything yet -->
+      <section id="start" hidden aria-labelledby="start-title" class="mt-6">
+        <h2 id="start-title" class="sr-only">Where to start</h2>
+        <ul class="grid gap-4 md:grid-cols-2">
+          <li>
+            <a href="matches.html" class="group flex h-full items-center gap-4 rounded-[20px] border border-line bg-white p-5 no-underline outline-none transition-colors hover:border-forest focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">
+              <span class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-forest text-white"><svg viewBox="0 0 24 24" class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/></svg></span>
+              <span class="min-w-0"><span class="block font-display text-lg font-semibold tracking-tight text-ink">Match me with a room</span><span class="block text-base text-muted">Set your budget and needs</span></span>
+            </a>
+          </li>
+          <li>
+            <a href="rooms.html" class="group flex h-full items-center gap-4 rounded-[20px] border border-line bg-white p-5 no-underline outline-none transition-colors hover:border-forest focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">
+              <span class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-mint text-forest"><svg viewBox="0 0 24 24" class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg></span>
+              <span class="min-w-0"><span class="block font-display text-lg font-semibold tracking-tight text-ink">Browse all rooms</span><span class="block text-base text-muted">See every room and compare</span></span>
+            </a>
+          </li>
         </ul>
       </section>
 
-      <!-- ROW 1: best match (focal point) + profile -->
-      <div class="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <!-- ROW 1: best match (focal point) + four number tiles -->
+      <div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
 
-        <!-- BEST MATCH: the one decision on this screen -->
+        <!-- BEST MATCH -->
         <section id="card-top" aria-labelledby="top-title" class="relative overflow-hidden rounded-[28px] bg-forest p-6 text-white sm:p-8">
-          <div class="grid items-center gap-6 sm:grid-cols-[minmax(0,1fr)_200px]">
+          <h2 id="top-title" class="font-display text-lg font-semibold tracking-tight text-white/85">Your best match</h2>
+
+          <div data-state="loading" class="mt-5"><p class="text-base text-white/85" role="status">Loading...</p></div>
+
+          <div data-state="error" hidden class="mt-5" role="alert">
+            <p class="font-display text-2xl font-bold tracking-tight">We could not read your match</p>
+            <p class="mt-2 text-base text-white/85">Allow site data for this page, then reload.</p>
+            <button type="button" data-reload class="btn btn-lime mt-5">Reload</button>
+          </div>
+
+          <!-- no match yet: the dorm with every window dark -->
+          <div data-state="empty" hidden class="mt-5 grid items-center gap-6 sm:grid-cols-[minmax(0,1fr)_170px]">
             <div class="min-w-0">
-              <h2 id="top-title" class="font-display text-lg font-semibold tracking-tight text-white/85">Your best match</h2>
-
-              <!-- loading -->
-              <div data-state="loading" class="mt-4">
-                <p class="text-base text-white/85" role="status">Loading your best match...</p>
-              </div>
-
-              <!-- error -->
-              <div data-state="error" hidden class="mt-4" role="alert">
-                <p class="font-display text-2xl font-bold tracking-tight">We could not read your match</p>
-                <p class="mt-2 max-w-md text-base text-white/85">Your browser may be blocking site data. Allow site data for this page, then reload.</p>
-                <button type="button" data-reload class="btn btn-lime mt-5">Reload this page</button>
-              </div>
-
-              <!-- empty -->
-              <div data-state="empty" hidden class="mt-4">
-                <p class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">No match yet</p>
-                <p class="mt-3 max-w-md text-base text-white/85">Homebase ranks Ariate Dormitory rooms by how well they fit your budget and the amenities you need. Tell it what you need and your best room shows up here.</p>
-                <a href="matches.html" class="btn btn-lime mt-6">Set my budget and needs</a>
-              </div>
-
-              <!-- has a match -->
-              <div data-state="match" hidden class="mt-4">
-                <p id="top-name" class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl"></p>
-                <p class="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                  <span id="top-score" class="font-display text-2xl font-bold"></span>
-                  <span id="top-price" class="text-base text-white/85"></span>
-                </p>
-                <a href="matches.html" class="btn btn-lime mt-6">See all my matches</a>
-              </div>
+              <p class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">No match yet</p>
+              <p class="mt-2 text-base text-white/85">Tell us your budget and needs.</p>
+              <a href="matches.html" class="btn btn-lime mt-6">Find my match</a>
             </div>
-
-            <!-- identity motif: the dorm, one window lights when a match exists -->
-            <svg viewBox="0 0 200 200" class="mx-auto hidden h-auto w-full max-w-[200px] sm:block" aria-hidden="true" focusable="false">
+            <svg viewBox="0 0 200 200" class="mx-auto hidden h-auto w-full max-w-[170px] sm:block" aria-hidden="true" focusable="false">
               <rect x="14" y="14" width="172" height="176" rx="10" fill="#0E5435"/>
               <rect x="8" y="10" width="184" height="12" rx="3" fill="#0D5033"/>
               <rect class="win" x="36" y="40" width="30" height="38" rx="3"/>
               <rect class="win" x="86" y="40" width="30" height="38" rx="3"/>
               <rect class="win" x="136" y="40" width="30" height="38" rx="3"/>
               <rect class="win" x="36" y="92" width="30" height="38" rx="3"/>
-              <rect id="lit-window" class="win" x="86" y="92" width="30" height="38" rx="3"/>
+              <rect class="win" x="86" y="92" width="30" height="38" rx="3"/>
               <rect class="win" x="136" y="92" width="30" height="38" rx="3"/>
               <rect class="win" x="36" y="144" width="30" height="38" rx="3"/>
               <rect class="win" x="136" y="144" width="30" height="38" rx="3"/>
               <rect class="win" x="86" y="150" width="30" height="40" rx="3"/>
             </svg>
           </div>
+
+          <!-- has a match: score ring + the room's picture -->
+          <div data-state="match" hidden class="mt-5 grid items-center gap-6 sm:grid-cols-[auto_minmax(0,1fr)] xl:grid-cols-[auto_minmax(0,1fr)_190px]">
+            <div class="relative mx-auto h-36 w-36 shrink-0 sm:mx-0" role="img" id="ring-wrap">
+              <svg viewBox="0 0 120 120" class="h-full w-full -rotate-90" aria-hidden="true" focusable="false">
+                <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="10"/>
+                <circle id="ring" cx="60" cy="60" r="52" fill="none" stroke="#C6F24E" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="326.7" style="transition: stroke-dashoffset 800ms ease-out"/>
+              </svg>
+              <div class="absolute inset-0 grid place-content-center text-center">
+                <span id="top-pct" class="font-display text-4xl font-bold leading-none"></span>
+                <span class="mt-1 text-sm text-white/85">fit</span>
+              </div>
+            </div>
+            <div class="min-w-0 text-center sm:text-left">
+              <p id="top-label" class="text-sm font-semibold uppercase tracking-wider" style="color:#C6F24E"></p>
+              <p id="top-name" class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl"></p>
+              <p id="top-meta" class="mt-2 text-base text-white/85"></p>
+              <p id="top-price" class="mt-1 font-display text-xl font-bold"></p>
+              <a href="matches.html" class="btn btn-lime mt-5">See all my matches</a>
+            </div>
+            <div id="top-pic" hidden class="hidden aspect-[8/5] overflow-hidden rounded-2xl bg-forest-deep xl:block"><img alt="" class="h-full w-full object-cover" width="640" height="400"></div>
+          </div>
         </section>
 
-        <!-- PROFILE -->
-        <section aria-labelledby="profile-title" class="rounded-[20px] border border-line bg-tint p-6">
-          <div class="flex items-center justify-between">
-            <h2 id="profile-title" class="card-title">Your profile</h2>
-            <a href="profile.html" class="inline-flex items-center text-sm font-semibold text-forest underline underline-offset-4 hover:text-forest-deep">Edit profile</a>
-          </div>
-          <div class="mt-4 flex items-center gap-4">
-            <a href="profile.html" title="Edit your profile" class="group block rounded-full focus-visible:ring-2 focus-visible:ring-forest outline-none">
-              <span id="profile-initial" class="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-forest font-display text-xl font-semibold text-white overflow-hidden" aria-hidden="true"></span>
-            </a>
-            <div class="min-w-0">
-              <p id="profile-name" class="truncate font-display text-lg font-semibold tracking-tight"></p>
-              <p id="profile-sub" class="text-sm text-muted">Student</p>
-            </div>
-          </div>
-          <dl class="mt-5 space-y-3 text-base">
-            <div>
-              <dt class="text-sm font-medium text-muted">Email</dt>
-              <dd id="profile-email" class="break-words"></dd>
-            </div>
-            <div>
-              <dt class="text-sm font-medium text-muted">Dormitory</dt>
-              <dd>Ariate Dormitory</dd>
-            </div>
-          </dl>
-          <div class="mt-4 flex flex-wrap items-center gap-3">
-            <a href="profile.html" class="btn btn-outline text-sm !min-h-[38px] !px-4">Manage Profile</a>
-            <button type="button" id="open-rules" class="textlink !min-h-[38px] text-sm">House rules</button>
-          </div>
+        <!-- NUMBER TILES -->
+        <section aria-label="At a glance" class="grid grid-cols-2 gap-4">
+          <a href="#saved" id="tile-saved" class="flex flex-col justify-between rounded-[20px] border border-line bg-white p-4 no-underline outline-none transition-colors hover:border-forest focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">
+            <span class="grid h-10 w-10 place-items-center rounded-xl bg-tint text-forest"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg></span>
+            <span class="mt-4 block"><span data-v class="block font-display text-3xl font-bold leading-none tracking-tight text-ink">0</span><span class="mt-1 block text-sm text-muted">Saved</span></span>
+          </a>
+          <a href="#compared" id="tile-cmp" class="flex flex-col justify-between rounded-[20px] border border-line bg-white p-4 no-underline outline-none transition-colors hover:border-forest focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">
+            <span class="grid h-10 w-10 place-items-center rounded-xl bg-tint text-forest"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="9" height="14" rx="2"/><rect x="12" y="5" width="9" height="14" rx="2"/></svg></span>
+            <span class="mt-4 block"><span data-v class="block font-display text-3xl font-bold leading-none tracking-tight text-ink">0</span><span class="mt-1 block text-sm text-muted">Compared</span></span>
+          </a>
+          <a href="matches.html" id="tile-budget" class="flex flex-col justify-between rounded-[20px] border border-line bg-white p-4 no-underline outline-none transition-colors hover:border-forest focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">
+            <span class="grid h-10 w-10 place-items-center rounded-xl bg-tint text-forest"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18M16 14.5h2"/></svg></span>
+            <span class="mt-4 block"><span data-v class="block truncate font-display text-3xl font-bold leading-none tracking-tight text-ink">-</span><span class="mt-1 block text-sm text-muted">Budget a month</span></span>
+          </a>
+          <a href="#reservation" id="tile-req" class="flex flex-col justify-between rounded-[20px] border border-line bg-white p-4 no-underline outline-none transition-colors hover:border-forest focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">
+            <span class="grid h-10 w-10 place-items-center rounded-xl bg-tint text-forest"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4h6v3H9zM9 12h6M9 16h4"/></svg></span>
+            <span class="mt-4 block"><span data-v class="block"></span><span class="mt-1 block text-sm text-muted">Room request</span></span>
+          </a>
         </section>
       </div>
 
-      <!-- YOUR PREFERENCES: what the student told My Matches. Edit goes back to My Matches, Clear removes it. -->
-      <section id="prefs" aria-labelledby="prefs-title" class="mt-6 rounded-[20px] border border-line bg-white p-6">
-        <h2 id="prefs-title" class="card-title">Your preferences</h2>
-
-        <div data-state="loading" class="mt-4"><p class="note" role="status">Loading your preferences...</p></div>
-
-        <div data-state="error" hidden class="mt-4" role="alert">
-          <p class="text-base font-semibold text-danger">We could not read your preferences.</p>
-          <p class="note mt-1">Allow site data for this page in your browser, then reload.</p>
-        </div>
-
-        <div data-state="empty" hidden class="mt-4">
-          <p class="note max-w-lg">You have not told Homebase what you need yet. Set your budget and needs and your best rooms are ranked for you.</p>
-          <a href="matches.html" class="textlink mt-1">Set my preferences</a>
-        </div>
-
-        <div data-state="view" hidden id="prefs-view" class="mt-4"></div>
-      </section>
-
-      <!-- YOUR ROOM REQUEST: status of the reservation lives here (no separate page) -->
-      <section id="reservation" tabindex="-1" aria-labelledby="res-title" class="mt-6 scroll-mt-28 rounded-[20px] border border-line bg-white p-6 outline-none sm:p-8">
+      <!-- YOUR ROOM REQUEST -->
+      <section id="reservation" tabindex="-1" aria-labelledby="res-title" class="mt-6 scroll-mt-28 rounded-[20px] border border-line bg-white p-5 outline-none sm:p-6">
         <h2 id="res-title" class="card-title">Your room request</h2>
 
-        <div data-state="loading" class="mt-4"><p class="note" role="status">Loading your request...</p></div>
+        <div data-state="loading" class="mt-4"><p class="note" role="status">Loading...</p></div>
 
         <div data-state="error" hidden class="mt-4" role="alert">
           <p class="text-base font-semibold text-danger">We could not read your request.</p>
           <p id="res-error-text" class="note mt-1">Allow site data for this page in your browser, then reload.</p>
         </div>
 
-        <div data-state="empty" hidden class="mt-4">
-          <p class="note max-w-lg">You have not requested a room yet. Find a room and press Request this room. The dormitory office answers your request, and your spot is held while you wait.</p>
-          <a href="rooms.html" class="btn mt-4">Explore rooms</a>
+        <div data-state="empty" hidden class="mt-4 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-dashed border-edge p-5">
+          <p class="font-display text-lg font-semibold tracking-tight text-muted">No request yet</p>
+          <a href="rooms.html" class="btn">Explore rooms</a>
         </div>
 
         <div data-state="view" hidden id="res-view" class="mt-4"></div>
       </section>
 
-      <!-- ROW 2: saved rooms (wide) + recent comparisons (narrow) -->
-      <div class="mt-6 grid gap-6 lg:grid-cols-5">
-
-        <section id="card-saved" aria-labelledby="saved-title" class="rounded-[20px] border border-line bg-white p-6 lg:col-span-3">
+      <!-- SAVED ROOMS: pictures, not a list -->
+      <section id="saved" tabindex="-1" aria-labelledby="saved-title" class="mt-6 scroll-mt-28 outline-none">
+        <div id="card-saved" class="rounded-[20px] border border-line bg-white p-5 sm:p-6">
           <h2 id="saved-title" class="card-title">Saved rooms</h2>
 
-          <div data-state="loading" class="mt-4"><p class="note" role="status">Loading your saved rooms...</p></div>
+          <div data-state="loading" class="mt-4"><p class="note" role="status">Loading...</p></div>
 
           <div data-state="error" hidden class="mt-4" role="alert">
             <p class="text-base font-semibold text-danger">We could not read your saved rooms.</p>
-            <p class="note mt-1">Allow site data for this page in your browser, then reload.</p>
           </div>
 
-          <div data-state="empty" hidden class="mt-4">
-            <p class="note max-w-md">Nothing saved yet. Save a room from Explore Rooms and it waits for you here.</p>
-            <a href="rooms.html" class="textlink mt-2">Go to Explore Rooms</a>
+          <div data-state="empty" hidden class="mt-4 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-dashed border-edge p-5">
+            <p class="font-display text-lg font-semibold tracking-tight text-muted">Nothing saved yet</p>
+            <a href="rooms.html" class="btn btn-outline">Explore rooms</a>
           </div>
 
-          <ul data-state="list" hidden id="saved-list" class="mt-4 space-y-2"></ul>
-        </section>
+          <ul data-state="list" hidden id="saved-list" class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></ul>
+        </div>
+      </section>
 
-        <section id="card-cmp" aria-labelledby="cmp-title" class="rounded-[20px] border border-line bg-white p-6 lg:col-span-2">
-          <h2 id="cmp-title" class="card-title">Recent comparisons</h2>
+      <!-- ROW 3: preferences + comparisons -->
+      <div class="mt-6 grid gap-6 lg:grid-cols-5">
 
-          <div data-state="loading" class="mt-4"><p class="note" role="status">Loading your comparisons...</p></div>
+        <section id="prefs" aria-labelledby="prefs-title" class="rounded-[20px] border border-line bg-white p-5 sm:p-6 lg:col-span-3">
+          <h2 id="prefs-title" class="card-title">Your preferences</h2>
+
+          <div data-state="loading" class="mt-4"><p class="note" role="status">Loading...</p></div>
 
           <div data-state="error" hidden class="mt-4" role="alert">
-            <p class="text-base font-semibold text-danger">We could not read your comparisons.</p>
-            <p class="note mt-1">Allow site data for this page in your browser, then reload.</p>
+            <p class="text-base font-semibold text-danger">We could not read your preferences.</p>
           </div>
 
-          <div data-state="empty" hidden class="mt-4">
-            <p class="note">You have not compared rooms yet. Tick Compare on two or three rooms in Explore Rooms and they show up here.</p>
+          <div data-state="empty" hidden class="mt-4 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-dashed border-edge p-5">
+            <p class="font-display text-lg font-semibold tracking-tight text-muted">Not set yet</p>
+            <a href="matches.html" class="btn btn-outline">Set preferences</a>
           </div>
 
-          <ul data-state="list" hidden id="cmp-list" class="mt-4 space-y-2"></ul>
+          <div data-state="view" hidden id="prefs-view" class="mt-4"></div>
+        </section>
+
+        <section id="compared" tabindex="-1" aria-labelledby="cmp-title" class="scroll-mt-28 outline-none lg:col-span-2">
+          <div id="card-cmp" class="h-full rounded-[20px] border border-line bg-white p-5 sm:p-6">
+            <h2 id="cmp-title" class="card-title">Recent comparisons</h2>
+
+            <div data-state="loading" class="mt-4"><p class="note" role="status">Loading...</p></div>
+
+            <div data-state="error" hidden class="mt-4" role="alert">
+              <p class="text-base font-semibold text-danger">We could not read your comparisons.</p>
+            </div>
+
+            <div data-state="empty" hidden class="mt-4 rounded-2xl border border-dashed border-edge p-5">
+              <p class="font-display text-lg font-semibold tracking-tight text-muted">None yet</p>
+              <p class="note mt-1">Tick Compare on rooms in Explore Rooms.</p>
+            </div>
+
+            <ul data-state="list" hidden id="cmp-list" class="mt-4 space-y-2"></ul>
+          </div>
         </section>
       </div>
     </div>
@@ -327,17 +326,17 @@
   <script>
     (function () {
       /*
-        STORAGE CONTRACT (the pages you build next write these keys, this page only reads them):
-          homebase_currentUser   { id, name, email, role }                   written by index.html at login
-          homebase_topMatch      { name: "Room 204", score: 0-100, price: 4500 }   written by My Matches
-          homebase_savedRooms    [ { id: "204", name: "Room 204", price: 4500 } ]  written by Explore Rooms
-          homebase_reservations  see assets/js/reservation.js (requests; Home shows the student's latest one)
-          homebase_comparisons   [ { rooms: ["Room 204", "Room 301"], ids: ["204", "301"], date: "2026-10-25T08:00:00Z" } ]  written by Explore Rooms
-        price and date are optional. If a key is missing, the card shows its empty state.
+        STORAGE CONTRACT (other pages write these keys, this page only reads them):
+          homebase_currentUser   { id, name, email, role }
+          homebase_topMatch      { name, score: 0-100, label, price }       written by My Matches
+          homebase_savedRooms    [ { id, name, price, type } ]              written by Explore Rooms
+          homebase_comparisons   [ { rooms: [names], ids: [ids], date } ]   written by Explore Rooms
+          homebase_preferences   { budget, type, floor, amenities, priority } written by My Matches
+          homebase_reservations  see assets/js/reservation.js
+        A missing key shows that card's empty state. Every number on this page comes from these keys.
       */
       var KEYS = {
         user: 'homebase_currentUser',
-        // private to the signed-in student: each key ends with their user id
         top: HB_AUTH.userKey('homebase_topMatch'),
         saved: HB_AUTH.userKey('homebase_savedRooms'),
         cmp: HB_AUTH.userKey('homebase_comparisons'),
@@ -345,31 +344,44 @@
       };
 
       var $ = function (id) { return document.getElementById(id); };
+      var mk = function (tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
 
       // ---- storage (guarded: blocked storage or broken JSON becomes an error state, not a crash) ----
       function read(key) {
-        try {
-          var raw = localStorage.getItem(key);
-          return { ok: true, value: raw ? JSON.parse(raw) : null };
-        } catch (e) {
-          return { ok: false, value: null };
-        }
+        try { var raw = localStorage.getItem(key); return { ok: true, value: raw ? JSON.parse(raw) : null }; }
+        catch (e) { return { ok: false, value: null }; }
       }
       function write(key, value) {
-        try { localStorage.setItem(key, JSON.stringify(value)); return true; }
-        catch (e) { return false; }
+        try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch (e) { return false; }
       }
-
-      // Show exactly one state ("loading", "error", "empty", "match", "list") inside a card.
+      // Show exactly one state inside a card.
       function setState(cardId, state) {
         var nodes = $(cardId).querySelectorAll('[data-state]');
-        for (var i = 0; i < nodes.length; i++) {
-          nodes[i].hidden = nodes[i].getAttribute('data-state') !== state;
-        }
+        for (var i = 0; i < nodes.length; i++) nodes[i].hidden = nodes[i].getAttribute('data-state') !== state;
+      }
+      function money(n) { return (typeof n === 'number' && isFinite(n)) ? '\u20B1' + n.toLocaleString('en-PH') : ''; }
+      function fmtDate(s) {
+        var d = new Date(s && String(s).length === 10 ? s + 'T00:00:00' : s);
+        return isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
       }
 
-      function peso(n) {
-        return (typeof n === 'number' && isFinite(n)) ? '\u20B1' + n.toLocaleString('en-PH') + ' per month' : '';
+      // small line icons
+      var ICON = {
+        check: '<path d="M5 12l5 5 9-10"/>',
+        x: '<path d="M6 6l12 12M18 6L6 18"/>',
+        tune: '<path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>',
+        star: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+        doc: '<rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4h6v3H9zM9 12h6M9 16h4"/>',
+        key: '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3"/>',
+        bed: '<path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 00-3-3h-7v6"/>'
+      };
+      function icon(name, cls) {
+        var s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('class', cls || 'h-5 w-5'); s.setAttribute('fill', 'none');
+        s.setAttribute('stroke', 'currentColor'); s.setAttribute('stroke-width', '2'); s.setAttribute('stroke-linecap', 'round');
+        s.setAttribute('stroke-linejoin', 'round'); s.setAttribute('aria-hidden', 'true');
+        s.innerHTML = ICON[name] || '';
+        return s;
       }
 
       // ---- user ----
@@ -384,21 +396,19 @@
       $('nav-initial').textContent = initial;
       $('nav-name').textContent = firstName;
 
-      // ---- logout (works from the navbar and the mobile menu) ----
+      // ---- logout (navbar and mobile menu) ----
       document.querySelectorAll('[data-logout]').forEach(function (b) {
         b.addEventListener('click', function () {
           try { localStorage.removeItem(KEYS.user); } catch (e) {}
           window.location.href = 'index.html';
         });
       });
-
       document.querySelectorAll('[data-reload]').forEach(function (b) {
         b.addEventListener('click', function () { window.location.reload(); });
       });
 
       // ---- mobile menu ----
-      var menuBtn = $('menu-btn');
-      var menu = $('menu');
+      var menuBtn = $('menu-btn'), menu = $('menu');
       function setMenu(open) {
         menu.hidden = !open;
         menuBtn.setAttribute('aria-expanded', String(open));
@@ -412,7 +422,7 @@
       // ---- landlords have their own page ----
       if (user.role === 'landlord') { window.location.replace('landlord.html'); return; }
 
-      // ---- profile ----
+      // ---- name and avatar in the navbar (the profile card that used to sit on this page is gone) ----
       var prof = (window.HB_AUTH && HB_AUTH.getProfile) ? HB_AUTH.getProfile(user) : {};
       if (prof && prof.name) {
         fullName = prof.name;
@@ -420,140 +430,202 @@
         $('nav-name').textContent = firstName;
       }
       $('first-name').textContent = firstName;
-      $('profile-name').textContent = fullName;
-      $('profile-email').textContent = String((prof && prof.email) || user.email);
-      var isNonStudent = (user && user.userType === 'non_student') || (prof && prof.userType === 'non_student') || (!prof.school && !prof.studentId && (prof.yearLevel === 'Working Professional' || prof.occupation));
-      var subEl = $('profile-sub');
-      if (subEl) {
-        if (prof && prof.course) {
-          subEl.textContent = prof.course + (prof.yearLevel && prof.yearLevel !== 'Working Professional' ? ' (' + prof.yearLevel + ')' : (isNonStudent ? '' : (prof.yearLevel ? ' (' + prof.yearLevel + ')' : '')));
-        } else if (isNonStudent) {
-          subEl.textContent = prof.occupation || 'Resident';
-        }
+      if (window.HB_AUTH && HB_AUTH.renderAvatar) HB_AUTH.renderAvatar($('nav-initial'), user);
+
+      // ---- rooms, for pictures ----
+      var ROOMS = (window.HB && HB.getRooms) ? HB.getRooms() : [];
+      function roomById(id) { for (var i = 0; i < ROOMS.length; i++) if (String(ROOMS[i].id) === String(id)) return ROOMS[i]; return null; }
+      function roomByName(n) { for (var i = 0; i < ROOMS.length; i++) if (ROOMS[i].name === n) return ROOMS[i]; return null; }
+      function priceParts(room, fallbackPrice) {
+        if (room) return { amount: money(Number(room.price)), unit: HB.capacity(room) > 1 ? 'per person / month' : 'per month' };
+        return { amount: money(fallbackPrice), unit: 'per month' };
       }
-      if (window.HB_AUTH && HB_AUTH.renderAvatar) {
-        HB_AUTH.renderAvatar($('nav-initial'), user);
-        HB_AUTH.renderAvatar($('profile-initial'), user);
-      } else {
-        $('profile-initial').textContent = initial;
+      function pic(room, cls) {
+        var frame = mk('div', cls || 'aspect-[8/5] bg-track');
+        if (room && window.HB) {
+          var img = mk('img', 'h-full w-full object-cover');
+          img.src = HB.roomImage(room); img.alt = ''; img.width = 640; img.height = 400; img.loading = 'lazy'; img.decoding = 'async';
+          frame.appendChild(img);
+        }
+        return frame;
+      }
+
+      // ---- a connected row of steps (used for the progress bar and for the request) ----
+      // items: [{ label, state: 'done' | 'now' | 'todo', href }]
+      function stepper(items, withIcons) {
+        var ol = mk('ol', 'grid');
+        ol.style.gridTemplateColumns = 'repeat(' + items.length + ', minmax(0, 1fr))';
+        items.forEach(function (it, i) {
+          var li = mk('li', 'relative flex flex-col items-center text-center');
+          if (i > 0) {
+            var bar = mk('span', 'absolute right-1/2 top-[19px] h-0.5 w-full ' + (it.state === 'todo' ? 'bg-line' : 'bg-forest'));
+            bar.setAttribute('aria-hidden', 'true'); li.appendChild(bar);
+          }
+          var node = it.href ? mk('a', '') : mk('span', '');
+          if (it.href) { node.href = it.href; node.className = 'flex flex-col items-center no-underline outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 rounded-xl'; }
+          else node.className = 'flex flex-col items-center';
+          var dot = mk('span', 'relative z-10 grid h-10 w-10 place-items-center rounded-full border-2 font-display text-sm font-semibold ' +
+            (it.state === 'done' ? 'border-forest bg-forest text-white' : it.state === 'now' ? 'border-forest bg-white text-forest' : 'border-line bg-white text-muted'));
+          if (it.state === 'done') dot.appendChild(icon('check', 'h-5 w-5'));
+          else if (withIcons && it.icon) dot.appendChild(icon(it.icon, 'h-5 w-5'));
+          else dot.textContent = String(i + 1);
+          node.appendChild(dot);
+          var lab = mk('span', 'mt-2 px-1 text-sm ' + (it.state === 'todo' ? 'text-muted' : 'font-semibold text-ink'), it.label);
+          var sr = mk('span', 'sr-only', it.state === 'done' ? ' (done)' : it.state === 'now' ? ' (now)' : ' (next)');
+          lab.appendChild(sr);
+          node.appendChild(lab);
+          li.appendChild(node);
+          ol.appendChild(li);
+        });
+        return ol;
+      }
+
+      // ---- progress bar at the top ----
+      function myLatest() { return (window.HB && HB.load().ok) ? (HB.forUser(user.id)[0] || null) : null; }
+      function renderJourney() {
+        var p = read(KEYS.prefs).value, top = read(KEYS.top).value, r = myLatest(), st = r ? r.status : '';
+        var hasPrefs = !!(p && typeof p.budget === 'number');
+        var hasTop = !!(top && typeof top.name === 'string' && top.name);
+        var s = [
+          hasPrefs ? 'done' : 'todo',
+          hasTop ? 'done' : 'todo',
+          (st === 'approved' || st === 'confirmed') ? 'done' : st === 'pending' ? 'now' : 'todo',
+          st === 'confirmed' ? 'done' : st === 'approved' ? 'now' : 'todo'
+        ];
+        if (s.indexOf('now') === -1) { var f = s.indexOf('todo'); if (f > -1) s[f] = 'now'; }
+        var items = [
+          { label: 'Preferences', state: s[0], href: 'matches.html', icon: 'tune' },
+          { label: 'Match', state: s[1], href: 'matches.html', icon: 'star' },
+          { label: 'Request', state: s[2], href: st ? '#reservation' : 'rooms.html', icon: 'doc' },
+          { label: 'Move in', state: s[3], href: st ? '#reservation' : null, icon: 'key' }
+        ];
+        var box = $('journey'); box.textContent = '';
+        box.appendChild(stepper(items, true));
       }
 
       // ---- best match ----
+      var FIT_LABEL_SHORT = function (m, pct) { return (typeof m.label === 'string' && m.label) ? m.label : (pct >= 80 ? 'Great fit' : pct >= 60 ? 'Good fit' : 'Okay fit'); };
       function renderTop() {
         var r = read(KEYS.top);
         if (!r.ok) { setState('card-top', 'error'); return; }
         var m = r.value;
         var valid = m && typeof m.name === 'string' && m.name && typeof m.score === 'number' && isFinite(m.score);
         if (!valid) { setState('card-top', 'empty'); return; }
-        $('top-name').textContent = m.name;
         var pct = Math.max(0, Math.min(100, Math.round(m.score)));
-        $('top-score').textContent = (typeof m.label === 'string' && m.label) ? m.label + ' (' + pct + '%)' : pct + '% fit';
-        $('top-price').textContent = peso(m.price);
-        $('lit-window').classList.add('lit');
+        $('top-name').textContent = m.name;
+        $('top-pct').textContent = pct + '%';
+        $('top-label').textContent = FIT_LABEL_SHORT(m, pct);
+        $('ring-wrap').setAttribute('aria-label', pct + ' percent fit');
+        var room = roomByName(m.name);
+        var pp = priceParts(room, m.price);
+        $('top-price').textContent = pp.amount ? pp.amount + ' ' + pp.unit : '';
+        $('top-meta').textContent = room ? 'Floor ' + room.floor + ', ' + room.type : '';
+        var holder = $('top-pic');
+        if (room && window.HB) { holder.querySelector('img').src = HB.roomImage(room); holder.hidden = false; } else holder.hidden = true;
         setState('card-top', 'match');
+        // draw the ring after it is visible so it animates
+        var circ = 2 * Math.PI * 52, ring = $('ring');
+        ring.style.strokeDashoffset = String(circ);
+        requestAnimationFrame(function () { requestAnimationFrame(function () { ring.style.strokeDashoffset = String(circ * (1 - pct / 100)); }); });
       }
 
-      // ---- saved rooms ----
+      // ---- number tiles ----
+      function renderTiles() {
+        var saved = read(KEYS.saved).value, cmp = read(KEYS.cmp).value, p = read(KEYS.prefs).value;
+        var nSaved = Array.isArray(saved) ? saved.filter(function (x) { return x && x.name; }).length : 0;
+        var nCmp = Array.isArray(cmp) ? cmp.filter(function (x) { return x && Array.isArray(x.rooms) && x.rooms.length > 1; }).length : 0;
+        $('tile-saved').querySelector('[data-v]').textContent = String(nSaved);
+        $('tile-cmp').querySelector('[data-v]').textContent = String(nCmp);
+        var b = $('tile-budget').querySelector('[data-v]');
+        b.textContent = (p && typeof p.budget === 'number') ? money(p.budget) : '-';
+        var rv = $('tile-req').querySelector('[data-v]'); rv.textContent = '';
+        var r = myLatest();
+        if (r && window.HB) {
+          var label = { pending: 'Pending', approved: 'Pay now', confirmed: 'Confirmed', declined: 'Declined', cancelled: 'Cancelled', expired: 'Expired', ended: 'Ended' }[r.status] || r.status;
+          rv.appendChild(HB.chip(label, HB.statusTone(r.status)));
+          rv.appendChild(mk('span', 'mt-2 block truncate text-base font-semibold text-ink', r.roomName));
+        } else {
+          rv.className = 'block font-display text-3xl font-bold leading-none tracking-tight text-muted';
+          rv.textContent = 'None';
+        }
+      }
+
+      // ---- saved rooms: picture cards ----
+      var STATE_LABEL = { available: 'Available', full: 'Full', taken: 'Taken', yours: 'Your request' };
       function renderSaved() {
         var r = read(KEYS.saved);
         if (!r.ok || (r.value !== null && !Array.isArray(r.value))) { setState('card-saved', 'error'); return; }
         var rooms = (r.value || []).filter(function (x) { return x && typeof x.name === 'string' && x.name; });
         if (!rooms.length) { setState('card-saved', 'empty'); return; }
 
-        var list = $('saved-list');
-        list.textContent = '';
+        var list = $('saved-list'); list.textContent = '';
         rooms.forEach(function (room) {
-          var li = document.createElement('li');
-          li.className = 'flex items-center justify-between gap-3 rounded-xl border border-line px-4 py-2';
+          var full = roomById(room.id);
+          var li = mk('li', 'relative overflow-hidden rounded-[20px] border border-line bg-white');
+          var a = mk('a', 'block no-underline outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-forest');
+          a.href = 'rooms.html?room=' + encodeURIComponent(room.id);
+          a.setAttribute('aria-label', 'See details of ' + room.name);
+          a.appendChild(pic(full));
+          var body = mk('div', 'p-4');
+          var head = mk('div', 'flex items-center justify-between gap-2');
+          head.appendChild(mk('p', 'truncate font-display text-lg font-semibold tracking-tight text-ink', room.name));
+          if (full && window.HB) { var stt = HB.roomState(full, user.id); head.appendChild(HB.chip(STATE_LABEL[stt] || stt, HB.roomTone(stt))); }
+          body.appendChild(head);
+          var pp = priceParts(full, room.price);
+          var price = mk('p', 'mt-1 font-display text-xl font-bold tracking-tight text-ink', pp.amount);
+          price.appendChild(mk('span', 'ml-1 font-body text-sm font-normal text-muted', pp.unit));
+          body.appendChild(price);
+          a.appendChild(body);
+          li.appendChild(a);
 
-          var text = document.createElement('div');
-          text.className = 'min-w-0';
-          var name = document.createElement('a');
-          name.href = 'rooms.html?room=' + encodeURIComponent(room.id);
-          name.className = 'block truncate font-semibold text-forest underline underline-offset-4 outline-none hover:text-forest-deep focus-visible:ring-2 focus-visible:ring-forest';
-          name.setAttribute('aria-label', 'See details of ' + room.name);
-          name.textContent = room.name;
-          text.appendChild(name);
-          var price = room.type ? HB.priceLabel(room) : peso(room.price);
-          if (price) {
-            var p = document.createElement('p');
-            p.className = 'text-sm text-muted';
-            p.textContent = price;
-            text.appendChild(p);
-          }
-
-          var btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'inline-flex min-h-[44px] shrink-0 items-center rounded-full px-3 text-sm font-semibold text-forest underline underline-offset-4 outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-forest';
-          btn.textContent = 'Remove';
-          btn.setAttribute('aria-label', 'Remove ' + room.name + ' from saved rooms');
-          btn.addEventListener('click', function () {
+          var rm = mk('button', 'absolute right-2 top-2 grid h-11 w-11 place-items-center rounded-full border border-line bg-white text-ink outline-none hover:bg-danger-soft hover:text-danger focus-visible:ring-2 focus-visible:ring-forest');
+          rm.type = 'button'; rm.setAttribute('aria-label', 'Remove ' + room.name + ' from saved rooms');
+          rm.appendChild(icon('x', 'h-5 w-5'));
+          rm.addEventListener('click', function () {
             var next = rooms.filter(function (x) { return x !== room; });
             if (!write(KEYS.saved, next)) { setState('card-saved', 'error'); return; }
-            renderSaved();
+            renderSaved(); renderTiles(); renderStart();
           });
-
-          li.appendChild(text);
-          li.appendChild(btn);
+          li.appendChild(rm);
           list.appendChild(li);
         });
         setState('card-saved', 'list');
       }
 
-      // ---- recent comparisons ----
+      // ---- recent comparisons: overlapping pictures + names ----
       function renderComparisons() {
         var r = read(KEYS.cmp);
         if (!r.ok || (r.value !== null && !Array.isArray(r.value))) { setState('card-cmp', 'error'); return; }
         var items = (r.value || []).filter(function (x) { return x && Array.isArray(x.rooms) && x.rooms.length > 1; });
         if (!items.length) { setState('card-cmp', 'empty'); return; }
 
-        var list = $('cmp-list');
-        list.textContent = '';
+        var list = $('cmp-list'); list.textContent = '';
         items.slice(0, 5).forEach(function (c) {
-          var li = document.createElement('li');
-          li.className = 'rounded-xl border border-line px-4 py-2';
-          var title;
-          if (Array.isArray(c.ids) && c.ids.length > 1) {
-            title = document.createElement('a');
-            title.href = 'rooms.html?compare=' + encodeURIComponent(c.ids.join(','));
-            title.className = 'inline-flex min-h-[44px] items-center rounded font-semibold text-forest underline underline-offset-4 outline-none hover:text-forest-deep focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2';
-            title.setAttribute('aria-label', 'Compare ' + c.rooms.join(' and ') + ' again');
-          } else {
-            title = document.createElement('p');
-            title.className = 'font-semibold';
-          }
-          title.textContent = c.rooms.join(' vs ');
-          li.appendChild(title);
-          var d = c.date ? new Date(c.date) : null;
-          if (d && !isNaN(d.getTime())) {
-            var when = document.createElement('p');
-            when.className = 'text-sm text-muted';
-            when.textContent = d.toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
-            li.appendChild(when);
-          }
-          list.appendChild(li);
+          var hasIds = Array.isArray(c.ids) && c.ids.length > 1;
+          var row = mk(hasIds ? 'a' : 'div', 'flex items-center gap-3 rounded-xl border border-line p-3 no-underline' + (hasIds ? ' outline-none transition-colors hover:border-forest focus-visible:ring-2 focus-visible:ring-forest' : ''));
+          if (hasIds) { row.href = 'rooms.html?compare=' + encodeURIComponent(c.ids.join(',')); row.setAttribute('aria-label', 'Compare ' + c.rooms.join(' and ') + ' again'); }
+          var stack = mk('span', 'flex shrink-0 -space-x-3');
+          (hasIds ? c.ids : c.rooms).slice(0, 3).forEach(function (key, i) {
+            var rm = hasIds ? roomById(key) : roomByName(key);
+            var disc = mk('span', 'grid h-11 w-11 place-items-center overflow-hidden rounded-full border-2 border-line bg-track text-sm font-semibold text-muted');
+            if (rm && window.HB) { var im = mk('img', 'h-full w-full object-cover'); im.src = HB.roomImage(rm); im.alt = ''; disc.appendChild(im); }
+            else disc.textContent = String(key).replace(/\D/g, '').slice(-3) || '?';
+            disc.style.zIndex = String(3 - i);
+            stack.appendChild(disc);
+          });
+          row.appendChild(stack);
+          var txt = mk('span', 'min-w-0');
+          txt.appendChild(mk('span', 'block truncate font-semibold text-ink', c.rooms.join(' vs ')));
+          var d = c.date ? fmtDate(c.date) : '';
+          if (d) txt.appendChild(mk('span', 'block text-sm text-muted', d));
+          row.appendChild(txt);
+          list.appendChild(row);
         });
         setState('card-cmp', 'list');
       }
 
       // ---- your room request ----
       var cancelling = false;
-      function fmtDate(s) {
-        var d = new Date(s && String(s).length === 10 ? s + 'T00:00:00' : s);
-        return isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
-      }
-      function step(label, state) {
-        var li = document.createElement('li');
-        li.className = 'flex items-center gap-3';
-        var dot = document.createElement('span');
-        dot.className = 'h-4 w-4 shrink-0 rounded-full border-2 border-forest ' + (state === 'done' ? 'bg-forest' : 'bg-white');
-        dot.setAttribute('aria-hidden', 'true');
-        var t = document.createElement('span');
-        t.className = 'text-base ' + (state === 'next' ? 'text-muted' : 'font-semibold');
-        t.textContent = label + (state === 'done' ? ' (done)' : state === 'now' ? ' (now)' : ' (next)');
-        li.appendChild(dot); li.appendChild(t);
-        return li;
-      }
       function renderReservation() {
         if (!window.HB) {
           $('res-error-text').textContent = 'A page file did not load: assets/js/reservation.js. Check that it is where this page expects it, then reload.';
@@ -565,48 +637,52 @@
         }
         var mine = HB.forUser(user.id);
         if (!mine.length) { setState('reservation', 'empty'); return; }
-        var r = mine[0];
+        var r = mine[0], room = roomById(r.roomId);
         var box = $('res-view'); box.textContent = '';
-        var mk = function (tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
         var due = r.paymentDueAt ? fmtDate(r.paymentDueAt) : '';
 
-        var head = mk('div', 'flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1');
+        // top: picture + name + facts as small chips
+        var top = mk('div', 'grid items-center gap-5 sm:grid-cols-[180px_minmax(0,1fr)]');
+        top.appendChild(pic(room, 'hidden aspect-[8/5] overflow-hidden rounded-2xl bg-track sm:block'));
+        var info = mk('div', 'min-w-0');
+        var head = mk('div', 'flex flex-wrap items-center gap-x-3 gap-y-1');
         head.appendChild(mk('p', 'font-display text-2xl font-bold tracking-tight', r.roomName));
         var label = { pending: 'Pending', approved: 'Approved, payment due', confirmed: 'Confirmed', declined: 'Declined', cancelled: 'Cancelled', expired: 'Expired', ended: 'Stay ended' }[r.status] || r.status;
         head.appendChild(HB.chip(label, HB.statusTone(r.status)));
-        box.appendChild(head);
-        box.appendChild(mk('p', 'mt-1 text-base text-muted', 'Floor ' + r.floor + ', ' + r.type + ' room, ' + HB.priceLabel(r)));
+        info.appendChild(head);
+        var facts = mk('ul', 'mt-3 flex flex-wrap gap-2');
+        var fl = ['Floor ' + r.floor + ', ' + r.type, HB.priceLabel(r)];
+        if (r.moveIn) fl.push('Move-in ' + fmtDate(r.moveIn));
+        if (r.status === 'approved' && due) fl.push('Pay by ' + due);
+        fl.forEach(function (t) { facts.appendChild(mk('li', 'rounded-lg border border-line bg-tint px-3 py-1 text-sm', t)); });
+        info.appendChild(facts);
+        if (r.message) info.appendChild(mk('p', 'mt-3 truncate text-sm text-muted', '\u201C' + r.message + '\u201D'));
+        top.appendChild(info);
+        box.appendChild(top);
 
-        var dl = mk('dl', 'mt-4 grid gap-3 text-base sm:grid-cols-3');
-        var facts = [['Move-in date', fmtDate(r.moveIn)], ['Requested on', fmtDate(r.createdAt)]];
-        if (r.status === 'approved' && due) facts.push(['Pay the office by', due]);
-        if (r.status === 'confirmed' && r.confirmedAt) facts.push(['Payment received', fmtDate(r.confirmedAt)]);
-        if (r.message) facts.push(['Your message', r.message]);
-        facts.forEach(function (f) { var d = mk('div'); d.appendChild(mk('dt', 'text-sm font-medium text-muted', f[0])); d.appendChild(mk('dd', 'break-words', f[1])); dl.appendChild(d); });
-        box.appendChild(dl);
-
+        // progress
         var steps = {
-          pending:   [['Requested', 'done'], ['Landlord decision', 'now'], ['Payment', 'next']],
+          pending:   [['Requested', 'done'], ['Office decision', 'now'], ['Payment', 'todo']],
           approved:  [['Requested', 'done'], ['Approved', 'done'], ['Payment', 'now']],
-          confirmed: [['Requested', 'done'], ['Approved', 'done'], ['Payment confirmed', 'done']],
+          confirmed: [['Requested', 'done'], ['Approved', 'done'], ['Paid', 'done']],
           declined:  [['Requested', 'done'], ['Declined', 'done']],
-          expired:   [['Requested', 'done'], ['Approved', 'done'], ['Payment not received in time', 'done']],
-          ended:     [['Requested', 'done'], ['Payment confirmed', 'done'], ['Stay ended', 'done']]
+          expired:   [['Requested', 'done'], ['Approved', 'done'], ['Not paid in time', 'done']],
+          ended:     [['Requested', 'done'], ['Paid', 'done'], ['Stay ended', 'done']]
         }[r.status];
         if (steps) {
-          var ol = mk('ol', 'mt-5 grid gap-2 sm:grid-cols-3');
-          ol.setAttribute('aria-label', 'Request progress');
-          steps.forEach(function (st) { ol.appendChild(step(st[0], st[1])); });
-          box.appendChild(ol);
+          var wrap = mk('div', 'mt-6');
+          wrap.setAttribute('aria-label', 'Request progress');
+          wrap.appendChild(stepper(steps.map(function (x) { return { label: x[0], state: x[1] }; }), false));
+          box.appendChild(wrap);
         }
 
         function cancelRow(question) {
           var row = mk('div', 'mt-3 flex flex-wrap items-center gap-2');
           if (cancelling) {
             row.appendChild(mk('p', 'mr-2 text-base font-medium', question));
-            var yes = mk('button', 'btn !border-danger !bg-white !text-danger hover:!bg-danger-soft', 'Yes, cancel request'); yes.type = 'button';
-            yes.addEventListener('click', function () { cancelling = false; if (!HB.setStatus(r.id, 'cancelled')) { setState('reservation', 'error'); return; } renderReservation(); });
-            var keep = mk('button', 'btn btn-outline', 'Keep my request'); keep.type = 'button';
+            var yes = mk('button', 'btn !border-danger !bg-white !text-danger hover:!bg-danger-soft', 'Yes, cancel'); yes.type = 'button';
+            yes.addEventListener('click', function () { cancelling = false; if (!HB.setStatus(r.id, 'cancelled')) { setState('reservation', 'error'); return; } refresh(); });
+            var keep = mk('button', 'btn btn-outline', 'Keep it'); keep.type = 'button';
             keep.addEventListener('click', function () { cancelling = false; renderReservation(); });
             row.appendChild(yes); row.appendChild(keep);
           } else {
@@ -617,19 +693,18 @@
           return row;
         }
 
-        var panel = mk('div', 'mt-5 rounded-xl border border-line bg-tint p-4');
+        var panel = mk('div', 'mt-6 rounded-xl border border-line bg-tint p-4');
         if (r.status === 'pending') {
-          panel.appendChild(mk('p', 'text-base', 'The dormitory office is reviewing your request. Your spot is held for you while you wait.'));
-          panel.appendChild(cancelRow('Cancel this request? The room is released.'));
+          panel.appendChild(mk('p', 'text-base', 'Waiting for the office. Your spot is held.'));
+          panel.appendChild(cancelRow('Cancel and release the room?'));
         } else if (r.status === 'approved') {
-          panel.appendChild(mk('p', 'font-semibold text-forest-deep', 'Approved. Next step: pay the dormitory office' + (due ? ' by ' + due : '') + '.'));
-          panel.appendChild(mk('p', 'mt-1 text-base', 'Payment and the contract are handled by the dormitory office, outside Homebase. If it is not paid in time, the room is released. The office contact details will be added here.'));
-          panel.appendChild(cancelRow('Cancel this approved request? The room is released.'));
+          panel.appendChild(mk('p', 'font-semibold text-forest-deep', 'Approved. Pay the dormitory office' + (due ? ' by ' + due : '') + '.'));
+          panel.appendChild(mk('p', 'mt-1 text-sm text-muted', 'Payment is handled by the office, outside Homebase.'));
+          panel.appendChild(cancelRow('Cancel and release the room?'));
         } else if (r.status === 'confirmed') {
-          panel.appendChild(mk('p', 'font-semibold text-forest-deep', 'You are all set.'));
-          panel.appendChild(mk('p', 'mt-1 text-base', 'The office received your payment. ' + r.roomName + ' is yours, with move-in on ' + fmtDate(r.moveIn) + '.'));
+          panel.appendChild(mk('p', 'font-semibold text-forest-deep', 'You are all set. Move-in ' + fmtDate(r.moveIn) + '.'));
         } else {
-          var msg = { declined: 'This request was declined, so the room is free again.', cancelled: 'You cancelled this request. The room was released.', expired: 'Payment was not received by ' + due + ', so the room was released.', ended: 'This stay has ended.' }[r.status] || '';
+          var msg = { declined: 'Declined. The room is free again.', cancelled: 'Cancelled. The room was released.', expired: 'Not paid by ' + due + '. The room was released.', ended: 'This stay has ended.' }[r.status] || '';
           panel.appendChild(mk('p', 'text-base', msg));
           var a = mk('a', 'btn mt-3', 'Find another room'); a.href = 'rooms.html'; panel.appendChild(a);
         }
@@ -641,7 +716,7 @@
       // ---- house rules ----
       $('open-rules').addEventListener('click', function () { if (window.HB) HB.openRules(); });
 
-      // ---- where to start (only for a student who has not done anything yet) ----
+      // ---- where to start (only for someone who has not done anything yet) ----
       function renderStart() {
         var top = read(KEYS.top).value, saved = read(KEYS.saved).value, prefs = read(KEYS.prefs).value;
         var hasRes = !!window.HB && HB.forUser(user.id).length > 0;
@@ -649,33 +724,50 @@
         $('start').hidden = !isNew;
       }
 
-      // ---- your preferences ----
+      // ---- your preferences: chips ----
       var clearing = false;
+      var PRIORITY = { budget: 'Budget', amenities: 'Amenities', type: 'Room type', floor: 'Floor' };
       function renderPrefs() {
         var r = read(KEYS.prefs);
         if (!r.ok) { setState('prefs', 'error'); return; }
         var p = r.value;
         if (!p || typeof p.budget !== 'number' || !isFinite(p.budget) || !Array.isArray(p.amenities)) { setState('prefs', 'empty'); return; }
         var box = $('prefs-view'); box.textContent = '';
-        var mk = function (tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
-        var dl = mk('dl', 'grid gap-4 text-base sm:grid-cols-2 lg:grid-cols-5');
-        [['Monthly budget', peso(p.budget)], ['Room type', p.type || 'Any'], ['Preferred floor', typeof p.floor === 'number' ? 'Floor ' + p.floor : 'No preference'], ['Amenities', p.amenities.length ? p.amenities.join(', ') : 'None chosen'], ['Matters most', { budget: 'Budget', amenities: 'Amenities', type: 'Room type', floor: 'Floor' }[p.priority] || 'Balanced']].forEach(function (f) {
-          var d = mk('div'); d.appendChild(mk('dt', 'text-sm font-medium text-muted', f[0])); d.appendChild(mk('dd', 'break-words', f[1])); dl.appendChild(d);
-        });
-        box.appendChild(dl);
+
+        var main = mk('div', 'flex flex-wrap items-center gap-2');
+        main.appendChild(mk('span', 'rounded-full bg-forest px-4 py-2 font-display text-lg font-bold text-white', money(p.budget) + ' / month'));
+        main.appendChild(mk('span', 'rounded-full border border-line bg-tint px-4 py-2 text-base font-medium', p.type || 'Any type'));
+        main.appendChild(mk('span', 'rounded-full border border-line bg-tint px-4 py-2 text-base font-medium', typeof p.floor === 'number' ? 'Floor ' + p.floor : 'Any floor'));
+        if (PRIORITY[p.priority]) {
+          var pr = mk('span', 'inline-flex items-center gap-1.5 rounded-full border border-forest px-4 py-2 text-base font-semibold text-forest');
+          pr.appendChild(icon('star', 'h-4 w-4')); pr.appendChild(document.createTextNode(PRIORITY[p.priority] + ' first'));
+          main.appendChild(pr);
+        }
+        box.appendChild(main);
+
+        if (p.amenities.length) {
+          var am = mk('ul', 'mt-3 flex flex-wrap gap-1.5');
+          p.amenities.forEach(function (a) {
+            var li = mk('li', 'inline-flex items-center gap-1 rounded-lg border border-line bg-tint px-2.5 py-1 text-sm');
+            li.appendChild(icon('check', 'h-4 w-4 text-forest')); li.appendChild(document.createTextNode(a));
+            am.appendChild(li);
+          });
+          box.appendChild(am);
+        }
+
         var row = mk('div', 'mt-5 flex flex-wrap items-center gap-2');
         if (clearing) {
-          row.appendChild(mk('p', 'mr-2 text-base font-medium', 'Clear your preferences? Your best match is cleared too.'));
-          var yes = mk('button', 'btn !border-danger !bg-white !text-danger hover:!bg-danger-soft', 'Yes, clear them'); yes.type = 'button';
+          row.appendChild(mk('p', 'mr-2 text-base font-medium', 'Clear your preferences and best match?'));
+          var yes = mk('button', 'btn !border-danger !bg-white !text-danger hover:!bg-danger-soft', 'Yes, clear'); yes.type = 'button';
           yes.addEventListener('click', function () {
             try { localStorage.removeItem(KEYS.prefs); localStorage.removeItem(KEYS.top); } catch (e) { setState('prefs', 'error'); return; }
-            clearing = false; renderTop(); renderPrefs(); renderStart();
+            clearing = false; refresh();
           });
           var keep = mk('button', 'btn btn-outline', 'Keep them'); keep.type = 'button';
           keep.addEventListener('click', function () { clearing = false; renderPrefs(); });
           row.appendChild(yes); row.appendChild(keep);
         } else {
-          var edit = mk('a', 'btn', 'Edit preferences'); edit.href = 'matches.html';
+          var edit = mk('a', 'btn', 'Edit'); edit.href = 'matches.html';
           var clr = mk('button', 'btn btn-outline', 'Clear'); clr.type = 'button';
           clr.addEventListener('click', function () { clearing = true; renderPrefs(); });
           row.appendChild(edit); row.appendChild(clr);
@@ -683,10 +775,6 @@
         box.appendChild(row);
         setState('prefs', 'view');
       }
-
-      renderTop();
-      renderPrefs();
-      renderStart();
 
       // ---- waiting for a parent or guardian (students under 18) ----
       function renderGuardian() {
@@ -698,11 +786,14 @@
         box.hidden = false;
       }
       $('guardian-new').addEventListener('click', function () { HB_AUTH.newGuardianCode(user.id).then(renderGuardian); });
+
+      function refresh() {
+        renderTop(); renderPrefs(); renderStart(); renderReservation(); renderSaved(); renderComparisons(); renderTiles(); renderJourney();
+      }
       renderGuardian();
-      renderReservation();
-      renderSaved();
-      renderComparisons();
+      refresh();
     })();
   </script>
+
 </body>
 </html>
