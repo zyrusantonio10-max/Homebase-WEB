@@ -277,7 +277,7 @@
             </a>
           </div>
           <button type="button" id="logout" class="btn btn-logout mt-4">Log out</button>
-        </div>
+        </div>  
 
       </div>
     </section>
@@ -377,13 +377,15 @@
         $('session-view').hidden = !signedIn;
         if (signedIn) {
           var isLandlord = user.role === 'landlord';
-          $('session-detail').textContent = user.name + ' (' + (isLandlord ? 'landlord' : 'student') + '), ' + user.email;
+          var isNonStudent = !isLandlord && (user.userType === 'non_student' || user.role === 'non_student');
+          var roleLabel = isLandlord ? 'landlord' : (isNonStudent ? 'resident' : 'student');
+          $('session-detail').textContent = user.name + ' (' + roleLabel + '), ' + user.email;
           $('session-lead').textContent = isLandlord ? 'Students are waiting for an answer' : 'Ready to find a room?';
           $('session-text').textContent = isLandlord
             ? 'Review the room requests students sent to Ariate Dormitory and approve or decline each one.'
             : 'Explore Ariate Dormitory rooms, set your budget and needs, and see how well each room fits you.';
           $('session-link').setAttribute('href', homeFor(user.role));
-          $('session-link-text').textContent = isLandlord ? 'Go to Reservation Requests' : 'Go to Student Dashboard';
+          $('session-link-text').textContent = isLandlord ? 'Go to Reservation Requests' : (isNonStudent ? 'Go to Resident Dashboard' : 'Go to Student Dashboard');
         }
         return signedIn;
       }

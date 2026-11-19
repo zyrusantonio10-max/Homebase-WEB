@@ -424,9 +424,14 @@
       $('first-name').textContent = firstName;
       $('profile-name').textContent = fullName;
       $('profile-email').textContent = String((prof && prof.email) || user.email);
-      if (prof && prof.course) {
-        var subEl = $('profile-sub');
-        if (subEl) subEl.textContent = prof.course + (prof.yearLevel ? ' (' + prof.yearLevel + ')' : '');
+      var isNonStudent = (user && user.userType === 'non_student') || (prof && prof.userType === 'non_student') || (!prof.school && !prof.studentId && (prof.yearLevel === 'Working Professional' || prof.occupation));
+      var subEl = $('profile-sub');
+      if (subEl) {
+        if (prof && prof.course) {
+          subEl.textContent = prof.course + (prof.yearLevel && prof.yearLevel !== 'Working Professional' ? ' (' + prof.yearLevel + ')' : (isNonStudent ? '' : (prof.yearLevel ? ' (' + prof.yearLevel + ')' : '')));
+        } else if (isNonStudent) {
+          subEl.textContent = prof.occupation || 'Resident';
+        }
       }
       if (window.HB_AUTH && HB_AUTH.renderAvatar) {
         HB_AUTH.renderAvatar($('nav-initial'), user);

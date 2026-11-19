@@ -116,13 +116,16 @@
 
   // ---- helpers ----
   function readLocal(key) { try { var v = JSON.parse(localStorage.getItem(key) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
-  // compare two copies of a list: same data, whatever the date format ("...Z" or "...+00:00")
+  // the same row with every date written one way ("...Z" and "...+00:00" are the same moment)
+  function normRow(r) {
+    var o = {};
+    for (var k in r) { var v = r[k]; o[k] = (typeof v === 'string' && /^\d{4}-\d\d-\d\dT/.test(v) && !isNaN(Date.parse(v))) ? new Date(v).toISOString() : v; }
+    return o;
+  }
+  // compare two copies of a list: same data, whatever the date format
   function canon(reg, rows) {
     return JSON.stringify(reg.tables.map(function (t) {
-      return (rows[t.table] || []).slice().sort(function (a, b) { return String(a[t.idKey]).localeCompare(String(b[t.idKey])); }).map(function (r) {
-        var o = {}; for (var k in r) { var v = r[k]; o[k] = (typeof v === 'string' && /^\d{4}-\d\d-\d\dT/.test(v) && !isNaN(Date.parse(v))) ? new Date(v).toISOString() : v; }
-        return o;
-      });
+      return (rows[t.table] || []).slice().sort(function (a, b) { return String(a[t.idKey]).localeCompare(String(b[t.idKey])); }).map(normRow);
     }));
   }
   function canReload() {
@@ -164,10 +167,10 @@
     var d = db(), chain = Promise.resolve();
     reg.tables.forEach(function (t) {
       var before = {}, after = prev[t.table] || [], rows = next[t.table] || [], adds = [], edits = [];
-      after.forEach(function (r) { before[r[t.idKey]] = JSON.stringify(r); });
+      after.forEach(function (r) { before[r[t.idKey]] = JSON.stringify(normRow(r)); });
       rows.forEach(function (r) {
         var old = before[r[t.idKey]];
-        if (old === undefined) adds.push(r); else if (old !== JSON.stringify(r)) edits.push(r);
+        if (old === undefined) adds.push(r); else if (old !== JSON.stringify(normRow(r))) edits.push(r);
       });
       if (adds.length) chain = chain.then(function () { return d.from(t.table).insert(adds).then(function (r) { if (r.error) throw r.error; }); });
       edits.forEach(function (r) {
