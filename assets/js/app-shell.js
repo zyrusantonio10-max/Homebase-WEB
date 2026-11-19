@@ -101,20 +101,35 @@
   NAV.forEach(function (item) { ul.appendChild(li(link(item, 'hb-link'), item)); });
   nav.appendChild(ul); side.appendChild(nav);
   var me = el('div', 'hb-user');
-  var meLink = el('a', 'hb-user-link'); meLink.href = 'profile.html'; meLink.setAttribute('aria-label', 'My profile');
+  var meLink = el('a', 'hb-user-link flex-1'); meLink.href = 'profile.html'; meLink.setAttribute('aria-label', 'My profile');
   meLink.appendChild(avatar(isLL ? 'nav-avatar' : 'nav-initial'));
   var who = el('span', 'hb-who');
   var first = String(user.name || user.email || '').split(/\s+/)[0];
   var nm = el('span', 'hb-name', isLL ? String(user.name || user.email) : first); nm.id = 'nav-name';
   who.appendChild(nm); who.appendChild(el('span', 'hb-role', isLL ? 'Landlord' : 'Student')); meLink.appendChild(who);
+
+  var themeToggle = (window.HB_THEME && HB_THEME.createButton) ? HB_THEME.createButton() : el('button', 'hb-theme-toggle');
+  themeToggle.setAttribute('data-theme-toggle', '');
+  if (!themeToggle.innerHTML) themeToggle.innerHTML = '<svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg><svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>';
+
+  var meRow = el('div', 'flex items-center justify-between gap-2 mb-2');
+  meRow.appendChild(meLink);
+  meRow.appendChild(themeToggle);
+
   var out = el('button', 'btn btn-logout', 'Log out'); out.type = 'button'; out.id = 'logout'; out.setAttribute('data-logout', '');
   out.addEventListener('click', logout);
-  me.appendChild(meLink); me.appendChild(out); side.appendChild(me);
+  me.appendChild(meRow); me.appendChild(out); side.appendChild(me);
 
   // ---- top bar (phones) ----
   var top = el('header', 'hb-top');
   top.appendChild(brand());
   var right = el('div', 'hb-top-right');
+  
+  var mThemeToggle = (window.HB_THEME && HB_THEME.createButton) ? HB_THEME.createButton() : el('button', 'hb-theme-toggle');
+  mThemeToggle.setAttribute('data-theme-toggle', '');
+  if (!mThemeToggle.innerHTML) mThemeToggle.innerHTML = themeToggle.innerHTML;
+  right.appendChild(mThemeToggle);
+
   var pl = el('a', 'hb-user-link'); pl.href = 'profile.html'; pl.setAttribute('aria-label', 'My profile'); pl.appendChild(avatar(null));
   right.appendChild(pl);
   var mb = el('button', 'btn btn-outline text-sm !min-h-[38px] !px-3', 'Menu');

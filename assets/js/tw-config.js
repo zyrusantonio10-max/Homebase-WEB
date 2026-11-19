@@ -3,20 +3,20 @@
 
   1) Tailwind reads it, so classes like bg-forest, text-danger, border-warn-line, hover:bg-lime-deep, bg-paper work.
   2) The same colors are also published as CSS variables (--forest, --danger-soft, --paper, ...) for the CSS files.
-
-  How the colors are used:
-    forest   brand green: primary buttons, focus, the sidebar, "good" states
-    lime     the single accent: the lit window in the logo, the current page in the sidebar, the best-match button
-    paper    warm off-white page ground (new). Cards stay white on top of it, so they read as cards
-    mint     soft greens used on the landing page
-    ink      main text           muted    secondary text
-    line     borders             edge     hover border on fields
-    tint     quiet cards         track    hover backgrounds and picture placeholders
-    danger   red: Log out, Decline, Delete, Hide, errors, "bad" statuses (declined, expired)
-    warn     amber: "needs attention" (pending, payment due, over budget)
-  Every status also says what it is in words. Color never carries meaning alone.
+  3) Handles Dark Mode class configuration and theme asset loading.
 */
 (function () {
+  // Prevent light flash: apply saved dark theme immediately
+  try {
+    var savedTheme = localStorage.getItem('homebase_theme');
+    var isDark = savedTheme === 'dark' || (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  } catch (e) {}
+
   var colors = {
     forest: { DEFAULT: '#0B4A2F', deep: '#083A25', body: '#0E5435' },
     lime:   { DEFAULT: '#C6F24E', deep: '#B5E03F' },
@@ -34,6 +34,7 @@
 
   if (typeof tailwind !== 'undefined') {
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           colors: colors,
@@ -53,7 +54,25 @@
     if (typeof v === 'string') css += '--' + name + ':' + v + ';';
     else Object.keys(v).forEach(function (shade) { css += '--' + (shade === 'DEFAULT' ? name : name + '-' + shade) + ':' + v[shade] + ';'; });
   });
+  css += '}';
+
   var style = document.createElement('style');
-  style.textContent = css + '}';
+  style.textContent = css;
   document.head.appendChild(style);
+
+  // Auto-inject dark.css if not present
+  if (!document.querySelector('link[href*="dark.css"]')) {
+    var darkLink = document.createElement('link');
+    darkLink.rel = 'stylesheet';
+    darkLink.href = 'assets/css/dark.css';
+    document.head.appendChild(darkLink);
+  }
+
+  // Auto-inject theme.js if not present
+  if (!window.HB_THEME && !document.querySelector('script[src*="theme.js"]')) {
+    var themeScript = document.createElement('script');
+    themeScript.src = 'assets/js/theme.js';
+    themeScript.defer = true;
+    document.head.appendChild(themeScript);
+  }
 })();
