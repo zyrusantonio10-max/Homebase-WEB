@@ -3,307 +3,313 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Homebase | Find a room that fits you</title>
-  <meta name="description" content="Homebase scores Ariate Dormitory rooms against your budget, amenities and room type.">
+  <title>Homebase | Find a room that fits your budget and needs</title>
+  <meta name="description" content="Homebase helps students and residents find rooms that fit their budget and needs. Easy. Safe. Convenient.">
 
-  <!--
-    Design Read: student housing login page for students studying far from home (and the landlords who house them),
-    in a login-first, collage-on-the-left layout, warm and plain-spoken, dial ENERGY 2 / RHYTHM 2 / MOTION 1.
-
-    Reasons (R-31):
-    - Layout: login-first split. Left = logo, one collage, one headline. Right = the log in form, nothing else competing with it.
-      Register moved into a dialog so the page has one job: get a returning user in.
-    - Palette: white page, deep green, a mint tint for the quiet cards, one lime accent. Lime is used ONLY on the lit window
-      and the focus ring, so it stays the single accent.
-    - Collage: product cards that show what Homebase does, not decoration (R-22): the dorm with one lit window (identity motif,
-      focal point), a budget bar card, a room type chip, a fit summary card (budget, amenities, room type: the same three things
-      My Matches scores), plus two round badges for amenities and availability. They overlap the way a stack of screens would.
-    - Collage values are SAMPLE placeholders and the page says so ("Sample preview", R-38). No real statistics, no people.
-    - Photo slot: drop your own photo at assets/hero.jpg and it fills the big dorm card. If the file is missing, the SVG dorm shows.
-    - Radius: 12px inputs, 20 to 28px cards, full pill on the two actions only (Log in, Create new account).
-    - Shadow: only the elements that sit on top of others (fit card, room chip, availability badge) lift.
-    - Type: Sora for headlines (the wordmark voice), Public Sans for body and forms.
-    - Motion: the lit window switches on once at load; disabled under prefers-reduced-motion.
-    - Logo: text wordmark plus a placeholder mark built from the motif. Replace with the real logo when there is one (R-23).
-    - After login: students go to home.html, landlords go to landlord.html.
-    - Register is for students only. There is one dormitory, so the landlord is one account made by the system (see OFFICE in the script).
-    - Not built: "Forgot password?". There is no backend to send a reset yet, so a link would do nothing (R-26).
-      Add it in the PHP + MySQL phase.
-  -->
-
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
 
+  <!-- Tailwind CSS & Custom Theme Config -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="assets/js/tw-config.js"></script>
 
-  <style type="text/tailwindcss">
-    @layer components {
-      .label { @apply mb-1.5 block text-sm font-medium text-ink; }
-      .field {
-        @apply block h-[60px] w-full rounded-xl border border-line bg-white px-3.5 pb-2 pt-6 text-base text-ink
-               placeholder:text-transparent outline-none transition-colors
-               hover:border-edge focus-visible:border-forest focus-visible:ring-2 focus-visible:ring-forest/30
-               aria-[invalid=true]:border-danger aria-[invalid=true]:ring-danger/20;
-      }
-      .float-label {
-        @apply pointer-events-none absolute left-3.5 top-1.5 text-xs text-muted transition-all
-               peer-placeholder-shown:top-[19px] peer-placeholder-shown:text-base
-               peer-focus:top-1.5 peer-focus:text-xs;
-      }
-      .err { @apply mt-1.5 text-sm font-medium text-danger; }
-      .btn {
-        @apply flex min-h-[48px] w-full items-center justify-center rounded-full border border-transparent bg-forest px-4 py-3 text-base font-semibold text-white
-               transition-colors hover:bg-forest-deep outline-none
-               focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-70;
-      }
-      .btn-outline { @apply border-forest bg-white text-forest hover:bg-tint; }
-      .btn-logout { @apply border border-danger-line bg-danger-soft text-danger hover:bg-danger hover:text-white hover:border-danger focus-visible:ring-danger; }
-      .linkbtn { @apply inline-flex min-h-[44px] items-center rounded px-1 font-semibold text-forest underline underline-offset-4 outline-none hover:text-forest-deep focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2; }
-    }
-  </style>
-
-  <!-- Layout shell and the collage are plain CSS: they need absolute positioning and per-card sizes that utilities would only obscure. -->
   <style>
-    :root { --forest:#0B4A2F; --forest-deep:#083A25; --forest-body:#0E5435; --lime:#C6F24E; --ink:#14211A; --muted:#46564D; --mint:#E3EEE7; --mint-deep:#CFE3D6; }
-
-    /* ---------- page shell ---------- */
-    .lp { display: grid; grid-template-rows: auto 1fr; min-height: 100dvh; }
-    .lp-left { position: relative; background: #fff; padding: 24px 24px 8px; }
-    .lp-logo { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; border-radius: 8px; font: 700 1.25rem/1 Sora, system-ui, sans-serif; letter-spacing: -.01em; color: var(--ink); text-decoration: none; outline: none; }
-    .lp-logo:focus-visible { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--forest); }
-    .lp-logo svg { width: 40px; height: 40px; flex: none; }
-    .lp-title { margin: 20px 0 0; font: 700 1.875rem/1.1 Sora, system-ui, sans-serif; letter-spacing: -.02em; color: var(--ink); }
-    .lp-title span { display: block; }
-    .lp-title .g { color: var(--forest); }
-    .lp-stage, .lp-note { display: none; }
-
-    @media (min-width: 1024px) {
-      .lp { grid-template-columns: minmax(0, 1fr) minmax(400px, 34%); grid-template-rows: minmax(0, 1fr); height: 100dvh; }
-      .lp-left { padding: 0; }
-      .lp-logo { position: absolute; top: 32px; left: 56px; z-index: 3; }
-      .lp-title { position: absolute; left: 56px; bottom: 48px; margin: 0; font-size: 2.5rem; z-index: 3; }
+    /* Custom brand color variables matching the design */
+    :root {
+      --hb-forest: #1E4D36;
+      --hb-forest-dark: #153A28;
+      --hb-forest-pill: #2F6A4F;
+      --hb-sage: #93B4A2;
+      --hb-ink: #143826;
+      --hb-border: #D1D5DB;
     }
-    @media (min-width: 1100px) {
-      .lp-stage { display: flex; position: absolute; inset: 0; align-items: center; justify-content: flex-end; padding-right: 5%; pointer-events: none; z-index: 1; }
-      .lp-note { display: block; position: absolute; right: 24px; bottom: 16px; z-index: 3; font-size: 12px; line-height: 1.3; color: var(--muted); }
+
+    body {
+      font-family: 'Public Sans', system-ui, -apple-system, sans-serif;
+      color: var(--hb-ink);
     }
-    @media (min-width: 1280px) { .lp-title { font-size: 3rem; } }
-    @media (min-width: 1536px) { .lp-title { font-size: 3.5rem; } }
 
-    /* ---------- collage (design size 540 x 628, scaled with zoom) ---------- */
-    .cl { position: relative; width: 540px; height: 628px; flex: none; zoom: .72; font-family: "Public Sans", system-ui, sans-serif; color: var(--ink); }
-    @media (min-width: 1280px) and (min-height: 760px) { .cl { zoom: .9; } }
-    @media (min-width: 1536px) and (min-height: 900px) { .cl { zoom: 1; } }
-    @media (max-height: 680px) { .cl { zoom: .6; } }
-    .cl, .cl * { box-sizing: border-box; }
-    .cl > * { position: absolute; }
+    .font-display {
+      font-family: 'Sora', system-ui, -apple-system, sans-serif;
+    }
 
-    /* big card: the dorm, one window lit = "the room that fits you" */
-    .cl-dorm { left: 170px; top: 8px; width: 290px; height: 470px; border-radius: 28px; overflow: hidden; background: var(--forest); z-index: 2; }
-    .cl-dorm svg, .cl-dorm img { position: absolute; inset: 0; width: 100%; height: 100%; }
-    .cl-dorm img { object-fit: cover; }
+    /* Custom input focus & styling */
+    .input-box {
+      border: 1.5px solid #D1D5DB;
+      transition: all 0.2s ease;
+    }
+    .input-box:focus-within {
+      border-color: #1E4D36;
+      box-shadow: 0 0 0 3px rgba(30, 77, 54, 0.12);
+    }
+    .input-box[aria-invalid="true"],
+    .input-box.has-error {
+      border-color: #DC2626;
+      box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+    }
 
-    /* back card: budget */
-    .cl-budget { left: 0; top: 120px; width: 250px; height: 290px; border-radius: 24px; background: var(--mint); padding: 22px 100px 22px 20px; z-index: 1; }
-    .cl-budget h3 { margin: 0 0 16px; font: 600 14px/1.2 Sora, system-ui, sans-serif; }
-    .cl-bar-label { margin: 0 0 5px; font-size: 13px; line-height: 1.2; color: var(--muted); }
-    .cl-track { height: 10px; border-radius: 5px; background: var(--mint-deep); margin-bottom: 14px; }
-    .cl-track i { display: block; height: 100%; border-radius: 5px; background: var(--forest); }
-    .cl-tag { display: inline-block; margin-top: 6px; padding: 6px 10px; border-radius: 8px; background: #fff; font-size: 13px; font-weight: 600; color: var(--forest); }
+    /* Smooth transitions */
+    .btn-transition {
+      transition: all 0.18s ease-in-out;
+    }
 
-    /* round badges */
-    .cl-round { display: grid; place-items: center; border-radius: 50%; }
-    .cl-round svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-    .cl-wifi { left: 14px; top: 24px; width: 72px; height: 72px; background: var(--mint-deep); color: var(--forest); z-index: 3; }
-    .cl-wifi svg { width: 34px; height: 34px; }
-    .cl-wifi circle { fill: currentColor; stroke: none; }
-    .cl-ok { left: 392px; top: 510px; width: 104px; height: 104px; background: var(--forest); color: #fff; border: 6px solid #fff; box-shadow: 0 10px 24px rgba(20,33,26,.18); z-index: 6; }
-    .cl-ok svg { width: 44px; height: 44px; }
-
-    /* room type chip */
-    .cl-room { left: 372px; top: 60px; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 14px; background: #fff; box-shadow: 0 8px 22px rgba(20,33,26,.16); z-index: 4; }
-    .cl-room svg { width: 28px; height: 28px; flex: none; fill: none; stroke: var(--forest); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-    .cl-room b { display: block; font: 600 15px/1.2 Sora, system-ui, sans-serif; }
-    .cl-room small { display: block; font-size: 13px; line-height: 1.2; color: var(--muted); }
-
-    /* front card: fit summary */
-    .cl-fit { left: 56px; top: 420px; width: 340px; height: 156px; border-radius: 20px; background: #fff; padding: 18px 20px; box-shadow: 0 14px 34px rgba(20,33,26,.18); z-index: 5; }
-    .cl-fit header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-    .cl-fit h3 { margin: 0; font: 600 15px/1.2 Sora, system-ui, sans-serif; }
-    .cl-fit header span { padding: 5px 10px; border-radius: 8px; background: var(--forest); color: #fff; font-size: 13px; font-weight: 600; }
-    .cl-row { display: grid; grid-template-columns: 84px 1fr; align-items: center; gap: 10px; margin-bottom: 11px; font-size: 13.5px; }
-    .cl-row .cl-track { margin: 0; height: 8px; }
-
-    /* the lit window switches on once */
-    @keyframes switch-on { from { fill: #083A25; } to { fill: #C6F24E; } }
-    .lit-window { animation: switch-on 900ms ease-out 400ms both; }
-    @media (prefers-reduced-motion: reduce) { .lit-window { animation: none; } }
+    [hidden] {
+      display: none !important;
+    }
   </style>
 </head>
 
-<body class="bg-white font-body text-ink antialiased">
+<body class="min-h-screen bg-white text-[#143826] antialiased selection:bg-[#2F6A4F] selection:text-white">
 
-  <main class="lp">
+  <main class="min-h-screen grid grid-cols-1 lg:grid-cols-[1.18fr_1fr]">
 
-    <!-- LEFT: logo, collage, headline -->
-    <section class="lp-left" aria-label="About Homebase">
+    <!-- ==========================================
+         LEFT PANEL: BRANDING, HERO & GRAPHIC MOTIFS
+         ========================================== -->
+    <section class="relative min-h-[620px] lg:min-h-screen bg-white overflow-hidden flex flex-col justify-start px-8 sm:px-12 lg:px-16 xl:px-20 pt-8 sm:pt-10 lg:pt-12 pb-12 lg:border-r lg:border-gray-200" aria-label="About Homebase">
 
-      <a href="/" class="lp-logo" aria-label="Homebase home">
-        <!-- placeholder mark built from the page motif: dark square, one lit window -->
-        <svg viewBox="0 0 32 32" aria-hidden="true">
-          <rect width="32" height="32" rx="8" fill="#0B4A2F"/>
-          <rect x="7" y="8" width="7" height="8" rx="1.5" fill="#083A25"/>
-          <rect x="18" y="8" width="7" height="8" rx="1.5" fill="#C6F24E"/>
-          <rect x="7" y="19" width="7" height="8" rx="1.5" fill="#083A25"/>
-          <rect x="18" y="19" width="7" height="8" rx="1.5" fill="#083A25"/>
-        </svg>
-        <span>Homebase</span>
-      </a>
-
-      <div class="lp-stage">
-        <div class="cl" role="img" aria-label="Sample preview of a Homebase match: a dorm with one lit window, a budget comparison, a room type chip, an amenities badge, an availability badge, and a summary showing how well the room fits on budget, amenities and room type.">
-
-          <div class="cl-budget">
-            <h3>Monthly budget</h3>
-            <p class="cl-bar-label">Your limit</p>
-            <div class="cl-track"><i style="width:100%"></i></div>
-            <p class="cl-bar-label">This room</p>
-            <div class="cl-track"><i style="width:72%"></i></div>
-            <span class="cl-tag">Within budget</span>
-          </div>
-
-          <div class="cl-dorm">
-            <svg viewBox="0 0 290 470" aria-hidden="true" preserveAspectRatio="xMidYMid slice">
-              <rect width="290" height="470" fill="#0B4A2F"/>
-              <circle cx="205" cy="118" r="98" fill="#0D5033"/>
-              <rect y="438" width="290" height="32" fill="#083A25"/>
-              <rect x="32" y="98" width="226" height="14" rx="3" fill="#0E5435"/>
-              <rect x="40" y="110" width="210" height="328" rx="6" fill="#0E5435"/>
-              <g fill="#083A25">
-                <rect x="60" y="134" width="40" height="52" rx="3"/><rect x="125" y="134" width="40" height="52" rx="3"/><rect x="190" y="134" width="40" height="52" rx="3"/>
-                <rect x="60" y="208" width="40" height="52" rx="3"/><rect x="190" y="208" width="40" height="52" rx="3"/>
-                <rect x="60" y="282" width="40" height="52" rx="3"/><rect x="125" y="282" width="40" height="52" rx="3"/><rect x="190" y="282" width="40" height="52" rx="3"/>
-                <rect x="120" y="370" width="50" height="68" rx="3"/>
-              </g>
-              <rect class="lit-window" x="125" y="208" width="40" height="52" rx="3" fill="#C6F24E"/>
-              <path d="M 24 456 H 266" stroke="#fff" stroke-opacity=".6" stroke-width="3" stroke-dasharray="9 9" stroke-linecap="round" fill="none"/>
-            </svg>
-            <!-- Photo slot: put your own photo at assets/hero.jpg. Hidden until the file actually loads. -->
-            <img id="hero-img" src="assets/hero.jpg" alt="" hidden decoding="async">
-          </div>
-
-          <div class="cl-round cl-wifi">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10a11 11 0 0 1 16 0"/><path d="M7 13.5a7 7 0 0 1 10 0"/><path d="M10 17a3 3 0 0 1 4 0"/><circle cx="12" cy="20" r="1.6"/></svg>
-          </div>
-
-          <div class="cl-room">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19V6"/><path d="M3 15h18v4"/><path d="M21 15v-2a3 3 0 0 0-3-3h-7v5"/><circle cx="7" cy="11.5" r="1.6"/></svg>
-            <div><b>Double room</b><small>Floor 2</small></div>
-          </div>
-
-          <div class="cl-fit">
-            <header><h3>How well it fits you</h3><span>Good fit</span></header>
-            <div class="cl-row"><span>Budget</span><div class="cl-track"><i style="width:90%"></i></div></div>
-            <div class="cl-row"><span>Amenities</span><div class="cl-track"><i style="width:65%"></i></div></div>
-            <div class="cl-row"><span>Room type</span><div class="cl-track"><i style="width:100%"></i></div></div>
-          </div>
-
-          <div class="cl-round cl-ok">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
-          </div>
-        </div>
+      <!-- TOP DECORATIVE PILLS (Hanging from top edge) -->
+      <div class="absolute top-0 right-8 sm:right-12 lg:right-14 flex items-start gap-4 sm:gap-6 lg:gap-7 pointer-events-none z-0" aria-hidden="true">
+        <!-- Pill 1 (Left track: short) -->
+        <div class="w-11 sm:w-13 lg:w-16 h-20 sm:h-24 lg:h-28 bg-[#2F6A4F] rounded-b-[24px] sm:rounded-b-[28px] lg:rounded-b-[32px]"></div>
+        <!-- Pill 2 (Middle track: long) -->
+        <div class="w-11 sm:w-13 lg:w-16 h-48 sm:h-56 lg:h-72 bg-[#2F6A4F] rounded-b-[24px] sm:rounded-b-[28px] lg:rounded-b-[32px]"></div>
+        <!-- Pill 3 (Right track: medium) -->
+        <div class="w-11 sm:w-13 lg:w-16 h-36 sm:h-44 lg:h-52 bg-[#2F6A4F] rounded-b-[24px] sm:rounded-b-[28px] lg:rounded-b-[32px]"></div>
       </div>
 
-      <h1 class="lp-title">
-        <span>Find a room</span>
-        <span>that fits</span>
-        <span class="g">your budget</span>
-        <span class="g">and needs.</span>
-      </h1>
+      <!-- BOTTOM DECORATIVE ELEMENTS -->
+      <!-- Sage green quarter-circle in bottom-left corner -->
+      <div class="absolute -bottom-8 -left-8 sm:-bottom-6 sm:-left-6 w-64 h-64 sm:w-80 sm:h-80 lg:w-[400px] lg:h-[400px] bg-[#93B4A2] rounded-tr-[100%] pointer-events-none z-0" aria-hidden="true"></div>
 
-      <p class="lp-note">Sample preview. Values shown are placeholders.</p>
+      <!-- Bottom pill bars rising from bottom edge -->
+      <div class="absolute bottom-0 right-8 sm:right-12 lg:right-14 flex items-end gap-4 sm:gap-6 lg:gap-7 pointer-events-none z-0" aria-hidden="true">
+        <!-- Pill 1 (Left track: short) -->
+        <div class="w-11 sm:w-13 lg:w-16 h-20 sm:h-24 lg:h-28 bg-[#2F6A4F] rounded-t-[24px] sm:rounded-t-[28px] lg:rounded-t-[32px]"></div>
+        <!-- Pill 2 (Middle track: tall) -->
+        <div class="w-11 sm:w-13 lg:w-16 h-52 sm:h-60 lg:h-76 bg-[#2F6A4F] rounded-t-[24px] sm:rounded-t-[28px] lg:rounded-t-[32px]"></div>
+        <!-- Pill 3 (Right track: medium) -->
+        <div class="w-11 sm:w-13 lg:w-16 h-28 sm:h-36 lg:h-44 bg-[#2F6A4F] rounded-t-[24px] sm:rounded-t-[28px] lg:rounded-t-[32px]"></div>
+      </div>
+
+      <!-- TOP-LEFT: LOGO AREA -->
+      <header class="relative z-20">
+        <!-- 
+          LOGO LINK:
+          You can drop your official logo image here inside the <a> tag.
+          Example: <img src="assets/images/logo.png" alt="Homebase Logo" class="h-12 w-auto">
+        -->
+        <a href="index.html" class="inline-flex items-center gap-3.5 no-underline outline-none focus-visible:ring-2 focus-visible:ring-[#1E4D36] rounded-xl" aria-label="Homebase Home">
+          
+          <!-- Logo Emblem (Emblem matching the design) -->
+          <div class="relative flex items-center justify-center w-12 h-12 rounded-full border-2 border-[#2F6A4F]/25 bg-white shadow-sm overflow-hidden text-[#1E4D36]">
+            <!-- Subtle home & roof symbol -->
+            <svg viewBox="0 0 40 40" class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 18.5L20 7l14 11.5V33a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z"/>
+              <path d="M15 35V20h10v15"/>
+            </svg>
+          </div>
+
+          <!-- Brand Wordmark -->
+          <span class="font-display text-2xl sm:text-[1.75rem] font-bold text-[#143826] tracking-tight">Homebase</span>
+        </a>
+      </header>
+
+      <!-- HERO HEADLINE & TAGLINE
+           TWEAK POSITION HERE:
+           - Move Down / Up: change 'lg:mt-32 xl:mt-36' (e.g. mt-28, mt-36, mt-40)
+           - Move Right / Left: change 'lg:ml-12 xl:ml-20' (e.g. ml-8, ml-16, ml-24, or mx-auto)
+      -->
+      <div id="hero-text-block" class="relative z-10 max-w-lg mt-16 sm:mt-24 lg:mt-32 xl:mt-36 lg:ml-12 xl:ml-20">
+        <h1 class="font-display text-4xl sm:text-5xl lg:text-[3.25rem] xl:text-[3.5rem] font-bold text-[#143826] leading-[1.14] tracking-tight">
+          Find a room<br>
+          that fits<br>
+          your budget<br>
+          and needs
+        </h1>
+
+        <div class="mt-7 sm:mt-8">
+          <p class="text-lg sm:text-xl font-bold text-[#143826] tracking-tight">
+            Easy. Safe. Convenient.
+          </p>
+          <!-- Underline Accent Bar directly under Easy. Safe. -->
+          <div class="mt-2.5 sm:mt-3 w-[74px] sm:w-[82px] h-[3.5px] bg-[#143826] rounded-full"></div>
+        </div>
+      </div>
     </section>
 
-    <!-- RIGHT: log in -->
-    <section aria-label="Log in" class="flex min-h-0 items-center justify-center overflow-y-auto bg-white px-6 py-10 lg:border-l lg:border-line lg:px-12">
+
+    <!-- ==========================================
+         RIGHT PANEL: AUTHENTICATION / LOGIN FORM
+         ========================================== -->
+    <section aria-label="Log in" class="flex min-h-[500px] lg:min-h-screen items-center justify-center bg-white px-6 sm:px-12 lg:px-16 py-12">
       <div class="w-full max-w-[420px]">
 
-        <!-- Signed-out view -->
+        <!-- ================= SIGNED-OUT VIEW ================= -->
         <div id="auth-view">
-          <h2 class="font-display text-xl font-semibold tracking-tight text-ink">Log into Homebase</h2>
+          <!-- Heading -->
+          <h2 class="font-display text-2xl sm:text-[1.75rem] font-bold text-[#143826] text-center tracking-tight">
+            Log into Homebase
+          </h2>
 
-          <form id="form-login" novalidate class="mt-5 space-y-3">
-            <div id="login-error" role="alert" class="err hidden !mt-0 rounded-xl border border-danger/30 bg-danger-soft px-3.5 py-3"></div>
+          <!-- Login Form -->
+          <form id="form-login" novalidate class="mt-8 space-y-4">
+            <!-- Server / Auth Error Alert -->
+            <div id="login-error" role="alert" class="hidden rounded-xl border border-red-200 bg-red-50 p-3.5 text-sm font-medium text-red-700"></div>
+
+            <!-- Email Field -->
             <div>
-              <div class="relative">
-                <input class="field peer" id="login-email" name="email" type="email" autocomplete="email" inputmode="email" placeholder=" " aria-describedby="login-email-err" required>
-                <label class="float-label" for="login-email">Email</label>
+              <div id="box-email" class="input-box relative flex items-center rounded-2xl bg-white px-4 py-3.5">
+                <!-- Mail Icon -->
+                <svg class="w-5 h-5 text-gray-400 shrink-0 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+                <input 
+                  class="w-full bg-transparent text-base text-[#143826] placeholder:text-gray-400 outline-none" 
+                  id="login-email" 
+                  name="email" 
+                  type="email" 
+                  autocomplete="email" 
+                  inputmode="email" 
+                  placeholder="Email" 
+                  aria-describedby="login-email-err" 
+                  required>
               </div>
-              <p class="err hidden" id="login-email-err"></p>
+              <p class="err hidden mt-1.5 text-xs text-red-600 font-medium pl-1" id="login-email-err"></p>
             </div>
+
+            <!-- Password Field -->
             <div>
-              <div class="relative">
-                <input class="field peer pr-16" id="login-password" name="password" type="password" autocomplete="current-password" placeholder=" " aria-describedby="login-password-err" required>
-                <label class="float-label" for="login-password">Password</label>
-                <button type="button" data-toggle-password="login-password" aria-controls="login-password" aria-pressed="false"
-                  class="absolute inset-y-0 right-0 my-1 mr-1 rounded-lg px-3 text-sm font-semibold text-forest outline-none hover:bg-track focus-visible:ring-2 focus-visible:ring-forest">Show</button>
+              <div id="box-password" class="input-box relative flex items-center rounded-2xl bg-white px-4 py-3.5">
+                <!-- Lock Icon -->
+                <svg class="w-5 h-5 text-gray-400 shrink-0 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+                <input 
+                  class="w-full bg-transparent text-base text-[#143826] placeholder:text-gray-400 outline-none pr-2" 
+                  id="login-password" 
+                  name="password" 
+                  type="password" 
+                  autocomplete="current-password" 
+                  placeholder="Password" 
+                  aria-describedby="login-password-err" 
+                  required>
+                <!-- Toggle Password Visibility Button -->
+                <button 
+                  type="button" 
+                  data-toggle-password="login-password" 
+                  aria-controls="login-password" 
+                  aria-pressed="false"
+                  class="text-sm font-semibold text-[#143826] hover:text-[#2F6A4F] px-1 outline-none transition-colors">
+                  Show
+                </button>
               </div>
-              <p class="err hidden" id="login-password-err"></p>
+              <p class="err hidden mt-1.5 text-xs text-red-600 font-medium pl-1" id="login-password-err"></p>
             </div>
-            <button class="btn" type="submit" id="login-submit">Log in</button>
+
+            <!-- Log In Submit Button -->
+            <button 
+              type="submit" 
+              id="login-submit" 
+              class="btn-transition w-full mt-2 py-4 rounded-full bg-[#1E4D36] text-white font-semibold text-base hover:bg-[#153A28] active:scale-[0.99] shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-[#1E4D36] focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-75">
+              Log in
+            </button>
           </form>
 
-          <div class="my-6 border-t border-line" aria-hidden="true"></div>
+          <!-- Divider with "or" -->
+          <div class="relative flex py-6 items-center" aria-hidden="true">
+            <div class="flex-grow border-t border-gray-200"></div>
+            <span class="flex-shrink mx-3 text-xs text-gray-400 font-normal">or</span>
+            <div class="flex-grow border-t border-gray-200"></div>
+          </div>
 
-          <a href="register.html" class="btn btn-outline">Create new account</a>
+          <!-- Create New Account Button -->
+          <a 
+            href="register.html" 
+            class="btn-transition w-full py-3.5 rounded-full border border-gray-300 bg-white text-[#143826] font-semibold text-base hover:bg-gray-50 active:scale-[0.99] text-center block outline-none focus-visible:ring-2 focus-visible:ring-[#1E4D36] focus-visible:ring-offset-2">
+            Create new account
+          </a>
 
-          <p class="mt-5 text-center">
-            <button type="button" id="open-how" aria-haspopup="dialog" class="linkbtn font-medium">How matching works</button>
+          <!-- Subtle matching info link -->
+          <p class="mt-6 text-center">
+            <button type="button" id="open-how" aria-haspopup="dialog" class="text-xs text-gray-500 hover:text-[#1E4D36] underline underline-offset-4 outline-none transition-colors">
+              How matching works
+            </button>
           </p>
         </div>
 
-        <!-- Signed-in view -->
-        <div id="session-view" hidden>
-          <h2 class="font-display text-2xl font-bold tracking-tight text-ink" id="session-heading" tabindex="-1">You are logged in</h2>
-          <p class="mt-1.5 text-base text-muted" id="session-detail"></p>
-          <div class="mt-6 rounded-xl border border-line bg-tint p-5 text-base text-ink">
-            <p class="font-semibold text-forest-deep" id="session-lead">Ready to find a room?</p>
-            <p class="mt-1 text-sm text-muted" id="session-text">Explore Ariate Dormitory rooms, set your budget and needs, and see how well each room fits you.</p>
-            <a href="home.html" id="session-link" class="btn mt-4 inline-flex items-center justify-center gap-2 text-white no-underline">
+
+        <!-- ================= SIGNED-IN VIEW ================= -->
+        <div id="session-view" hidden class="text-center">
+          <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#E3EEE7] text-[#1E4D36]">
+            <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+          <h2 class="font-display mt-4 text-2xl font-bold tracking-tight text-[#143826]" id="session-heading" tabindex="-1">
+            You are logged in
+          </h2>
+          <p class="mt-2 text-sm text-gray-600" id="session-detail"></p>
+          
+          <div class="mt-6 rounded-2xl border border-gray-200 bg-[#F4F8F5] p-5 text-left text-sm text-[#143826]">
+            <p class="font-semibold text-[#153A28]" id="session-lead">Ready to find a room?</p>
+            <p class="mt-1 text-xs text-gray-600 leading-relaxed" id="session-text">
+              Explore Ariate Dormitory rooms, set your budget and needs, and see how well each room fits you.
+            </p>
+            <a href="home.html" id="session-link" class="btn-transition mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#1E4D36] py-3 text-sm font-semibold text-white no-underline hover:bg-[#153A28]">
               <span id="session-link-text">Go to Student Dashboard</span>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </a>
           </div>
-          <button type="button" id="logout" class="btn btn-logout mt-4">Log out</button>
+
+          <button type="button" id="logout" class="btn-transition mt-4 w-full rounded-full border border-red-200 bg-red-50 py-3 text-sm font-semibold text-red-600 hover:bg-red-100 hover:border-red-300">
+            Log out
+          </button>
         </div>  
 
       </div>
     </section>
   </main>
 
-  <!-- HOW MATCHING WORKS -->
-  <dialog id="how-dialog" aria-labelledby="how-title" class="w-[calc(100vw-2rem)] max-w-md rounded-2xl border border-line bg-white p-0 text-ink shadow-xl backdrop:bg-ink/50">
+  <!-- HOW MATCHING WORKS MODAL DIALOG -->
+  <dialog id="how-dialog" aria-labelledby="how-title" class="w-[calc(100vw-2rem)] max-w-md rounded-2xl border border-gray-200 bg-white p-0 text-[#143826] shadow-2xl backdrop:bg-black/40">
     <div class="p-6">
-      <h2 id="how-title" class="font-display text-xl font-bold tracking-tight">How matching works</h2>
-      <p class="mt-2 text-base text-muted">You tell Homebase what you need. It compares each available room to that and ranks rooms by how well they fit you.</p>
-      <dl class="mt-5 space-y-3 text-base">
-        <div><dt class="font-semibold">Budget</dt><dd class="text-muted">Your monthly limit, compared with what the room costs each month.</dd></div>
-        <div><dt class="font-semibold">Amenities</dt><dd class="text-muted">The things you say you need in a room.</dd></div>
-        <div><dt class="font-semibold">Room type</dt><dd class="text-muted">Single, double or quad, whichever you prefer.</dd></div>
-        <div><dt class="font-semibold">Then request it</dt><dd class="text-muted">Found a room you like? Send a request. The dormitory office approves or declines it.</dd></div>
+      <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+        <h2 id="how-title" class="font-display text-xl font-bold tracking-tight text-[#143826]">How matching works</h2>
+        <button type="button" id="close-how-x" class="text-gray-400 hover:text-gray-600 text-lg leading-none">&times;</button>
+      </div>
+      <p class="mt-3 text-sm text-gray-600 leading-relaxed">
+        Homebase compares available rooms at Ariate Dormitory with your personal preferences and computes how well each room fits your lifestyle.
+      </p>
+      <dl class="mt-4 space-y-3 text-sm">
+        <div class="rounded-xl bg-gray-50 p-3">
+          <dt class="font-semibold text-[#143826]">Budget Match</dt>
+          <dd class="text-xs text-gray-600 mt-0.5">Your monthly budget limit vs. the room's monthly rate.</dd>
+        </div>
+        <div class="rounded-xl bg-gray-50 p-3">
+          <dt class="font-semibold text-[#143826]">Amenities</dt>
+          <dd class="text-xs text-gray-600 mt-0.5">Required comforts like Wi-Fi, aircon, study desks, and private bathrooms.</dd>
+        </div>
+        <div class="rounded-xl bg-gray-50 p-3">
+          <dt class="font-semibold text-[#143826]">Room Type</dt>
+          <dd class="text-xs text-gray-600 mt-0.5">Single, double, or shared occupancy options based on your preference.</dd>
+        </div>
       </dl>
-      <button type="button" id="close-how" class="btn mt-6">Close</button>
+      <button type="button" id="close-how" class="btn-transition mt-5 w-full rounded-full bg-[#1E4D36] py-3 text-sm font-semibold text-white hover:bg-[#153A28]">
+        Got it
+      </button>
     </div>
   </dialog>
 
+  <!-- Scripts: Supabase & Auth Handling -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/supabase.js"></script>
   <script src="assets/js/auth.js"></script>
+
   <script>
     (function () {
-      var USERS_KEY = 'homebase_users';
       var CURRENT_KEY = 'homebase_currentUser';
 
       var $ = function (id) { return document.getElementById(id); };
@@ -311,23 +317,19 @@
       // Where each role lands after logging in.
       function homeFor(role) { return role === 'landlord' ? 'landlord.html' : 'home.html'; }
 
-      // ---- storage (guarded: private mode or blocked storage must not crash the page) ----
+      // Storage helpers
       function read(key, fallback) {
         try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
         catch (e) { return fallback; }
       }
-      function write(key, value) {
-        try { localStorage.setItem(key, JSON.stringify(value)); return true; }
-        catch (e) { return false; }
-      }
       function clear(key) { try { localStorage.removeItem(key); } catch (e) {} }
 
-      // ---- dialogs ----
+      // Dialog controls
       var how = $('how-dialog');
       function openDialog(d) { if (d.showModal) d.showModal(); else d.setAttribute('open', ''); }
       function closeDialog(d) { if (d.close) d.close(); else d.removeAttribute('open'); }
 
-      // ---- show/hide password ----
+      // Show / Hide Password toggle
       document.querySelectorAll('[data-toggle-password]').forEach(function (btn) {
         btn.addEventListener('click', function () {
           var input = $(btn.getAttribute('data-toggle-password'));
@@ -338,30 +340,34 @@
         });
       });
 
-      // ---- errors ----
-      function setFieldError(inputId, message) {
-        var input = $(inputId), p = $(inputId + '-err');
+      // Error indicators
+      function setFieldError(inputId, boxId, message) {
+        var input = $(inputId), box = $(boxId), p = $(inputId + '-err');
         if (message) {
           input.setAttribute('aria-invalid', 'true');
-          p.textContent = message; p.classList.remove('hidden');
+          if (box) box.classList.add('has-error');
+          p.textContent = message; 
+          p.classList.remove('hidden');
         } else {
           input.removeAttribute('aria-invalid');
-          p.textContent = ''; p.classList.add('hidden');
+          if (box) box.classList.remove('has-error');
+          p.textContent = ''; 
+          p.classList.add('hidden');
         }
       }
+
       function setFormError(id, message) {
         var box = $(id);
         box.textContent = message || '';
         box.classList.toggle('hidden', !message);
       }
+
       function clearLoginErrors() {
-        ['login-email', 'login-password'].forEach(function (id) { setFieldError(id, ''); });
+        setFieldError('login-email', 'box-email', '');
+        setFieldError('login-password', 'box-password', '');
         setFormError('login-error', '');
       }
-      function firstInvalid(ids) {
-        for (var i = 0; i < ids.length; i++) if ($(ids[i]).getAttribute('aria-invalid') === 'true') return $(ids[i]);
-        return null;
-      }
+
       var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
       function setBusy(btn, busy, idleText, busyText) {
@@ -369,7 +375,7 @@
         btn.textContent = busy ? busyText : idleText;
       }
 
-      // ---- session view ----
+      // Session view rendering
       function renderSession() {
         var user = read(CURRENT_KEY, null);
         var signedIn = !!(user && user.email);
@@ -379,7 +385,7 @@
           var isLandlord = user.role === 'landlord';
           var isNonStudent = !isLandlord && (user.userType === 'non_student' || user.role === 'non_student');
           var roleLabel = isLandlord ? 'landlord' : (isNonStudent ? 'resident' : 'student');
-          $('session-detail').textContent = user.name + ' (' + roleLabel + '), ' + user.email;
+          $('session-detail').textContent = (user.name || user.email) + ' (' + roleLabel + ')';
           $('session-lead').textContent = isLandlord ? 'Students are waiting for an answer' : 'Ready to find a room?';
           $('session-text').textContent = isLandlord
             ? 'Review the room requests students sent to Ariate Dormitory and approve or decline each one.'
@@ -390,52 +396,80 @@
         return signedIn;
       }
 
-      // ---- login ----
+      // Login form submission
       $('form-login').addEventListener('submit', function (e) {
         e.preventDefault();
         clearLoginErrors();
         var email = $('login-email').value.trim().toLowerCase();
         var pw = $('login-password').value;
 
-        setFieldError('login-email', !email ? 'Enter your email.' : (!EMAIL_RE.test(email) ? 'That email does not look right.' : ''));
-        setFieldError('login-password', !pw ? 'Enter your password.' : '');
-        var bad = firstInvalid(['login-email', 'login-password']);
-        if (bad) { bad.focus(); return; }
+        var hasErr = false;
+        if (!email) {
+          setFieldError('login-email', 'box-email', 'Enter your email.');
+          hasErr = true;
+        } else if (!EMAIL_RE.test(email)) {
+          setFieldError('login-email', 'box-email', 'That email does not look right.');
+          hasErr = true;
+        }
+
+        if (!pw) {
+          setFieldError('login-password', 'box-password', 'Enter your password.');
+          hasErr = true;
+        }
+
+        if (hasErr) {
+          if ($('login-email').getAttribute('aria-invalid') === 'true') {
+            $('login-email').focus();
+          } else {
+            $('login-password').focus();
+          }
+          return;
+        }
 
         var btn = $('login-submit');
         setBusy(btn, true, 'Log in', 'Logging in...');
-        HB_AUTH.login(email, pw).then(function (res) {
-          if (!res.ok) { setFormError('login-error', res.error); $('login-password').focus(); return; }
-          $('form-login').reset();
-          renderSession();
-          window.location.href = homeFor(res.user.role);
-        }).then(function () { setBusy(btn, false, 'Log in', 'Logging in...'); });
+        
+        if (window.HB_AUTH && typeof window.HB_AUTH.login === 'function') {
+          window.HB_AUTH.login(email, pw).then(function (res) {
+            if (!res.ok) {
+              setFormError('login-error', res.error || 'Invalid email or password.');
+              $('login-password').focus();
+              return;
+            }
+            $('form-login').reset();
+            renderSession();
+            window.location.href = homeFor(res.user.role);
+          }).catch(function (err) {
+            setFormError('login-error', 'An error occurred while signing in. Please try again.');
+          }).finally(function () {
+            setBusy(btn, false, 'Log in', 'Logging in...');
+          });
+        } else {
+          // Fallback if auth module not initialized
+          setBusy(btn, false, 'Log in', 'Logging in...');
+          setFormError('login-error', 'Authentication service unavailable.');
+        }
       });
 
-      // ---- logout ----
+      // Logout handler
       $('logout').addEventListener('click', function () {
         clear(CURRENT_KEY);
-        if (window.HB_DB) HB_DB.auth.signOut();
+        if (window.HB_DB && window.HB_DB.auth) window.HB_DB.auth.signOut();
         renderSession();
         clearLoginErrors();
         $('login-email').focus();
       });
 
-      // ---- how matching works ----
+      // Dialog handlers
       $('open-how').addEventListener('click', function () { openDialog(how); });
       $('close-how').addEventListener('click', function () { closeDialog(how); });
+      if ($('close-how-x')) $('close-how-x').addEventListener('click', function () { closeDialog(how); });
       how.addEventListener('click', function (e) { if (e.target === how) closeDialog(how); });
 
-      // ---- hero photo: only revealed once the file really loads ----
-      var heroImg = $('hero-img');
-      function revealPhoto() { if (heroImg.naturalWidth > 0) heroImg.hidden = false; }
-      if (heroImg.complete) revealPhoto(); else heroImg.addEventListener('load', revealPhoto);
-      heroImg.addEventListener('error', function () { heroImg.remove(); });
-
+      // Initialize session view
       renderSession();
     })();
   </script>
-
 
 </body>
 </html>
