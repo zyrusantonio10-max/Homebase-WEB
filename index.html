@@ -80,7 +80,7 @@
     .lp-stage, .lp-note { display: none; }
 
     @media (min-width: 1024px) {
-      .lp { grid-template-columns: minmax(0, 1fr) minmax(400px, 34%); grid-template-rows: minmax(0, 1fr); height: 100dvh; }
+      .lp { grid-template-columns: minmax(0, 1fr) minmax(400px, 34%); grid-template-rows: minmax(0, 1fr); height: calc(100dvh - 3.5rem); }
       .lp-left { padding: 0; }
       .lp-logo { position: absolute; top: 32px; left: 56px; z-index: 3; }
       .lp-title { position: absolute; left: 56px; bottom: 48px; margin: 0; font-size: 2.5rem; z-index: 3; }
@@ -144,6 +144,64 @@
 </head>
 
 <body class="bg-white font-body text-ink antialiased pb-20 md:pb-0">
+
+  <!-- Hybrid Navigation Bar: bottom tabs on mobile, top bar on desktop -->
+  <nav aria-label="Main navigation">
+    <!-- Desktop: horizontal top bar -->
+    <div class="hidden md:flex items-center justify-between border-b border-line bg-white px-6 h-14">
+      <a href="/" class="inline-flex items-center gap-2.5 rounded-lg font-display text-xl font-bold tracking-tight text-ink no-underline outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2" aria-label="Homebase home">
+        <svg viewBox="0 0 32 32" class="h-9 w-9 shrink-0" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#0B4A2F"/><rect x="7" y="8" width="7" height="8" rx="1.5" fill="#083A25"/><rect x="18" y="8" width="7" height="8" rx="1.5" fill="#C6F24E"/><rect x="7" y="19" width="7" height="8" rx="1.5" fill="#083A25"/><rect x="18" y="19" width="7" height="8" rx="1.5" fill="#083A25"/></svg>
+        <span>Homebase</span>
+      </a>
+      <div class="flex items-center gap-1">
+        <a href="/" aria-current="page" class="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold bg-forest text-white transition-colors">
+          <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>
+          Home
+        </a>
+        <a href="matches.html" class="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-muted hover:bg-track hover:text-ink transition-colors">
+          <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+          Rooms
+        </a>
+        <a href="landlord-reviews.html" class="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-muted hover:bg-track hover:text-ink transition-colors">
+          <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>
+          Reviews
+        </a>
+        <a href="profile.html" class="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-muted hover:bg-track hover:text-ink transition-colors">
+          <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+          Profile
+        </a>
+      </div>
+    </div>
+    <!-- Mobile: fixed bottom tab bar -->
+    <div class="fixed bottom-0 inset-x-0 z-50 border-t border-line bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.06)] md:hidden" style="padding-bottom:env(safe-area-inset-bottom,0px)">
+      <ul class="flex h-16">
+        <li class="flex-1 min-w-0">
+          <a href="/" class="flex h-full flex-col items-center justify-center gap-0.5 text-forest" aria-current="page">
+            <svg class="h-6 w-6 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>
+            <span class="text-[11px] font-semibold leading-tight">Home</span>
+          </a>
+        </li>
+        <li class="flex-1 min-w-0">
+          <a href="matches.html" class="flex h-full flex-col items-center justify-center gap-0.5 text-muted hover:text-forest transition-colors">
+            <svg class="h-6 w-6 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+            <span class="text-[11px] font-semibold leading-tight">Rooms</span>
+          </a>
+        </li>
+        <li class="flex-1 min-w-0">
+          <a href="landlord-reviews.html" class="flex h-full flex-col items-center justify-center gap-0.5 text-muted hover:text-forest transition-colors">
+            <svg class="h-6 w-6 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>
+            <span class="text-[11px] font-semibold leading-tight">Reviews</span>
+          </a>
+        </li>
+        <li class="flex-1 min-w-0">
+          <a href="profile.html" class="flex h-full flex-col items-center justify-center gap-0.5 text-muted hover:text-forest transition-colors">
+            <svg class="h-6 w-6 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+            <span class="text-[11px] font-semibold leading-tight">Profile</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
 
   <main class="lp">
 
@@ -436,38 +494,6 @@
     })();
   </script>
 
-    <!-- Hybrid Navigation Bar -->
-    <nav class="md:hidden fixed bottom-0 inset-x-0 z-50 bg-white border-t border-gray-200 shadow-lg">
-      <ul class="grid grid-cols-4 h-16 text-sm font-medium">
-        <!-- Home -->
-        <li>
-          <a href="/" class="flex flex-col items-center justify-center text-primary-600 hover:text-primary-800">
-            <i class="fa-solid fa-house text-xl"></i>
-            <span class="sr-only">Home</span>
-          </a>
-        </li>
-        <!-- Find rooms -->
-        <li>
-          <a href="/matches.html" class="flex flex-col items-center justify-center text-gray-600 hover:text-primary-600">
-            <i class="fa-solid fa-magnifying-glass text-xl"></i>
-            <span class="sr-only">Find rooms</span>
-          </a>
-        </li>
-        <!-- Reviews -->
-        <li>
-          <a href="/landlord-reviews.html" class="flex flex-col items-center justify-center text-gray-600 hover:text-primary-600">
-            <i class="fa-regular fa-comments text-xl"></i>
-            <span class="sr-only">Reviews</span>
-          </a>
-        </li>
-        <!-- Profile -->
-        <li>
-          <a href="/profile.html" class="flex flex-col items-center justify-center text-gray-600 hover:text-primary-600">
-            <i class="fa-regular fa-user text-xl"></i>
-            <span class="sr-only">Profile</span>
-          </a>
-        </li>
-      </ul>
-    </nav>
+
 </body>
 </html>
