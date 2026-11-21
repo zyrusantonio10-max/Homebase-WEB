@@ -8,11 +8,12 @@
 
   <!--
     Design Read: "I have a problem in my room. Did the office see it, and is it fixed?"
-    Same forest + lime language as the other student pages. This page is for students who live here.
-    - One button, Report a concern. Each concern is a card: what it is, which room, a status in words (Received, In progress,
-      Resolved, Fixed), the office's notes in order, and the tenant's own notes.
+    Same forest + lime language as the other student pages. This page is for students who live here. Less text, more picture:
+    - A banner with your room and one button, Report a concern, and three number tiles: Open, Is it fixed?, Fixed.
+    - Each concern is a card: a category icon, the state as a chip, and four connected dots (Received, In progress, Resolved, Fixed).
+      The office's notes and the tenant's notes are chat-style bubbles; long histories fold into "n updates".
     - When the office marks a concern resolved, the tenant decides: it is fixed, or reopen it. The office cannot close it alone.
-    - Only the tenant and the landlord can see a concern. All logic and storage live in assets/js/concerns.js.
+    - Only the tenant and the landlord can see a concern. All logic and storage live in assets/js/concerns.js (also used by the landlord page).
   -->
 
   <script>
@@ -84,14 +85,13 @@
 
   <main class="mx-auto max-w-3xl px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
     <h1 class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">Concerns</h1>
-    <p class="mt-2 max-w-xl text-base text-muted">Tell the dormitory office about a problem in your room or the house. Only you and the landlord can see it.</p>
 
     <div id="concerns" class="mt-6"><p class="text-base text-muted" role="status">Loading your concerns...</p></div>
 
     <div id="error" hidden role="alert" class="mt-6 rounded-[20px] border border-line p-6">
       <p class="font-display text-xl font-bold tracking-tight">We could not open your concerns</p>
-      <p class="mt-2 text-base text-muted">Either your browser is blocking site data, or <code>assets/js/concerns.js</code> did not load. Check that the file is where this page expects it, then reload.</p>
-      <button type="button" data-reload class="btn btn-outline mt-4">Reload this page</button>
+      <p class="mt-2 text-base text-muted">Allow site data for this page, then reload.</p>
+      <button type="button" data-reload class="btn btn-outline mt-4">Reload</button>
     </div>
   </main>
 

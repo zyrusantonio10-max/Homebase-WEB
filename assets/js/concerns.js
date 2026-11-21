@@ -51,6 +51,74 @@
   }
   function day(iso) { var d = new Date(iso); return isNaN(d) ? '' : d.toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' }); }
 
+  // ---- small visual helpers ----
+  var ICO = {
+    Repairs: '<path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 005.4-5.4l-2.4 2.4-2.6-.6-.6-2.6z"/>',
+    'Water and electricity': '<path d="M12 3s6 6.5 6 11a6 6 0 01-12 0c0-4.5 6-11 6-11z"/>',
+    Cleanliness: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+    'Noise or housemates': '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 010 7M19 6a8.5 8.5 0 010 12"/>',
+    Billing: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>',
+    Safety: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
+    Other: '<circle cx="6" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/>',
+    check: '<path d="M5 12l5 5 9-10"/>',
+    chat: '<path d="M4 5h16v11H9l-5 4z"/>',
+    lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>',
+    alert: '<path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/>'
+  };
+  function icon(name, cls) {
+    var s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('class', cls || 'h-5 w-5'); s.setAttribute('fill', 'none');
+    s.setAttribute('stroke', 'currentColor'); s.setAttribute('stroke-width', '2'); s.setAttribute('stroke-linecap', 'round');
+    s.setAttribute('stroke-linejoin', 'round'); s.setAttribute('aria-hidden', 'true'); s.innerHTML = ICO[name] || ICO.Other;
+    return s;
+  }
+  function roomThumb(roomId, cls) {
+    var room = null; try { room = HB.getRooms().filter(function (r) { return r.id === roomId; })[0] || null; } catch (e) {}
+    var f = el('span', 'shrink-0 overflow-hidden rounded-xl bg-track ' + cls); f.setAttribute('aria-hidden', 'true');
+    if (room) { var i = document.createElement('img'); i.src = HB.roomImage(room); i.alt = ''; i.className = 'h-full w-full object-cover'; f.appendChild(i); }
+    return f;
+  }
+  function personDot(userId, name, cls) {
+    var prof = (window.HB_AUTH && HB_AUTH.getProfile) ? (HB_AUTH.getProfile(userId) || {}) : {};
+    var a = el('span', 'grid shrink-0 place-items-center overflow-hidden rounded-full bg-forest font-display font-semibold text-white ' + cls); a.setAttribute('aria-hidden', 'true');
+    if (prof.photo && /^(data:image\/|https?:)/.test(prof.photo)) { var i = document.createElement('img'); i.src = prof.photo; i.alt = ''; i.className = 'h-full w-full object-cover'; a.appendChild(i); }
+    else a.textContent = String(name || '?').charAt(0).toUpperCase();
+    return a;
+  }
+  function tile(n, label, extra, on) {
+    var t = el('div', 'rounded-[20px] border p-4 ' + (on ? 'border-forest bg-tint' : 'border-line bg-white'));
+    t.appendChild(el('p', 'font-display text-3xl font-bold leading-none tracking-tight', String(n)));
+    t.appendChild(el('p', 'mt-1.5 text-sm ' + (on ? 'font-semibold text-forest' : 'text-muted'), label));
+    if (extra) { var x = el('p', 'mt-2'); x.appendChild(extra); t.appendChild(x); }
+    return t;
+  }
+  function dashed(iconName, title, line) {
+    var d = el('div', 'rounded-[20px] border border-dashed border-edge p-8 text-center');
+    var ic = el('span', 'mx-auto grid h-14 w-14 place-items-center rounded-full bg-tint text-forest'); ic.appendChild(icon(iconName, 'h-7 w-7')); d.appendChild(ic);
+    d.appendChild(el('p', 'card-title mt-3 text-muted', title));
+    if (line) d.appendChild(el('p', 'note mt-1', line));
+    return d;
+  }
+
+  // Received > In progress > Resolved > Fixed, as four connected dots
+  function stepsRow(c) {
+    var labels = ['Received', 'In progress', 'Resolved', 'Fixed'];
+    var idx = isClosed(c) ? 3 : c.status === 'resolved' ? 2 : c.status === 'in_progress' ? 1 : 0;
+    var ol = el('ol', 'mt-4 grid'); ol.style.gridTemplateColumns = 'repeat(4, minmax(0, 1fr))'; ol.setAttribute('aria-label', 'Progress');
+    labels.forEach(function (l, i) {
+      var st = (isClosed(c) || i < idx) ? 'done' : i === idx ? 'now' : 'todo';
+      var li = el('li', 'relative flex flex-col items-center text-center');
+      if (i > 0) { var bar = el('span', 'absolute right-1/2 top-[11px] h-0.5 w-full ' + (st === 'todo' ? 'bg-line' : 'bg-forest')); bar.setAttribute('aria-hidden', 'true'); li.appendChild(bar); }
+      var dot = el('span', 'relative z-10 grid h-6 w-6 place-items-center rounded-full border-2 ' + (st === 'done' ? 'border-forest bg-forest text-white' : st === 'now' ? 'border-forest bg-white text-forest' : 'border-line bg-white text-muted'));
+      if (st === 'done') dot.appendChild(icon('check', 'h-3.5 w-3.5')); else dot.appendChild(el('span', 'text-xs font-semibold', String(i + 1)));
+      li.appendChild(dot);
+      var lab = el('span', 'mt-1.5 px-0.5 text-xs sm:text-sm ' + (st === 'todo' ? 'text-muted' : 'font-semibold'), l);
+      lab.appendChild(el('span', 'sr-only', st === 'done' ? ' (done)' : st === 'now' ? ' (now)' : ' (next)'));
+      li.appendChild(lab); ol.appendChild(li);
+    });
+    return ol;
+  }
+
   // ---------------------------------------------------------------------------------------------------------------- data
   var C = {
     CATEGORIES: CATEGORIES,
@@ -167,35 +235,53 @@
 
   function timeline(c, role) {
     if (!c.updates.length) return null;
-    var ol = el('ol', 'mt-4 space-y-3 border-t border-line pt-4'); ol.setAttribute('aria-label', 'Updates');
+    var ol = el('ol', 'space-y-3'); ol.setAttribute('aria-label', 'Updates');
     c.updates.forEach(function (u) {
       var mine = u.by === role;
       var who = u.by === 'landlord' ? 'Office' : (mine ? 'You' : (c.studentName || 'Student'));
-      var line = who + ' \u00B7 ' + when(u.at);
-      var li = el('li');
-      li.appendChild(el('p', 'text-sm font-semibold text-forest', line));
-      var head = u.kind === 'status' ? 'Marked ' + STATUS_TEXT[u.status].toLowerCase() + '.'
-        : u.kind === 'reopen' ? 'Reopened. This is not fixed yet.'
-        : u.kind === 'confirm' ? 'Confirmed it is fixed.' : '';
-      if (head) li.appendChild(el('p', 'text-base font-medium', head));
-      if (u.text) li.appendChild(el('p', 'whitespace-pre-wrap break-words text-base', u.text));
-      ol.appendChild(li);
+      var li = el('li', 'flex gap-3');
+      li.appendChild(u.by === 'landlord'
+        ? (function () { var o = el('span', 'grid h-8 w-8 shrink-0 place-items-center rounded-full bg-forest text-xs font-semibold text-white', 'O'); o.setAttribute('aria-hidden', 'true'); return o; })()
+        : personDot(c.userId, c.studentName, 'h-8 w-8 text-xs'));
+      var body = el('div', 'min-w-0 flex-1');
+      var line = el('p', 'flex flex-wrap items-center gap-x-2 gap-y-1 text-sm');
+      line.appendChild(el('span', 'font-semibold text-forest', who));
+      line.appendChild(el('span', 'text-muted', when(u.at)));
+      var chip = u.kind === 'status' ? HB.chip(STATUS_TEXT[u.status], u.status === 'resolved' ? 'ok' : 'warn')
+        : u.kind === 'reopen' ? HB.chip('Reopened, not fixed yet', 'bad')
+        : u.kind === 'confirm' ? HB.chip('Fixed', 'ok') : null;
+      if (chip) line.appendChild(chip);
+      body.appendChild(line);
+      if (u.text) body.appendChild(el('p', 'mt-1 whitespace-pre-wrap break-words rounded-xl rounded-tl-sm border border-line bg-tint px-3 py-2 text-base', u.text));
+      li.appendChild(body); ol.appendChild(li);
     });
-    return ol;
+    var wrap = el('div', 'mt-4 border-t border-line pt-4');
+    if (c.updates.length > 2) {
+      var d = el('details'); var sm = el('summary', 'inline-flex min-h-[44px] cursor-pointer items-center rounded font-semibold text-forest outline-none focus-visible:ring-2 focus-visible:ring-forest', c.updates.length + ' updates');
+      d.appendChild(sm); ol.className += ' mt-2'; d.appendChild(ol); wrap.appendChild(d);
+    } else wrap.appendChild(ol);
+    return wrap;
   }
 
-  // the shared top of a card: what it is, which room, how urgent, what state, the words, the photo
+  // the shared top of a card: category icon, what state it is in, which room, the words, the photo, the four steps
   function cardTop(c, role) {
-    var art = el('article', 'rounded-[20px] border bg-white p-5 ' + (c.urgent && !isClosed(c) && c.status !== 'resolved' ? 'border-danger' : 'border-line'));
-    var head = el('div', 'flex flex-wrap items-start justify-between gap-2');
-    var left = el('div', 'min-w-0');
-    left.appendChild(el('h3', 'font-display text-lg font-semibold tracking-tight', c.category));
-    left.appendChild(el('p', 'text-sm text-muted', (role === 'landlord' ? c.studentName + ' \u00B7 ' : '') + c.roomName + ' \u00B7 Reported ' + day(c.createdAt)));
-    head.appendChild(left);
+    var live = c.urgent && !isClosed(c) && c.status !== 'resolved';
+    var art = el('article', 'rounded-[20px] border bg-white p-4 sm:p-5 ' + (live ? 'border-danger' : 'border-line'));
+    var head = el('div', 'flex items-start gap-3');
+    var ic = el('span', 'grid h-11 w-11 shrink-0 place-items-center rounded-xl ' + (live ? 'bg-danger-soft text-danger' : 'bg-tint text-forest')); ic.appendChild(icon(c.category, 'h-6 w-6'));
+    head.appendChild(ic);
+    var mid = el('div', 'min-w-0 flex-1');
+    var line = el('div', 'flex flex-wrap items-center justify-between gap-2');
+    line.appendChild(el('h3', 'font-display text-lg font-semibold tracking-tight', c.category));
     var chips = el('div', 'flex flex-wrap gap-2');
     if (c.urgent && c.status !== 'resolved') chips.appendChild(HB.chip('Urgent', 'bad'));
     chips.appendChild(statusChip(c, role));
-    head.appendChild(chips); art.appendChild(head);
+    line.appendChild(chips); mid.appendChild(line);
+    var sub = el('p', 'mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted');
+    if (role === 'landlord') { sub.appendChild(personDot(c.userId, c.studentName, 'h-6 w-6 text-xs')); sub.appendChild(el('span', 'font-medium text-ink', c.studentName)); }
+    sub.appendChild(el('span', '', c.roomName)); sub.appendChild(el('span', '', day(c.createdAt)));
+    mid.appendChild(sub); head.appendChild(mid); art.appendChild(head);
+
     art.appendChild(el('p', 'mt-3 whitespace-pre-wrap break-words text-base', c.description));
     if (c.photo) {
       var pb = el('button', 'mt-3 block rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-forest'); pb.type = 'button';
@@ -204,6 +290,7 @@
       pb.appendChild(img); pb.addEventListener('click', function () { showPhoto(c.photo, 'Photo attached to this concern'); });
       art.appendChild(pb);
     }
+    art.appendChild(stepsRow(c));
     return art;
   }
 
@@ -215,10 +302,11 @@
     var art = cardTop(c, 'student'), tl = timeline(c, 'student'); if (tl) art.appendChild(tl);
     var err = errLine();
     if (isClosed(c)) {
-      art.appendChild(el('p', 'mt-4 text-sm text-muted', 'You confirmed this was fixed on ' + day(c.confirmedAt) + '.'));
+      art.appendChild(el('p', 'mt-4 text-sm text-muted', 'Fixed on ' + day(c.confirmedAt)));
     } else if (c.status === 'resolved') {
-      var box = el('div', 'mt-4 rounded-xl border border-line bg-tint p-4');
-      box.appendChild(el('p', 'text-base font-semibold', 'The office marked this resolved. Is it fixed?'));
+      var box = el('div', 'mt-4 rounded-xl border border-forest bg-tint p-4');
+      var q = el('p', 'flex items-center gap-2 text-base font-semibold'); q.appendChild(icon('check', 'h-5 w-5 text-forest')); q.appendChild(document.createTextNode('Marked resolved. Is it fixed?'));
+      box.appendChild(q);
       var row = el('div', 'mt-3 flex flex-col gap-2 sm:flex-row');
       var yes = el('button', 'btn', 'Yes, it is fixed'); yes.type = 'button';
       var no = el('button', 'btn btn-outline', 'Not fixed, reopen'); no.type = 'button';
@@ -229,7 +317,7 @@
       var form = el('form', 'mt-4'); form.noValidate = true;
       var lab = el('label', 'sr-only', 'Add a note to this concern'); var id = 'note-' + c.id; lab.setAttribute('for', id);
       var line = el('div', 'flex gap-2');
-      var inp = el('input', 'field min-w-0 flex-1'); inp.id = id; inp.type = 'text'; inp.maxLength = C.MAX_NOTE; inp.placeholder = 'Add a note for the office';
+      var inp = el('input', 'field min-w-0 flex-1'); inp.id = id; inp.type = 'text'; inp.maxLength = C.MAX_NOTE; inp.placeholder = 'Add a note';
       var add = el('button', 'btn btn-outline', 'Add note'); add.type = 'submit';
       line.appendChild(inp); line.appendChild(add);
       form.appendChild(lab); form.appendChild(line); form.appendChild(err);
@@ -249,12 +337,12 @@
     var art = cardTop(c, 'landlord'), tl = timeline(c, 'landlord'); if (tl) art.appendChild(tl);
     var err = errLine();
     if (isClosed(c)) {
-      art.appendChild(el('p', 'mt-4 text-sm text-muted', 'The tenant confirmed this was fixed on ' + day(c.confirmedAt) + '.'));
+      art.appendChild(el('p', 'mt-4 text-sm text-muted', 'The tenant confirmed it on ' + day(c.confirmedAt)));
     } else {
       var form = el('form', 'mt-4'); form.noValidate = true;
       var id = 'upd-' + c.id, lab = el('label', 'sr-only', 'Update for ' + c.studentName); lab.setAttribute('for', id);
       var ta = el('textarea', 'field'); ta.id = id; ta.rows = 2; ta.maxLength = C.MAX_NOTE;
-      ta.placeholder = c.status === 'resolved' ? 'The tenant has not confirmed yet. You can still add a note.' : 'Write an update for the tenant, for example: plumber comes Thursday';
+      ta.placeholder = c.status === 'resolved' ? 'Waiting for the tenant. You can still add a note.' : 'Update for the tenant, for example: plumber comes Thursday';
       var row = el('div', 'mt-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap');
       function act(label, cls, fn) { var b = el('button', 'btn ' + cls, label); b.type = 'button'; b.addEventListener('click', function () { err.classList.add('hidden'); var r = fn(); if (!r.ok) showErr(err, r.error); else refresh(c.id); }); row.appendChild(b); }
       if (c.status === 'received') act('Start work', 'btn-outline', function () { return C.setStatus(c.id, user, 'in_progress', ta.value); });
@@ -264,7 +352,9 @@
       form.addEventListener('submit', function (e) { e.preventDefault(); });
       art.appendChild(form);
     }
-    var ml = el('a', 'textlink mt-3', 'Message ' + c.studentName); ml.href = 'landlord-messages.html?res=' + encodeURIComponent(c.reservationId);
+    var ml = el('a', 'btn btn-outline mt-3 gap-2 !px-4 text-sm'); ml.href = 'landlord-messages.html?res=' + encodeURIComponent(c.reservationId);
+    ml.appendChild(icon('chat', 'h-4 w-4')); ml.appendChild(document.createTextNode('Message'));
+    ml.setAttribute('aria-label', 'Message ' + c.studentName);
     art.appendChild(ml);
     return art;
   }
@@ -302,10 +392,10 @@
     form.appendChild(top);
 
     var fs = el('fieldset'); fs.appendChild(el('legend', 'label', 'What is it about?'));
-    var grid = el('div', 'grid grid-cols-2 gap-2');
+    var grid = el('div', 'grid grid-cols-3 gap-2');
     CATEGORIES.forEach(function (name, i) {
-      var lab = el('label', 'relative block'), inp = el('input', 'peer sr-only'); inp.type = 'radio'; inp.name = 'hb-con-cat'; inp.value = name;
-      var span = el('span', 'choice !min-h-[44px] !px-3 text-sm', name);
+      var lab = el('label', 'relative block cursor-pointer'), inp = el('input', 'peer sr-only'); inp.type = 'radio'; inp.name = 'hb-con-cat'; inp.value = name;
+      var span = el('span', 'choice !min-h-[76px] flex-col gap-1.5 !px-1 !py-2 text-xs leading-tight'); span.appendChild(icon(name, 'h-6 w-6')); span.appendChild(document.createTextNode(name));
       lab.appendChild(inp); lab.appendChild(span); grid.appendChild(lab);
     });
     fs.appendChild(grid); fs.appendChild(errLine()); form.appendChild(fs);
@@ -313,12 +403,12 @@
 
     var dw = el('div'); var dl = el('label', 'label', 'What is the problem?'); dl.setAttribute('for', 'hb-con-desc');
     var ta = el('textarea', 'field'); ta.id = 'hb-con-desc'; ta.rows = 4; ta.maxLength = MAX_DESC;
-    var hint = el('p', 'mt-1.5 text-sm text-muted', 'Say where it is and when it started. For a noise or housemate concern, say which room or what happens.');
+    var hint = el('p', 'mt-1.5 text-sm text-muted', 'Where is it, and when did it start?');
     var descErr = errLine(); dw.appendChild(dl); dw.appendChild(ta); dw.appendChild(hint); dw.appendChild(descErr); form.appendChild(dw);
 
     var ul = el('label', 'flex min-h-[44px] cursor-pointer items-start gap-3 text-base');
     var urgent = el('input', 'mt-1 h-5 w-5 shrink-0'); urgent.type = 'checkbox';
-    ul.appendChild(urgent); ul.appendChild(el('span', null, 'This is urgent: no water, no power, or a safety risk.')); form.appendChild(ul);
+    ul.appendChild(urgent); ul.appendChild(el('span', null, 'Urgent: no water, no power, or a safety risk')); form.appendChild(ul);
 
     var pw = el('div'); var pl = el('label', 'label', 'Photo (optional)'); pl.setAttribute('for', 'hb-con-photo');
     var file = el('input', 'field'); file.id = 'hb-con-photo'; file.type = 'file'; file.accept = 'image/*';
@@ -371,23 +461,33 @@
       var stay = HB.currentStay(user.id), mine = C.forStudent(user.id);
 
       if (stay) {
-        var bar = el('div', 'flex flex-wrap items-center justify-between gap-3');
-        bar.appendChild(el('p', 'text-base text-muted', 'You are living in ' + stay.roomName + '.'));
+        var banner = el('div', 'flex flex-wrap items-center gap-4 rounded-[20px] border border-line bg-tint p-4 sm:p-5');
+        banner.appendChild(roomThumb(stay.roomId, 'h-14 w-20'));
+        var t = el('div', 'min-w-0 flex-1');
+        t.appendChild(el('p', 'truncate font-display text-lg font-bold tracking-tight', stay.roomName));
+        t.appendChild(el('p', 'text-sm text-muted', 'Your room'));
+        banner.appendChild(t);
         var rb = el('button', 'btn', 'Report a concern'); rb.type = 'button';
         rb.addEventListener('click', function () { C.openReport(user, stay, render); });
-        bar.appendChild(rb); root.appendChild(bar);
+        banner.appendChild(rb); root.appendChild(banner);
+
+        var openN = mine.filter(function (c) { return !isClosed(c) && c.status !== 'resolved'; }).length;
+        var waitN = mine.filter(function (c) { return c.status === 'resolved' && !c.confirmedAt; }).length;
+        var fixedN = mine.filter(isClosed).length;
+        var tiles = el('div', 'mt-4 grid grid-cols-3 gap-3');
+        tiles.appendChild(tile(openN, 'Open', null, openN > 0));
+        tiles.appendChild(tile(waitN, 'Is it fixed?', null, waitN > 0));
+        tiles.appendChild(tile(fixedN, 'Fixed', null, false));
+        root.appendChild(tiles);
       } else {
         var future = HB.forUser(user.id).filter(function (r) { return r.status === 'confirmed'; })[0];
-        var note = el('div', 'rounded-[20px] border border-line bg-tint p-6');
-        note.appendChild(el('p', 'card-title', future ? 'You can report concerns from your move-in date' : 'Concerns open when your stay starts'));
-        note.appendChild(el('p', 'note mt-2', future
-          ? 'Your move-in date is ' + day(future.moveIn + 'T00:00:00') + '. From that day you can tell the office about any problem here.'
-          : 'This is for students living at Ariate Dormitory. Once the office confirms your payment and your move-in date arrives, you can report a problem here and follow it until it is fixed.'));
-        var home = el('a', 'textlink mt-2', 'Go to Home'); home.href = 'home.html'; note.appendChild(home);
-        root.appendChild(note);
+        var wrap = dashed('lock', future ? 'Opens on your move-in date' : 'Opens when your stay starts',
+          future ? day(future.moveIn + 'T00:00:00') : '');
+        var home = el('a', 'btn btn-outline mt-4', 'Go to Home'); home.href = 'home.html'; wrap.appendChild(home);
+        root.appendChild(wrap);
       }
 
-      if (!mine.length) { if (stay) root.appendChild(el('p', 'mt-6 text-base text-muted', 'No concerns yet. If something is wrong with your room or the house, report it here.')); return; }
+      if (!mine.length) { if (stay) { var none = dashed('check', 'No concerns'); none.className += ' mt-4'; root.appendChild(none); } return; }
       function section(title, list) {
         if (!list.length) return;
         var s = el('section', 'mt-6'); s.appendChild(el('h2', 'font-display text-xl font-bold tracking-tight', title));
@@ -426,28 +526,48 @@
         resolved: all.filter(function (c) { return c.status === 'resolved'; }),
         all: all
       };
-      if (!all.length) {
-        var empty = el('div', 'rounded-[20px] border border-line p-6');
-        empty.appendChild(el('p', 'card-title', 'No concerns yet'));
-        empty.appendChild(el('p', 'note mt-2', 'When a tenant reports a problem, it shows up here with the room, the photo and how urgent it is.'));
-        root.appendChild(empty); return;
-      }
-      var bar = el('div', 'flex flex-wrap gap-2'); bar.setAttribute('role', 'group'); bar.setAttribute('aria-label', 'Filter concerns');
+      if (!all.length) { root.appendChild(dashed('check', 'No concerns yet')); return; }
+
+      // the four stages, and the filter
+      var bar = el('div', 'grid grid-cols-2 gap-3 md:grid-cols-4'); bar.setAttribute('role', 'group'); bar.setAttribute('aria-label', 'Filter concerns');
       FILTERS.forEach(function (f) {
-        var b = el('button', 'choice !min-h-[44px] !px-3 text-sm', f[1] + ' (' + by[f[0]].length + ')'); b.type = 'button';
-        b.setAttribute('aria-pressed', String(filter === f[0]));
+        var on = filter === f[0];
+        var b = el('button', 'rounded-[20px] border p-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 ' + (on ? 'border-forest bg-tint' : 'border-line bg-white hover:border-edge')); b.type = 'button';
+        b.setAttribute('aria-pressed', String(on));
+        b.appendChild(el('span', 'block font-display text-3xl font-bold leading-none tracking-tight', String(by[f[0]].length)));
+        b.appendChild(el('span', 'mt-1.5 block text-sm ' + (on ? 'font-semibold text-forest' : 'text-muted'), f[1]));
+        var urgentNew = f[0] === 'attention' ? by.attention.filter(function (c) { return c.urgent; }).length : 0;
+        if (urgentNew) { var u = el('span', 'mt-2 block'); u.appendChild(HB.chip(urgentNew + ' urgent', 'bad')); b.appendChild(u); }
         b.addEventListener('click', function () { filter = f[0]; pinned = null; render(); });
         bar.appendChild(b);
       });
       root.appendChild(bar);
+
+      // what is open, by type: one bar each
+      var counts = {};
+      all.filter(function (c) { return c.status !== 'resolved'; }).forEach(function (c) { counts[c.category] = (counts[c.category] || 0) + 1; });
+      var cats = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; }).slice(0, 5);
+      if (cats.length) {
+        var card = el('section', 'mt-4 rounded-[20px] border border-line bg-white p-4 sm:p-5'); card.setAttribute('aria-label', 'Open concerns by type');
+        card.appendChild(el('h2', 'text-xs font-semibold uppercase tracking-wider text-muted', 'Open by type'));
+        var ul0 = el('ul', 'mt-3 space-y-2.5'), top = counts[cats[0]];
+        cats.forEach(function (name) {
+          var li = el('li', 'grid grid-cols-[auto_minmax(0,9rem)_minmax(0,1fr)_auto] items-center gap-3');
+          var ic = el('span', 'grid h-8 w-8 place-items-center rounded-lg bg-tint text-forest'); ic.appendChild(icon(name, 'h-4 w-4')); li.appendChild(ic);
+          li.appendChild(el('span', 'truncate text-sm', name));
+          var track = el('span', 'h-2 overflow-hidden rounded-full bg-track'); var fill = el('span', 'block h-full rounded-full bg-forest'); fill.style.width = Math.round(100 * counts[name] / top) + '%'; track.appendChild(fill); li.appendChild(track);
+          li.appendChild(el('span', 'font-display text-base font-bold', String(counts[name])));
+          ul0.appendChild(li);
+        });
+        card.appendChild(ul0); root.appendChild(card);
+      }
+
       var list = by[filter].slice();
       if (pinned && !list.some(function (c) { return c.id === pinned; })) { var pc = all.filter(function (c) { return c.id === pinned; })[0]; if (pc) list.push(pc); }
       list = sorted(list);
       if (!list.length) {
-        var none = el('div', 'mt-4 rounded-[20px] border border-line p-6');
-        none.appendChild(el('p', 'card-title', filter === 'attention' ? 'Nothing new' : 'Nothing here'));
-        none.appendChild(el('p', 'note mt-2', 'You are all caught up.'));
-        var showAll = el('button', 'btn btn-outline mt-3', 'Show all concerns'); showAll.type = 'button';
+        var none = dashed('check', filter === 'attention' ? 'Nothing new' : 'Nothing here'); none.className += ' mt-4';
+        var showAll = el('button', 'btn btn-outline mt-4', 'Show all'); showAll.type = 'button';
         showAll.addEventListener('click', function () { filter = 'all'; pinned = null; render(); });
         none.appendChild(showAll); root.appendChild(none); return;
       }

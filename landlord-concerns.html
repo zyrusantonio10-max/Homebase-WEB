@@ -8,7 +8,9 @@
 
   <!--
     Design Read: the landlord's list of tenant concerns for Ariate Dormitory: "what is broken, who is waiting, what is urgent?"
-    Same shell as the other landlord pages (assets/js/landlord-shell.js). Filters: New, In progress, Resolved, All.
+    Same shell as the other landlord pages (assets/js/landlord-shell.js). Less text, more picture:
+    - Four stage tiles (New, In progress, Resolved, All) are the filter, with an "n urgent" tag on New.
+    - A small bar chart shows what is open by type (repairs, water and electricity, noise...), so patterns are visible at a glance.
     - Open concerns are sorted urgent first, then oldest first, so nothing waits quietly at the bottom.
     - The office can start work, mark resolved, and leave a note for the tenant. Only the tenant can close a concern (Fixed).
     - Not built on purpose: assigning to staff, due dates, deleting a concern.
@@ -46,14 +48,13 @@
 
   <main class="mx-auto max-w-4xl px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
     <h1 class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">Concerns</h1>
-    <p class="mt-2 max-w-xl text-base text-muted">Problems your tenants reported. Urgent ones come first. A concern is only closed when the tenant confirms it is fixed.</p>
 
     <div id="concerns" class="mt-6"><p class="text-base text-muted" role="status">Loading concerns...</p></div>
 
     <div id="error" hidden role="alert" class="mt-6 rounded-[20px] border border-line p-6">
       <p class="font-display text-xl font-bold tracking-tight">We could not open the concerns</p>
-      <p class="mt-2 text-base text-muted">Either your browser is blocking site data, or <code>assets/js/concerns.js</code> did not load. Check that the file is where this page expects it, then reload.</p>
-      <button type="button" id="reload" class="btn btn-outline mt-4">Reload this page</button>
+      <p class="mt-2 text-base text-muted">Allow site data for this page, then reload.</p>
+      <button type="button" id="reload" class="btn btn-outline mt-4">Reload</button>
     </div>
   </main>
 
