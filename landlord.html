@@ -8,12 +8,13 @@
 
   <!--
     Design Read: one working screen for the landlord at Ariate Dormitory: "which requests need my answer?"
-    Same forest + lime language as the student pages, dial ENERGY 2 / RHYTHM 2 / MOTION 1.
-    - One list, filtered by status. Pending is the default because that is the job. Rows, not cards in a grid, because each request
-      is read top to bottom (who, which room, when, message) and answered with one of two buttons.
+    Same forest + lime language as the student pages. Less text, more picture:
+    - A banner with the one number that is the job today, a bed ring (free / requested / taken), and four number shortcuts.
+    - The four stage tiles (Pending, Awaiting payment, Confirmed, All active) are the filter, so the pipeline is the control.
+    - Each request is a card: room picture, student avatar, facts as chips, the student's message as a bubble,
+      and Requested > Approved > Paid as three connected dots. A payment countdown turns red at 2 days or less.
     - Approve is immediate. Decline asks first, because a student is waiting on it and it cannot be undone from this page.
     - No invented requests: the list only holds what students really sent (assets/js/reservation.js).
-    - Lime is not used here. Radius: pill buttons, 20px rows, 12px filter chips. No shadows, no motion.
     - Not built on purpose: reversing an approval or editing a request. Payment is handled by the dormitory office.
   -->
 
@@ -57,12 +58,13 @@
   <script src="assets/js/landlord-shell.js"></script>
 
 
-  <main class="mx-auto max-w-4xl px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
+  <main class="mx-auto max-w-5xl px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
     <h1 class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">Dashboard</h1>
-    <p class="mt-2 max-w-xl text-base text-muted">Where Ariate Dormitory stands today, and the room requests waiting for your answer.</p>
 
     <section id="glance-box" hidden aria-labelledby="glance-title" class="mt-6">
       <h2 id="glance-title" class="sr-only">At a glance</h2>
+
+      <!-- the one number that is the landlord's job today -->
       <div class="stat-hero">
         <div>
           <p class="stat-eyebrow">Needs your answer</p>
@@ -71,18 +73,24 @@
         </div>
         <a id="hero-cta" href="#board" class="btn btn-lime">Review requests</a>
       </div>
-      <dl id="glance" class="stat-grid"></dl>
-      <div class="mt-4 flex flex-wrap items-center gap-3">
-        <a href="landlord-rooms.html" class="inline-flex min-h-[44px] items-center rounded font-semibold text-forest underline underline-offset-4 outline-none hover:text-forest-deep focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">Manage rooms</a>
-        <span class="text-muted hidden sm:inline" aria-hidden="true">&#8226;</span>
-        <button type="button" id="open-building-modal" class="inline-flex min-h-[44px] items-center rounded font-semibold text-forest underline underline-offset-4 outline-none hover:text-forest-deep focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">Building amenities</button>
-        <span class="text-muted hidden sm:inline" aria-hidden="true">&#8226;</span>
-        <a href="#history" class="inline-flex min-h-[44px] items-center rounded font-semibold text-forest underline underline-offset-4 outline-none hover:text-forest-deep focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">History of past stays &amp; requests &darr;</a>
+
+      <div class="mt-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+        <!-- beds: free / requested / taken -->
+        <div class="flex items-center gap-5 rounded-[20px] border border-line bg-white p-5">
+          <div id="beds-ring" class="relative h-32 w-32 shrink-0" role="img"></div>
+          <ul id="beds-legend" class="min-w-0 space-y-2"></ul>
+        </div>
+        <!-- four shortcuts with numbers -->
+        <div id="glance" class="grid grid-cols-2 gap-4"></div>
+      </div>
+
+      <div class="mt-4 flex flex-wrap items-center gap-2">
+        <a href="landlord-rooms.html" class="btn btn-outline">Manage rooms</a>
+        <button type="button" id="open-building-modal" class="btn btn-outline">Building amenities</button>
       </div>
     </section>
 
-    <h2 class="mt-10 font-display text-2xl font-bold tracking-tight">Active requests &amp; residents</h2>
-    <p class="mt-1 max-w-xl text-base text-muted">Approve or decline each request, set how many days the student has to pay, mark payments, and manage active stays.</p>
+    <h2 class="mt-10 font-display text-2xl font-bold tracking-tight">Requests and residents</h2>
 
     <p id="page-error" role="alert" class="mt-4 hidden text-base font-semibold text-danger"></p>
 
@@ -90,36 +98,27 @@
 
     <div id="error" hidden role="alert" class="mt-8 rounded-[20px] border border-line p-6">
       <p class="font-display text-xl font-bold tracking-tight">We could not read the requests</p>
-      <p class="mt-2 text-base text-muted">Either your browser is blocking site data, or <code>assets/js/reservation.js</code> did not load. Check that the file is where this page expects it, then reload.</p>
-      <button type="button" id="reload" class="btn btn-outline mt-4">Reload this page</button>
+      <p class="mt-2 text-base text-muted">Allow site data for this page, then reload.</p>
+      <button type="button" id="reload" class="btn btn-outline mt-4">Reload</button>
     </div>
 
-    <div id="empty" hidden class="mt-8 rounded-[20px] border border-line p-6 sm:p-8">
-      <p class="font-display text-2xl font-bold tracking-tight">No active requests or residents</p>
-      <p class="mt-2 max-w-md text-base text-muted">When a student requests a room, it shows up here for you to answer.</p>
+    <div id="empty" hidden class="mt-8 rounded-[20px] border border-dashed border-edge p-8 text-center">
+      <span class="mx-auto grid h-14 w-14 place-items-center rounded-full bg-tint text-forest"><svg viewBox="0 0 24 24" class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg></span>
+      <p class="mt-3 font-display text-2xl font-bold tracking-tight text-muted">No active requests</p>
     </div>
 
     <div id="board" hidden class="scroll-mt-24">
-      <form id="filters" class="mt-6" onsubmit="return false">
-        <fieldset>
-          <legend class="sr-only">Show active requests</legend>
-          <div id="chips" class="flex flex-wrap gap-2"></div>
-        </fieldset>
-      </form>
-      <p id="none" hidden class="mt-6 rounded-[20px] border border-line p-6 text-base text-muted"></p>
+      <!-- the pipeline, and the filter: pick a stage -->
+      <div id="chips" role="group" aria-label="Show requests" class="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4"></div>
+      <p id="none" hidden class="mt-6 rounded-[20px] border border-dashed border-edge p-6 text-base text-muted"></p>
       <ul id="list" class="mt-6 space-y-4" aria-live="polite"></ul>
     </div>
 
     <!-- HISTORY OF PAST REQUESTS AND STAYS -->
     <section id="history" class="mt-14 border-t border-line pt-10">
-      <div class="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h2 class="font-display text-2xl font-bold tracking-tight">History of past requests and stays</h2>
-          <p class="mt-1 max-w-xl text-base text-muted">A permanent office record of completed stays, past requests, and former residents so the office can look back after a stay ends.</p>
-        </div>
-      </div>
+      <h2 class="font-display text-2xl font-bold tracking-tight">History</h2>
 
-      <div class="mt-6 flex flex-wrap items-center justify-between gap-4">
+      <div class="mt-5 flex flex-wrap items-center justify-between gap-4">
         <form id="history-filters" onsubmit="return false">
           <fieldset>
             <legend class="sr-only">Filter history by status</legend>
@@ -141,8 +140,8 @@
         </div>
       </div>
 
-      <p id="history-none" hidden class="mt-6 rounded-[20px] border border-line p-6 text-base text-muted"></p>
-      <ul id="history-list" class="mt-6 space-y-4" aria-live="polite"></ul>
+      <p id="history-none" hidden class="mt-6 rounded-[20px] border border-dashed border-edge p-6 text-base text-muted"></p>
+      <ul id="history-list" class="mt-6 space-y-3" aria-live="polite"></ul>
     </section>
 
     <!-- BUILDING AMENITIES MODAL DIALOG -->
@@ -151,7 +150,7 @@
         <div class="flex items-start justify-between gap-4">
           <div>
             <h2 id="building-dialog-title" class="font-display text-xl font-bold tracking-tight">Building amenities</h2>
-            <p class="mt-1 text-sm text-muted">Property-wide features that apply to all rooms at Ariate Dormitory. Students see these across room listings and matches.</p>
+            <p class="mt-1 text-sm text-muted">Shown to students on every room.</p>
           </div>
           <button type="button" id="building-modal-close-x" class="-mr-2 -mt-2 grid h-10 w-10 shrink-0 place-items-center rounded-lg text-muted outline-none hover:bg-track focus-visible:ring-2 focus-visible:ring-forest" aria-label="Close">
             <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
@@ -198,6 +197,60 @@
         var months = Math.floor(days / 30);
         var rem = days % 30;
         return months + ' month' + (months === 1 ? '' : 's') + (rem > 0 ? ', ' + rem + ' day' + (rem === 1 ? '' : 's') : '');
+      }
+
+      // ---- small visual helpers ----
+      var ICO = {
+        users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0M16 4.5a3.5 3.5 0 010 7M18 14.5a6.5 6.5 0 013.5 5.5"/>',
+        chat: '<path d="M4 5h16v11H9l-5 4z"/>',
+        tool: '<path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 005.4-5.4l-2.4 2.4-2.6-.6-.6-2.6z"/>',
+        clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+        check: '<path d="M5 12l5 5 9-10"/>',
+        user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/>'
+      };
+      function icon(name, cls) {
+        var s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('class', cls || 'h-5 w-5'); s.setAttribute('fill', 'none');
+        s.setAttribute('stroke', 'currentColor'); s.setAttribute('stroke-width', '2'); s.setAttribute('stroke-linecap', 'round');
+        s.setAttribute('stroke-linejoin', 'round'); s.setAttribute('aria-hidden', 'true'); s.innerHTML = ICO[name] || '';
+        return s;
+      }
+      function safePhoto(p) { return p && /^(data:image\/|https?:)/.test(p) ? p : ''; }
+      function avatarEl(prof, name, cls) {
+        var a = el('span', 'grid shrink-0 place-items-center overflow-hidden rounded-full bg-forest font-display font-semibold text-white ' + cls);
+        a.setAttribute('aria-hidden', 'true');
+        var ph = safePhoto(prof && prof.photo);
+        if (ph) { var i = document.createElement('img'); i.src = ph; i.alt = ''; i.className = 'h-full w-full object-cover'; a.appendChild(i); }
+        else a.textContent = String(name || '?').charAt(0).toUpperCase();
+        return a;
+      }
+      function roomPic(roomId, cls) {
+        var room = HB.getRooms().filter(function (r) { return r.id === roomId; })[0];
+        var f = el('span', 'shrink-0 overflow-hidden rounded-xl bg-track ' + cls); f.setAttribute('aria-hidden', 'true');
+        if (room) { var i = document.createElement('img'); i.src = HB.roomImage(room); i.alt = ''; i.className = 'h-full w-full object-cover'; i.loading = 'lazy'; f.appendChild(i); }
+        return f;
+      }
+      var SHORT = { pending: 'Pending', approved: 'Awaiting payment', confirmed: 'Staying', declined: 'Declined', cancelled: 'Cancelled', expired: 'Expired', ended: 'Stay ended' };
+      function pill(text, strong) { return el('li', 'rounded-lg border border-line bg-tint px-2.5 py-1 text-sm ' + (strong ? 'font-semibold' : 'font-medium'), text); }
+      function daysLeft(iso) { var d = new Date(iso); return isNaN(d) ? null : Math.ceil((d.getTime() - Date.now()) / 86400000); }
+
+      // Requested -> Approved -> Paid, as three connected dots
+      function miniSteps(status) {
+        var st = { pending: ['done', 'now', 'todo'], approved: ['done', 'done', 'now'], confirmed: ['done', 'done', 'done'] }[status];
+        if (!st) return null;
+        var labels = ['Requested', 'Approved', 'Paid'], ol = el('ol', 'mt-4 flex items-center gap-2');
+        ol.setAttribute('aria-label', 'Request progress');
+        labels.forEach(function (l, i) {
+          if (i > 0) { var bar = el('li', 'h-0.5 min-w-[16px] flex-1 ' + (st[i] === 'todo' ? 'bg-line' : 'bg-forest')); bar.setAttribute('aria-hidden', 'true'); ol.appendChild(bar); }
+          var li = el('li', 'flex items-center gap-1.5');
+          var dot = el('span', 'grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 ' + (st[i] === 'done' ? 'border-forest bg-forest text-white' : st[i] === 'now' ? 'border-forest bg-white text-forest' : 'border-line bg-white text-muted'));
+          if (st[i] === 'done') dot.appendChild(icon('check', 'h-3.5 w-3.5')); else dot.appendChild(el('span', 'text-xs font-semibold', String(i + 1)));
+          li.appendChild(dot);
+          var lab = el('span', 'text-sm ' + (st[i] === 'todo' ? 'text-muted' : 'font-semibold'), l);
+          lab.appendChild(el('span', 'sr-only', st[i] === 'done' ? ' (done)' : st[i] === 'now' ? ' (now)' : ' (next)'));
+          li.appendChild(lab); ol.appendChild(li);
+        });
+        return ol;
       }
 
       var user = {};
@@ -266,7 +319,7 @@
       }
 
       function actions(r) {
-        var acts = el('div', 'mt-5 flex flex-wrap items-center gap-2');
+        var acts = el('div', 'flex flex-wrap items-center gap-2');
         var asking = ui.id === r.id ? ui.kind : null;
 
         if (r.status === 'pending') {
@@ -338,7 +391,7 @@
               '<!-- Emergency Contact Box -->' +
               '<div class="mt-4 rounded-2xl border border-forest/20 bg-tint p-4">' +
                 '<div class="flex items-center gap-2 mb-2">' +
-                  '<span class="text-base" aria-hidden="true">&#9888;&#65039;</span>' +
+                  '<svg viewBox="0 0 24 24" class="h-5 w-5 text-forest" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/></svg>' +
                   '<h4 class="text-xs font-semibold uppercase tracking-wider text-forest-deep">Emergency Contact Details</h4>' +
                 '</div>' +
                 '<div id="hb-res-emer-content" class="grid gap-2 text-sm sm:grid-cols-2"></div>' +
@@ -355,15 +408,15 @@
                 '<h4 class="text-xs font-semibold uppercase tracking-wider text-muted">Dorm Living & Lifestyle Profile</h4>' +
                 '<div class="mt-2.5 grid gap-2.5">' +
                   '<div class="flex items-center gap-3 rounded-xl border border-line bg-white p-3 text-sm">' +
-                    '<span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-tint text-base" aria-hidden="true">&#127769;</span>' +
+                    '<span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-tint text-base" aria-hidden="true"><svg viewBox="0 0 24 24" class="h-5 w-5 text-forest" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z"/></svg></span>' +
                     '<div><p class="text-xs text-muted">Sleep Schedule</p><p id="hb-res-sleep" class="font-semibold text-ink"></p></div>' +
                   '</div>' +
                   '<div class="flex items-center gap-3 rounded-xl border border-line bg-white p-3 text-sm">' +
-                    '<span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-tint text-base" aria-hidden="true">&#128218;</span>' +
+                    '<span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-tint text-base" aria-hidden="true"><svg viewBox="0 0 24 24" class="h-5 w-5 text-forest" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 012-2h13v15H6a2 2 0 00-2 2z"/><path d="M4 20a2 2 0 012-2h13v3H6a2 2 0 01-2-1z"/></svg></span>' +
                     '<div><p class="text-xs text-muted">Study Habits</p><p id="hb-res-study" class="font-semibold text-ink"></p></div>' +
                   '</div>' +
                   '<div class="flex items-center gap-3 rounded-xl border border-line bg-white p-3 text-sm">' +
-                    '<span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-tint text-base" aria-hidden="true">&#10024;</span>' +
+                    '<span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-tint text-base" aria-hidden="true"><svg viewBox="0 0 24 24" class="h-5 w-5 text-forest" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg></span>' +
                     '<div><p class="text-xs text-muted">Cleanliness</p><p id="hb-res-clean" class="font-semibold text-ink"></p></div>' +
                   '</div>' +
                 '</div>' +
@@ -381,7 +434,7 @@
               '</div>' +
 
               '<div class="mt-6 flex justify-end pt-4 border-t border-line">' +
-                '<button type="button" id="hb-res-close-btn" class="btn btn-outline text-sm">Close Dossier</button>' +
+                '<button type="button" id="hb-res-close-btn" class="btn btn-outline text-sm">Close</button>' +
               '</div>' +
             '</div>';
           document.body.appendChild(dlg);
@@ -394,12 +447,12 @@
         var studentName = prof.name || r.studentName || 'Student';
         var studentEmail = prof.email || r.studentEmail || '';
         var av = document.getElementById('hb-res-avatar');
-        if (prof.photo) {
-          av.innerHTML = '<img src="' + prof.photo + '" alt="' + studentName + '" class="h-full w-full object-cover rounded-full">';
-          av.classList.add('overflow-hidden');
+        av.textContent = '';
+        if (safePhoto(prof.photo)) {
+          var avImg = document.createElement('img'); avImg.src = prof.photo; avImg.alt = studentName; avImg.className = 'h-full w-full object-cover rounded-full';
+          av.appendChild(avImg);
         } else {
           av.textContent = studentName.charAt(0).toUpperCase();
-          av.classList.remove('overflow-hidden');
         }
 
         document.getElementById('hb-res-title').textContent = studentName;
@@ -425,13 +478,16 @@
         emerBox.textContent = '';
         if (prof.emergencyName || prof.emergencyPhone) {
           var d1 = el('div');
-          d1.innerHTML = '<span class="text-xs text-muted block">Contact Name:</span><span class="font-semibold text-ink">' + (prof.emergencyName || 'Not specified') + (prof.emergencyRel ? ' (' + prof.emergencyRel + ')' : '') + '</span>';
+          d1.appendChild(el('span', 'text-xs text-muted block', 'Contact Name:'));
+          d1.appendChild(el('span', 'font-semibold text-ink', (prof.emergencyName || 'Not specified') + (prof.emergencyRel ? ' (' + prof.emergencyRel + ')' : '')));
           var d2 = el('div');
-          d2.innerHTML = '<span class="text-xs text-muted block">Emergency Phone:</span>' + (prof.emergencyPhone ? ('<a href="tel:' + prof.emergencyPhone + '" class="font-semibold text-forest underline">' + prof.emergencyPhone + '</a>') : '<span class="text-muted">Not provided</span>');
+          d2.appendChild(el('span', 'text-xs text-muted block', 'Emergency Phone:'));
+          if (prof.emergencyPhone) { var tl = el('a', 'font-semibold text-forest underline', prof.emergencyPhone); tl.href = 'tel:' + prof.emergencyPhone; d2.appendChild(tl); }
+          else d2.appendChild(el('span', 'text-muted', 'Not provided'));
           emerBox.appendChild(d1);
           emerBox.appendChild(d2);
         } else {
-          emerBox.innerHTML = '<p class="text-xs text-muted italic sm:col-span-2">The student has not yet entered their emergency contact in their profile.</p>';
+          emerBox.appendChild(el('p', 'text-xs text-muted italic sm:col-span-2', 'Not provided yet.'));
         }
 
         var bioBox = document.getElementById('hb-res-bio-box');
@@ -462,211 +518,120 @@
         if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
       }
 
+      // ---- one active request ----
       function row(r) {
-        var li = el('li', 'rounded-[20px] border border-line bg-white p-5 sm:p-6');
-        var top = el('div', 'flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1');
-        top.appendChild(el('p', 'font-display text-xl font-bold tracking-tight', r.roomName));
-        top.appendChild(el('p', 'text-sm font-semibold ' + (r.status === 'pending' ? 'text-ink' : (r.status === 'approved' || r.status === 'confirmed') ? 'text-forest' : 'text-muted'), LABEL[r.status] || r.status));
-        li.appendChild(top);
-        li.appendChild(el('p', 'mt-1 text-base text-muted', 'Floor ' + r.floor + ', ' + r.type + ' room, ' + HB.priceLabel(r)));
-
-        // Retrieve student's extra profile info from HB_AUTH
-        var prof = (window.HB_AUTH && HB_AUTH.getProfile) ? HB_AUTH.getProfile(r.userId) : {};
-        var studentDisplayName = prof.name || r.studentName || 'Student';
-        var studentPhone = prof.phone || '';
+        var li = el('li', 'rounded-[20px] border border-line bg-white p-4 sm:p-5');
+        var prof = (window.HB_AUTH && HB_AUTH.getProfile) ? (HB_AUTH.getProfile(r.userId) || {}) : {};
+        var name = prof.name || r.studentName || 'Student';
         var academic = (prof.course || '') + (prof.yearLevel ? ' (' + prof.yearLevel + ')' : '');
 
-        // Student Overview Card with Profile details and View Full Profile button
-        var sCard = el('div', 'mt-4 rounded-2xl border border-line bg-tint p-4 sm:p-5');
-        var sHead = el('div', 'flex flex-wrap items-center justify-between gap-3');
+        var wrap = el('div', 'flex items-start gap-4');
+        wrap.appendChild(roomPic(r.roomId, 'hidden aspect-[8/5] w-36 sm:block'));
+        var main = el('div', 'min-w-0 flex-1');
 
-        var sLeft = el('div', 'flex items-center gap-3.5');
-        var sAv = el('div', 'grid h-12 w-12 shrink-0 place-items-center rounded-full bg-forest text-lg font-bold text-white shadow-sm overflow-hidden');
-        if (prof.photo) {
-          sAv.innerHTML = '<img src="' + prof.photo + '" alt="' + studentDisplayName + '" class="h-full w-full object-cover rounded-full">';
-        } else {
-          sAv.textContent = studentDisplayName.charAt(0).toUpperCase();
+        var head = el('div', 'flex flex-wrap items-center justify-between gap-2');
+        var who = el('div', 'flex min-w-0 items-center gap-3');
+        who.appendChild(avatarEl(prof, name, 'h-11 w-11 text-base'));
+        var wt = el('div', 'min-w-0');
+        wt.appendChild(el('p', 'truncate font-display text-lg font-bold tracking-tight', name));
+        wt.appendChild(el('p', 'truncate text-sm text-muted', academic || r.studentEmail || ''));
+        who.appendChild(wt); head.appendChild(who);
+        head.appendChild(HB.chip(SHORT[r.status] || r.status, HB.statusTone(r.status)));
+        main.appendChild(head);
+
+        var facts = el('ul', 'mt-3 flex flex-wrap items-center gap-2');
+        facts.appendChild(pill(r.roomName, true));
+        facts.appendChild(pill('Floor ' + r.floor + ', ' + r.type));
+        facts.appendChild(pill(HB.capacity(r) > 1 ? peso(r.price) + ' / person' : peso(r.price)));
+        if (r.moveIn) facts.appendChild(pill('Move-in ' + fmt(r.moveIn)));
+        if (r.status === 'approved' && r.paymentDueAt) {
+          var left = daysLeft(r.paymentDueAt);
+          var due = el('li'); due.appendChild(HB.chip('Pay by ' + fmt(r.paymentDueAt) + (left != null ? (left > 0 ? ' (' + left + ' day' + (left === 1 ? '' : 's') + ' left)' : ' (due today)') : ''), left != null && left <= 2 ? 'bad' : 'warn'));
+          facts.appendChild(due);
         }
-        sLeft.appendChild(sAv);
+        if (r.status === 'confirmed' && r.confirmedAt) facts.appendChild(pill('Paid ' + fmt(r.confirmedAt)));
+        main.appendChild(facts);
 
-        var sText = el('div');
-        var sNameRow = el('div', 'flex flex-wrap items-center gap-2');
-        sNameRow.appendChild(el('h4', 'font-display text-base font-bold text-ink', studentDisplayName));
-        sNameRow.appendChild(el('span', 'rounded-full bg-forest/10 px-2 py-0.5 text-xs font-semibold text-forest', r.status === 'confirmed' ? 'Active Resident' : 'Resident Applicant'));
-        sText.appendChild(sNameRow);
-        sText.appendChild(el('p', 'text-sm text-muted', r.studentEmail + (studentPhone ? ' \u2022 ' + studentPhone : '')));
-        if (academic) {
-          sText.appendChild(el('p', 'text-xs font-medium text-ink/80', academic));
-        }
-        sLeft.appendChild(sText);
-        sHead.appendChild(sLeft);
-
-        var viewBtn = el('button', 'btn btn-outline text-sm py-2 px-4 inline-flex items-center gap-1.5 shadow-sm', 'View Full Profile');
-        viewBtn.type = 'button';
-        viewBtn.setAttribute('aria-label', 'View full profile for ' + studentDisplayName);
-        viewBtn.addEventListener('click', function () {
-          openResidentModal(r, prof);
-        });
-        var btnGroup = el('div', 'flex flex-wrap gap-2');
-        btnGroup.appendChild(viewBtn);
-        var msgLink = el('a', 'btn btn-outline text-sm py-2 px-4', 'Message student');
-        msgLink.href = 'landlord-messages.html?res=' + encodeURIComponent(r.id);
-        msgLink.setAttribute('aria-label', 'Message ' + studentDisplayName + ' about ' + r.roomName);
-        btnGroup.appendChild(msgLink);
-        sHead.appendChild(btnGroup);
-        sCard.appendChild(sHead);
-
-        // Emergency contact highlight preview
-        var emerRow = el('div', 'mt-3 pt-3 border-t border-line/60 flex flex-wrap items-center justify-between gap-2 text-xs');
-        if (prof.emergencyName || prof.emergencyPhone) {
-          emerRow.innerHTML = '<span class="text-muted">Emergency Contact:</span> <span class="font-semibold text-ink">' + (prof.emergencyName || 'Named contact') + (prof.emergencyRel ? ' (' + prof.emergencyRel + ')' : '') + ' \u2022 ' + (prof.emergencyPhone ? ('<a href="tel:' + prof.emergencyPhone + '" class="text-forest underline">' + prof.emergencyPhone + '</a>') : 'No phone') + '</span>';
-        } else {
-          emerRow.innerHTML = '<span class="text-muted">Emergency Contact:</span> <span class="text-muted italic">Not yet provided by student</span>';
-        }
-        sCard.appendChild(emerRow);
-        li.appendChild(sCard);
-
-        var dl = el('dl', 'mt-4 grid gap-3 text-base sm:grid-cols-3');
-        var facts = [['Move-in date', fmt(r.moveIn)], ['Requested on', fmt(r.createdAt)]];
-        if (r.rulesAcceptedAt) facts.push(['House rules', 'Agreed on ' + fmt(r.rulesAcceptedAt)]);
-        if (r.status === 'approved' && r.paymentDueAt) facts.push(['Payment due', fmt(r.paymentDueAt) + ' (' + r.paymentDays + ' days)']);
-        if (r.status === 'expired' && r.paymentDueAt) facts.push(['Payment was due', fmt(r.paymentDueAt)]);
-        if (r.confirmedAt && r.status === 'confirmed') facts.push(['Payment received', fmt(r.confirmedAt)]);
-        facts.forEach(function (p) { var d = el('div'); d.appendChild(el('dt', 'text-sm font-medium text-muted', p[0])); d.appendChild(el('dd', 'break-words', p[1])); dl.appendChild(d); });
-        li.appendChild(dl);
         if (r.message) {
-          var m = el('div', 'mt-3'); m.appendChild(el('p', 'text-sm font-medium text-muted', 'Message'));
-          m.appendChild(el('p', 'break-words text-base', r.message)); li.appendChild(m);
+          var m = el('p', 'mt-3 line-clamp-3 break-words rounded-xl rounded-tl-sm border border-line bg-tint px-3 py-2 text-base', r.message);
+          m.insertBefore(el('span', 'sr-only', 'Message from student: '), m.firstChild);
+          main.appendChild(m);
         }
-        var a = actions(r); if (a) li.appendChild(a);
+        var steps = miniSteps(r.status); if (steps) main.appendChild(steps);
+        wrap.appendChild(main); li.appendChild(wrap);
+
+        // decision buttons on the left, profile and message on the right
+        var foot = el('div', 'mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4');
+        var a = actions(r); foot.appendChild(a || el('span'));
+        var tools = el('div', 'flex flex-wrap gap-2');
+        var vb = el('button', 'btn btn-outline gap-2 !px-4 text-sm'); vb.type = 'button';
+        vb.appendChild(icon('user', 'h-4 w-4')); vb.appendChild(document.createTextNode('Profile'));
+        vb.setAttribute('aria-label', 'View full profile of ' + name);
+        vb.addEventListener('click', function () { openResidentModal(r, prof); });
+        var ml = el('a', 'btn btn-outline gap-2 !px-4 text-sm'); ml.href = 'landlord-messages.html?res=' + encodeURIComponent(r.id);
+        ml.appendChild(icon('chat', 'h-4 w-4')); ml.appendChild(document.createTextNode('Message'));
+        ml.setAttribute('aria-label', 'Message ' + name + ' about ' + r.roomName);
+        tools.appendChild(vb); tools.appendChild(ml); foot.appendChild(tools);
+        li.appendChild(foot);
         return li;
       }
 
-      // ---- history card for past requests and ended stays ----
+      // ---- one past request or stay ----
       function historyRow(r) {
-        var li = el('li', 'rounded-[20px] border border-line bg-white p-5 sm:p-6 transition-colors hover:border-[#8FA397]');
-        var top = el('div', 'flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2');
+        var li = el('li', 'rounded-[20px] border border-line bg-white p-4 transition-colors hover:border-edge sm:p-5');
+        var prof = (window.HB_AUTH && HB_AUTH.getProfile) ? (HB_AUTH.getProfile(r.userId) || {}) : {};
+        var name = prof.name || r.studentName || 'Student';
+        var wrap = el('div', 'flex items-start gap-4');
+        wrap.appendChild(roomPic(r.roomId, 'hidden aspect-[8/5] w-28 sm:block'));
+        var main = el('div', 'min-w-0 flex-1');
 
-        var titleBox = el('div');
-        titleBox.appendChild(el('p', 'font-display text-xl font-bold tracking-tight', r.roomName));
-        titleBox.appendChild(el('p', 'text-sm text-muted', 'Floor ' + r.floor + ', ' + r.type + ' room, ' + HB.priceLabel(r)));
-        top.appendChild(titleBox);
+        var head = el('div', 'flex flex-wrap items-center justify-between gap-2');
+        var who = el('div', 'flex min-w-0 items-center gap-3');
+        who.appendChild(avatarEl(prof, name, 'h-10 w-10 text-base'));
+        var wt = el('div', 'min-w-0');
+        wt.appendChild(el('p', 'truncate font-display text-base font-bold tracking-tight', name));
+        wt.appendChild(el('p', 'truncate text-sm text-muted', r.roomName + ', Floor ' + r.floor + ', ' + r.type));
+        who.appendChild(wt); head.appendChild(who);
+        head.appendChild(HB.chip(SHORT[r.status] || r.status, HB.statusTone(r.status)));
+        main.appendChild(head);
 
-        // Status badge
-        var badgeCls = 'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ';
-        var badgeText = '';
-        if (r.status === 'ended') {
-          badgeCls += 'bg-forest/10 text-forest';
-          badgeText = '\u2713 Stay Ended';
-        } else if (r.status === 'declined') {
-          badgeCls += 'bg-line/60 text-muted';
-          badgeText = 'Declined';
-        } else if (r.status === 'cancelled') {
-          badgeCls += 'bg-line/60 text-muted';
-          badgeText = 'Cancelled by student';
-        } else if (r.status === 'expired') {
-          badgeCls += 'bg-[#FEF3F2] text-danger border border-danger/20';
-          badgeText = 'Expired (unpaid)';
-        } else {
-          badgeCls += 'bg-tint text-ink';
-          badgeText = r.status;
-        }
-        top.appendChild(el('span', badgeCls, badgeText));
-        li.appendChild(top);
+        var facts = el('ul', 'mt-3 flex flex-wrap items-center gap-2');
+        if (r.moveIn) facts.appendChild(pill('Move-in ' + fmt(r.moveIn)));
+        facts.appendChild(pill('Requested ' + fmt(r.createdAt)));
+        if (r.endedAt) facts.appendChild(pill('Ended ' + fmt(r.endedAt)));
+        if (r.status === 'ended') { var tenure = durationText(r.moveIn || r.confirmedAt || r.createdAt, r.endedAt); if (tenure) facts.appendChild(pill('Stayed ' + tenure, true)); }
+        main.appendChild(facts);
 
-        // Student Overview Card with Profile details and View Full Profile button
-        var prof = (window.HB_AUTH && HB_AUTH.getProfile) ? HB_AUTH.getProfile(r.userId) : {};
-        var studentDisplayName = prof.name || r.studentName || 'Student';
-        var studentPhone = prof.phone || '';
-        var academic = (prof.course || '') + (prof.yearLevel ? ' (' + prof.yearLevel + ')' : '');
-
-        var sCard = el('div', 'mt-4 rounded-2xl border border-line bg-tint/60 p-4 sm:p-5');
-        var sHead = el('div', 'flex flex-wrap items-center justify-between gap-3');
-
-        var sLeft = el('div', 'flex items-center gap-3.5');
-        var sAv = el('div', 'grid h-12 w-12 shrink-0 place-items-center rounded-full bg-forest text-lg font-bold text-white shadow-sm overflow-hidden');
-        if (prof.photo) {
-          sAv.innerHTML = '<img src="' + prof.photo + '" alt="' + studentDisplayName + '" class="h-full w-full object-cover rounded-full">';
-        } else {
-          sAv.textContent = studentDisplayName.charAt(0).toUpperCase();
-        }
-        sLeft.appendChild(sAv);
-
-        var sText = el('div');
-        var sNameRow = el('div', 'flex flex-wrap items-center gap-2');
-        sNameRow.appendChild(el('h4', 'font-display text-base font-bold text-ink', studentDisplayName));
-        sNameRow.appendChild(el('span', 'rounded-full bg-forest/10 px-2 py-0.5 text-xs font-semibold text-forest', r.status === 'ended' ? 'Former Resident' : 'Past Applicant'));
-        sText.appendChild(sNameRow);
-        sText.appendChild(el('p', 'text-sm text-muted', r.studentEmail + (studentPhone ? ' \u2022 ' + studentPhone : '')));
-        if (academic) {
-          sText.appendChild(el('p', 'text-xs font-medium text-ink/80', academic));
-        }
-        sLeft.appendChild(sText);
-        sHead.appendChild(sLeft);
-
-        var viewBtn = el('button', 'btn btn-outline text-sm py-2 px-4 inline-flex items-center gap-1.5 shadow-sm', 'View Full Profile');
-        viewBtn.type = 'button';
-        viewBtn.setAttribute('aria-label', 'View full profile for ' + studentDisplayName);
-        viewBtn.addEventListener('click', function () {
-          openResidentModal(r, prof);
-        });
-        sHead.appendChild(viewBtn);
-        sCard.appendChild(sHead);
-
-        // Emergency contact highlight preview
-        var emerRow = el('div', 'mt-3 pt-3 border-t border-line/60 flex flex-wrap items-center justify-between gap-2 text-xs');
-        if (prof.emergencyName || prof.emergencyPhone) {
-          emerRow.innerHTML = '<span class="text-muted">Emergency Contact on file:</span> <span class="font-semibold text-ink">' + (prof.emergencyName || 'Named contact') + (prof.emergencyRel ? ' (' + prof.emergencyRel + ')' : '') + ' \u2022 ' + (prof.emergencyPhone ? ('<a href="tel:' + prof.emergencyPhone + '" class="text-forest underline">' + prof.emergencyPhone + '</a>') : 'No phone') + '</span>';
-        } else {
-          emerRow.innerHTML = '<span class="text-muted">Emergency Contact on file:</span> <span class="text-muted italic">Not recorded in profile</span>';
-        }
-        sCard.appendChild(emerRow);
-        li.appendChild(sCard);
-
-        // Dates grid
-        var dl = el('dl', 'mt-4 grid gap-3 text-base sm:grid-cols-2 lg:grid-cols-4');
-        var facts = [
-          ['Move-in date', fmt(r.moveIn) || 'Not specified'],
-          ['Requested on', fmt(r.createdAt)]
-        ];
-        if (r.confirmedAt) facts.push(['Payment confirmed', fmt(r.confirmedAt)]);
-        if (r.endedAt) facts.push(['Stay ended on', fmt(r.endedAt)]);
-        if (r.rulesAcceptedAt) facts.push(['House rules', 'Agreed on ' + fmt(r.rulesAcceptedAt)]);
-
-        // Duration of tenure
-        if (r.status === 'ended') {
-          var tenure = durationText(r.moveIn || r.confirmedAt || r.createdAt, r.endedAt);
-          if (tenure) facts.push(['Total stay duration', tenure]);
-        }
-
-        facts.forEach(function (p) {
-          var d = el('div');
-          d.appendChild(el('dt', 'text-sm font-medium text-muted', p[0]));
-          d.appendChild(el('dd', 'break-words font-medium', p[1]));
-          dl.appendChild(d);
-        });
-        li.appendChild(dl);
-
-        // Original student message
         if (r.message) {
-          var m = el('div', 'mt-3 rounded-xl border border-line/60 bg-tint/30 p-3 text-sm');
-          m.appendChild(el('p', 'text-xs font-semibold text-muted uppercase tracking-wider', 'Message from student:'));
-          m.appendChild(el('p', 'mt-0.5 break-words text-ink italic', '"' + r.message + '"'));
-          li.appendChild(m);
+          var m = el('p', 'mt-3 line-clamp-2 break-words text-sm text-muted', '\u201C' + r.message + '\u201D');
+          m.insertBefore(el('span', 'sr-only', 'Message from student: '), m.firstChild);
+          main.appendChild(m);
         }
+        wrap.appendChild(main); li.appendChild(wrap);
 
+        var foot = el('div', 'mt-3 flex justify-end');
+        var vb = el('button', 'btn btn-outline gap-2 !px-4 text-sm'); vb.type = 'button';
+        vb.appendChild(icon('user', 'h-4 w-4')); vb.appendChild(document.createTextNode('Profile'));
+        vb.setAttribute('aria-label', 'View full profile of ' + name);
+        vb.addEventListener('click', function () { openResidentModal(r, prof); });
+        foot.appendChild(vb); li.appendChild(foot);
         return li;
       }
 
+      // ---- the pipeline, which is also the filter ----
       function renderChips(activeList) {
         var box = $('chips'); box.textContent = '';
         ACTIVE_FILTERS.forEach(function (f) {
           var n = f[0] === 'all' ? activeList.length : activeList.filter(function (r) { return r.status === f[0]; }).length;
-          var label = el('label', 'relative block cursor-pointer');
-          var input = el('input', 'peer sr-only'); input.type = 'radio'; input.name = 'status'; input.value = f[0]; input.checked = activeFilter === f[0];
-          input.addEventListener('change', function () { activeFilter = f[0]; ui = { kind: null, id: null, error: '' }; render(); });
-          label.appendChild(input); label.appendChild(el('span', 'choice', f[1] + ' (' + n + ')'));
-          box.appendChild(label);
+          var on = activeFilter === f[0];
+          var b = el('button', 'flex flex-col items-start rounded-[20px] border p-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 ' +
+            (on ? 'border-forest bg-tint' : 'border-line bg-white hover:border-edge'));
+          b.type = 'button'; b.setAttribute('aria-pressed', String(on));
+          b.appendChild(el('span', 'font-display text-3xl font-bold leading-none tracking-tight', String(n)));
+          b.appendChild(el('span', 'mt-1.5 text-sm ' + (on ? 'font-semibold text-forest' : 'text-muted'), f[1]));
+          if (f[0] === 'pending' && n > 0) { var tag = el('span', 'mt-2'); tag.appendChild(HB.chip('Needs you', 'warn')); b.appendChild(tag); }
+          b.addEventListener('click', function () { activeFilter = f[0]; ui = { kind: null, id: null, error: '' }; render(); });
+          box.appendChild(b);
         });
       }
 
@@ -735,10 +700,10 @@
         var noneEl = $('history-none');
         if (!closedItems.length) {
           noneEl.hidden = false;
-          noneEl.textContent = 'No past requests or stays yet. When a stay ends or a request is closed, it will appear here as a permanent office record.';
+          noneEl.textContent = 'Nothing here yet.';
         } else if (!filtered.length) {
           noneEl.hidden = false;
-          noneEl.textContent = 'No past stays or requests match your search or filter.';
+          noneEl.textContent = 'No results.';
         } else {
           noneEl.hidden = true;
         }
@@ -750,41 +715,81 @@
         });
       }
 
-      // ---- at a glance: rooms by state, and requests waiting ----
+      // ---- at a glance: beds, and the shortcuts ----
+      var RING_COLORS = { free: '#1E4D36', requested: '#93B4A2', taken: '#C9D3CD' };
+      function renderBeds(free, requested, taken) {
+        var total = free + requested + taken, box = $('beds-ring'), C = 2 * Math.PI * 52;
+        box.textContent = '';
+        box.setAttribute('aria-label', free + ' of ' + total + ' beds free, ' + requested + ' requested, ' + taken + ' taken');
+        var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('viewBox', '0 0 120 120'); svg.setAttribute('class', 'h-full w-full -rotate-90'); svg.setAttribute('aria-hidden', 'true');
+        function arc(len, off, color) {
+          var c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          c.setAttribute('cx', '60'); c.setAttribute('cy', '60'); c.setAttribute('r', '52'); c.setAttribute('fill', 'none');
+          c.setAttribute('stroke', color); c.setAttribute('stroke-width', '12');
+          c.setAttribute('stroke-dasharray', len + ' ' + (C - len)); c.setAttribute('stroke-dashoffset', String(-off));
+          svg.appendChild(c);
+        }
+        if (!total) arc(C, 0, RING_COLORS.taken);
+        else {
+          var off = 0;
+          [['free', free], ['requested', requested], ['taken', taken]].forEach(function (p) {
+            if (!p[1]) return; var len = C * p[1] / total; arc(len, off, RING_COLORS[p[0]]); off += len;
+          });
+        }
+        box.appendChild(svg);
+        var mid = el('div', 'absolute inset-0 grid place-content-center text-center');
+        mid.appendChild(el('span', 'font-display text-3xl font-bold leading-none', String(free)));
+        mid.appendChild(el('span', 'mt-1 text-xs text-muted', 'beds free'));
+        box.appendChild(mid);
+
+        var lg = $('beds-legend'); lg.textContent = '';
+        [['free', 'Free', free], ['requested', 'Requested', requested], ['taken', 'Taken', taken]].forEach(function (p) {
+          var li = el('li', 'flex items-center gap-2 text-base');
+          var dot = el('i', 'inline-block h-3 w-3 shrink-0 rounded-full'); dot.style.background = RING_COLORS[p[0]]; dot.setAttribute('aria-hidden', 'true');
+          li.appendChild(dot); li.appendChild(el('span', 'font-display font-bold', String(p[2]))); li.appendChild(el('span', 'text-muted', p[1]));
+          lg.appendChild(li);
+        });
+      }
+
+      function tile(href, iconName, value, label, onClick) {
+        var a = el('a', 'flex flex-col justify-between rounded-[20px] border border-line bg-white p-4 no-underline outline-none transition-colors hover:border-forest focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2');
+        a.href = href;
+        var ic = el('span', 'grid h-10 w-10 place-items-center rounded-xl bg-tint text-forest'); ic.appendChild(icon(iconName, 'h-5 w-5')); a.appendChild(ic);
+        var t = el('span', 'mt-4 block');
+        t.appendChild(el('span', 'block font-display text-3xl font-bold leading-none tracking-tight text-ink', String(value)));
+        t.appendChild(el('span', 'mt-1 block text-sm text-muted', label));
+        a.appendChild(t);
+        if (onClick) a.addEventListener('click', onClick);
+        return a;
+      }
+
       function renderGlance(list) {
-        var rooms = HB.getRooms(), c = { freeBeds: 0, requested: 0, full: 0, taken: 0 };
+        var rooms = HB.getRooms(), free = 0, requested = 0, taken = 0;
         rooms.forEach(function (r) {
+          var cap = HB.capacity(r);
+          if (!r.available) { taken += cap; return; }
           var info = HB.bedsInfo(r, '__office__');
-          c.requested += info.requested;
-          if (!r.available) { c.taken++; return; }
-          c.freeBeds += info.free;
-          if (info.free === 0) c.full++;
+          var req = Math.min(info.requested, Math.max(0, cap - info.outside));
+          free += info.free; requested += req; taken += Math.max(0, cap - info.free - req);
         });
         var pending = list.filter(function (r) { return r.status === 'pending'; }).length;
         var activeRes = list.filter(function (r) { return r.status === 'confirmed'; }).length;
         var pastStays = list.filter(function (r) { return r.status === 'ended'; }).length;
-        // the banner: the one number that is the landlord's job today
+
         $('hero-count').textContent = String(pending);
-        $('hero-text').textContent = pending === 0 ? 'No room requests are waiting. You are all caught up.'
-          : (pending === 1 ? 'room request is waiting. Approve or decline it so the student can plan.' : 'room requests are waiting. Approve or decline each one so students can plan.');
+        $('hero-text').textContent = pending === 0 ? 'All caught up.' : (pending === 1 ? 'request waiting for your answer' : 'requests waiting for your answer');
         $('hero-cta').hidden = pending === 0;
+
+        renderBeds(free, requested, taken);
+
         var chats = window.HB_MSG ? HB_MSG.threadsFor(user).filter(function (t) { return t.lastSenderRole === 'student'; }).length : null;
-        var items = [
-          ['Active residents', activeRes],
-          ['Beds free', c.freeBeds],
-          ['Beds requested', c.requested],
-          ['Rooms full', c.full],
-          ['Chats to answer', chats],
-          ['Open concerns', window.HB_CONCERNS ? HB_CONCERNS.openCount() : null],
-          ['Past stays ended', pastStays]
-        ];
-        var dl = $('glance'); dl.textContent = '';
-        items.forEach(function (it) {
-          if (it[1] == null) return;
-          var d = el('div', 'stat-tile'); d.appendChild(el('dt', null, it[0]));
-          d.appendChild(el('dd', null, String(it[1])));
-          dl.appendChild(d);
-        });
+        var concerns = window.HB_CONCERNS ? HB_CONCERNS.openCount() : null;
+        var g = $('glance'); g.textContent = '';
+        g.appendChild(tile('#board', 'users', activeRes, 'Residents', function () { activeFilter = 'confirmed'; ui = { kind: null, id: null, error: '' }; render(); }));
+        if (chats != null) g.appendChild(tile('landlord-messages.html', 'chat', chats, 'Chats to answer'));
+        if (concerns != null) g.appendChild(tile('landlord-concerns.html', 'tool', concerns, 'Open concerns'));
+        g.appendChild(tile('#history', 'clock', pastStays, 'Past stays'));
         $('glance-box').hidden = false;
       }
 
@@ -802,7 +807,7 @@
           renderChips(activeList);
           var shown = activeFilter === 'all' ? activeList : activeList.filter(function (r) { return r.status === activeFilter; });
           $('none').hidden = shown.length > 0;
-          $('none').textContent = 'No ' + (activeFilter === 'all' ? 'active' : (ACTIVE_FILTERS.filter(function (f) { return f[0] === activeFilter; })[0][1].toLowerCase())) + ' requests right now.';
+          $('none').textContent = 'Nothing here right now.';
           var ul = $('list'); ul.textContent = '';
           shown.forEach(function (r) { ul.appendChild(row(r)); });
         }
