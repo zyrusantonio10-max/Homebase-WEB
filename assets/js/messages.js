@@ -113,6 +113,32 @@
     close.focus();
   }
 
+  // ---- small visual helpers ----
+  function roomOf(id) { try { return (window.HB && HB.getRooms ? HB.getRooms() : []).filter(function (r) { return r.id === id; })[0] || null; } catch (e) { return null; } }
+  function roomThumb(roomId, cls) {
+    var room = roomOf(roomId), s = el('span', 'grid shrink-0 place-items-center overflow-hidden rounded-xl bg-track ' + cls);
+    s.setAttribute('aria-hidden', 'true');
+    if (room && window.HB && HB.roomImage) { var i = document.createElement('img'); i.src = HB.roomImage(room); i.alt = ''; i.className = 'h-full w-full object-cover'; s.appendChild(i); }
+    return s;
+  }
+  function svgIcon(path, cls) {
+    var sv = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    sv.setAttribute('viewBox', '0 0 24 24'); sv.setAttribute('class', cls || 'h-5 w-5'); sv.setAttribute('fill', 'none');
+    sv.setAttribute('stroke', 'currentColor'); sv.setAttribute('stroke-width', '2'); sv.setAttribute('stroke-linecap', 'round');
+    sv.setAttribute('stroke-linejoin', 'round'); sv.setAttribute('aria-hidden', 'true'); sv.innerHTML = path;
+    return sv;
+  }
+  var ICON_CHAT = '<path d="M4 5h16v11H9l-5 4z"/>';
+  var ICON_SEND = '<path d="M4 12l16-8-6 16-3-7z"/>';
+  function timeOnly(iso) { var d = new Date(iso); return isNaN(d) ? '' : d.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' }); }
+  function dayLabel(iso) {
+    var d = new Date(iso); if (isNaN(d)) return '';
+    var t = new Date(), y = new Date(); y.setDate(t.getDate() - 1);
+    if (d.toDateString() === t.toDateString()) return 'Today';
+    if (d.toDateString() === y.toDateString()) return 'Yesterday';
+    return d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' });
+  }
+
   var QUICK = ['Is this room still available?', 'Can I visit the room before I request it?', 'What is included in the monthly rent?'];
   var STATE_TEXT = { available: 'Beds available', full: 'Full', taken: 'Closed' };
 
@@ -217,14 +243,14 @@
         dlg.id = 'hb-inquiry'; dlg.setAttribute('aria-labelledby', 'hb-inq-title');
         dlg.className = 'max-h-[90vh] w-[calc(100vw-2rem)] max-w-[440px] overflow-y-auto rounded-2xl border border-line bg-white p-0 text-ink shadow-xl backdrop:bg-ink/50';
         dlg.innerHTML =
-          '<div class="p-6"><h2 id="hb-inq-title" class="font-display text-xl font-bold tracking-tight"></h2>' +
-          '<p id="hb-inq-sub" class="mt-1 text-base text-muted"></p>' +
+          '<div class="p-6"><div class="flex items-center gap-4"><span id="hb-inq-thumb" class="contents"></span><div class="min-w-0"><h2 id="hb-inq-title" class="font-display text-xl font-bold tracking-tight"></h2>' +
+          '<p id="hb-inq-sub" class="mt-0.5 text-base text-muted"></p></div></div>' +
           '<form id="hb-inq-form" novalidate class="mt-5 space-y-4">' +
             '<p id="hb-inq-error" role="alert" class="hidden rounded-xl border border-danger/30 bg-danger-soft px-3.5 py-3 text-sm font-medium text-danger"></p>' +
             '<div><p class="label">Quick questions</p><div id="hb-inq-quick" class="flex flex-wrap gap-2"></div></div>' +
             '<div><label class="label" for="hb-inq-msg">Your message</label>' +
               '<textarea id="hb-inq-msg" rows="4" maxlength="' + MAX_LEN + '" class="field"></textarea></div>' +
-            '<p class="text-sm text-muted">This goes to the dormitory office. Asking a question does not reserve the room. To reserve it, send a room request.</p>' +
+            '<p class="text-sm text-muted">Asking does not reserve the room.</p>' +
             '<div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">' +
               '<button type="button" id="hb-inq-cancel" class="btn btn-outline">Not now</button>' +
               '<button type="submit" class="btn">Send message</button></div>' +
@@ -236,9 +262,8 @@
       var form = document.getElementById('hb-inq-form'), msg = document.getElementById('hb-inq-msg'), err = document.getElementById('hb-inq-error');
       var existing = M.findThread(user.id, room.id);
       document.getElementById('hb-inq-title').textContent = 'Ask about ' + room.name;
-      document.getElementById('hb-inq-sub').textContent = existing
-        ? 'You already have a conversation about this room. Your message is added to it.'
-        : 'Floor ' + room.floor + ', ' + room.type + ' room. Ask the landlord anything before you request it.';
+      document.getElementById('hb-inq-sub').textContent = 'Floor ' + room.floor + ', ' + room.type + (existing ? ' \u00B7 joins your chat' : '');
+      var thumbBox = document.getElementById('hb-inq-thumb'); thumbBox.textContent = ''; thumbBox.appendChild(roomThumb(room.id, 'h-16 w-16'));
       var quick = document.getElementById('hb-inq-quick'); quick.innerHTML = '';
       QUICK.forEach(function (q) {
         var b = el('button', 'choice !min-h-[44px] !px-3 text-sm', q); b.type = 'button';
@@ -314,31 +339,33 @@
         if (!t.lastMessage) return 'No messages yet';
         return (t.lastSenderRole === role ? 'You: ' : (isLandlord ? '' : 'Dormitory office: ')) + t.lastMessage;
       }
-      function rowButton(title, sub, text, time, n, isActive, onClick) {
-        var b = el('button', 'block w-full rounded-xl border p-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-forest ' +
+      function rowButton(title, sub, text, time, n, isActive, onClick, lead) {
+        var b = el('button', 'flex w-full items-center gap-3 rounded-xl border p-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-forest ' +
           (isActive ? 'border-forest bg-tint' : 'border-line bg-white hover:border-edge')); b.type = 'button';
         if (isActive) b.setAttribute('aria-current', 'true');
-        var top = el('div', 'flex items-start justify-between gap-2');
-        top.appendChild(el('span', 'min-w-0 truncate font-display text-base font-semibold', title));
+        if (lead) b.appendChild(lead);
+        var body = el('span', 'block min-w-0 flex-1');
+        var top = el('span', 'flex items-start justify-between gap-2');
+        top.appendChild(el('span', 'min-w-0 truncate font-display text-base ' + (n > 0 ? 'font-bold' : 'font-semibold'), title));
         top.appendChild(el('span', 'shrink-0 text-sm text-muted', time));
-        b.appendChild(top);
-        if (sub) b.appendChild(el('span', 'mt-0.5 block text-sm text-muted', sub));
-        var foot = el('div', 'mt-1 flex items-center justify-between gap-2');
-        foot.appendChild(el('span', 'min-w-0 truncate text-sm text-muted', text));
+        body.appendChild(top);
+        if (sub) body.appendChild(el('span', 'mt-0.5 block truncate text-sm text-muted', sub));
+        var foot = el('span', 'mt-1 flex items-center justify-between gap-2');
+        foot.appendChild(el('span', 'min-w-0 truncate text-sm ' + (n > 0 ? 'font-medium text-ink' : 'text-muted'), text));
         if (n > 0) foot.appendChild(HB.chip(n + ' new', 'warn'));
-        b.appendChild(foot); b.addEventListener('click', onClick); return b;
+        body.appendChild(foot); b.appendChild(body); b.addEventListener('click', onClick); return b;
       }
 
       function renderList() {
         listPane.innerHTML = '';
         var threads = M.threadsFor(user), unread = M.unreadMap(user);
         if (!threads.length && !state.draft) {
-          var empty = el('div', 'rounded-[20px] border border-line p-6');
-          empty.appendChild(el('p', 'card-title', 'No conversations yet'));
-          empty.appendChild(el('p', 'note mt-2', isLandlord
-            ? 'When a student asks about a room, the conversation shows up here. You can also message a student from their request on the Dashboard.'
-            : 'Open a room on Explore Rooms and choose Ask about this room to start one.'));
-          if (!isLandlord) { var a = el('a', 'textlink mt-2', 'Explore Rooms'); a.href = 'rooms.html'; empty.appendChild(a); }
+          var empty = el('div', 'rounded-[20px] border border-dashed border-edge p-8 text-center');
+          var ic = el('span', 'mx-auto grid h-14 w-14 place-items-center rounded-full bg-tint text-forest'); ic.appendChild(svgIcon(ICON_CHAT, 'h-7 w-7'));
+          empty.appendChild(ic);
+          empty.appendChild(el('p', 'card-title mt-3', 'No conversations yet'));
+          if (isLandlord) empty.appendChild(el('p', 'note mt-1', 'Student questions show up here.'));
+          else { var a = el('a', 'btn mt-4', 'Explore Rooms'); a.href = 'rooms.html'; empty.appendChild(a); }
           listPane.appendChild(empty); return;
         }
 
@@ -346,7 +373,7 @@
         if (!isLandlord) {
           var sl = el('ul', 'space-y-2');
           threads.forEach(function (t) {
-            var li = el('li'); li.appendChild(rowButton(t.roomName, roomSub(t), preview(t), when(t.updatedAt, false), unread[t.id] || 0, t.id === state.activeId, function () { openThread(t); }));
+            var li = el('li'); li.appendChild(rowButton(t.roomName, roomSub(t), preview(t), when(t.updatedAt, false), unread[t.id] || 0, t.id === state.activeId, function () { openThread(t); }, roomThumb(t.roomId, 'h-12 w-12')));
             sl.appendChild(li);
           });
           listPane.appendChild(sl); return;
@@ -396,14 +423,15 @@
         shown.forEach(function (g) {
           var li = el('li', 'rounded-[20px] border bg-white ' + (g.hasActive ? 'border-forest' : 'border-line'));
           var count = g.threads.length + (g.draft ? 1 : 0), expanded = !!state.open[g.id];
-          var hb = el('button', 'flex w-full items-start justify-between gap-3 rounded-[20px] p-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-forest'); hb.type = 'button';
+          var hb = el('button', 'flex w-full items-center gap-3 rounded-[20px] p-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-forest'); hb.type = 'button';
           if (count > 1) hb.setAttribute('aria-expanded', String(expanded));
-          var left = el('span', 'min-w-0');
+          var left = el('span', 'min-w-0 flex-1');
           left.appendChild(el('span', 'block truncate font-display text-base font-semibold', g.name));
           var latest = g.threads[0];
           left.appendChild(el('span', 'mt-0.5 block truncate text-sm text-muted',
             count > 1 ? count + ' room chats: ' + g.threads.map(function (t) { return t.roomName; }).join(', ')
                       : (latest ? latest.roomName + ' \u00B7 ' + preview(latest) : g.draft.roomName + ' \u00B7 New conversation')));
+          hb.appendChild(avatar(profileOf(g.id), g.name, 'h-11 w-11 text-base'));
           hb.appendChild(left);
           var right = el('span', 'flex shrink-0 flex-col items-end gap-1');
           if (latest) right.appendChild(el('span', 'text-sm text-muted', when(latest.updatedAt, false)));
@@ -418,7 +446,7 @@
             var kids = el('ul', 'space-y-2 px-3 pb-3');
             if (g.draft) { var dli = el('li'); dli.appendChild(rowButton(g.draft.roomName, '', 'New conversation. Nothing sent yet.', '', 0, true, function () {})); kids.appendChild(dli); }
             g.threads.forEach(function (t) {
-              var kli = el('li'); kli.appendChild(rowButton(t.roomName, roomSub(t), preview(t), when(t.updatedAt, false), unread[t.id] || 0, t.id === state.activeId, function () { openThread(t); }));
+              var kli = el('li'); kli.appendChild(rowButton(t.roomName, roomSub(t), preview(t), when(t.updatedAt, false), unread[t.id] || 0, t.id === state.activeId, function () { openThread(t); }, roomThumb(t.roomId, 'h-10 w-10')));
               kids.appendChild(kli);
             });
             li.appendChild(kids);
@@ -442,9 +470,10 @@
         convoPane.innerHTML = '';
         var t = active(), d = state.draft;
         if (!t && !d) {
-          var none = el('div', 'rounded-[20px] border border-line p-6');
-          none.appendChild(el('p', 'card-title', 'Select a conversation'));
-          none.appendChild(el('p', 'note mt-2', 'Choose one on the left to read it and reply.'));
+          var none = el('div', 'hidden rounded-[20px] border border-dashed border-edge p-10 text-center md:block');
+          var ic2 = el('span', 'mx-auto grid h-14 w-14 place-items-center rounded-full bg-tint text-forest'); ic2.appendChild(svgIcon(ICON_CHAT, 'h-7 w-7'));
+          none.appendChild(ic2);
+          none.appendChild(el('p', 'card-title mt-3 text-muted', 'Select a conversation'));
           convoPane.appendChild(none); return;
         }
         var info = t || d;
@@ -457,6 +486,7 @@
         head.appendChild(back);
         var sprof = isLandlord ? profileOf(info.studentId) : null;
         if (isLandlord) head.appendChild(avatar(sprof, info.studentName, 'h-11 w-11 text-base'));
+        else head.appendChild(roomThumb(info.roomId, 'h-12 w-12'));
         var hb = el('div', 'min-w-0 flex-1');
         hb.appendChild(el('h2', 'truncate font-display text-lg font-semibold tracking-tight', isLandlord ? info.studentName : 'Dormitory office'));
         var sub = el('div', 'mt-1 flex flex-wrap items-center gap-2');
@@ -475,20 +505,31 @@
           vp.addEventListener('click', function () { openStudentProfile(info); });
           head.appendChild(vp);
         }
+        if (!isLandlord) {
+          var vr = el('a', 'btn btn-outline shrink-0 !px-4 text-sm', 'View room'); vr.href = 'rooms.html?room=' + encodeURIComponent(info.roomId);
+          vr.setAttribute('aria-label', 'View ' + info.roomName + ' in Explore Rooms'); head.appendChild(vr);
+        }
         box.appendChild(head);
 
         var log = el('div', 'flex-1 space-y-3 overflow-y-auto p-4'); log.setAttribute('role', 'log'); log.setAttribute('aria-live', 'polite');
         log.setAttribute('aria-label', 'Messages'); log.tabIndex = 0;
         box.appendChild(log); ui.log = log;
 
-        var form = el('form', 'border-t border-line p-4'); form.noValidate = true;
+        var form = el('form', 'border-t border-line p-3 sm:p-4'); form.noValidate = true;
         var lab = el('label', 'sr-only', 'Write a message'); lab.setAttribute('for', 'msg-input');
-        var ta = el('textarea', 'field'); ta.id = 'msg-input'; ta.rows = 2; ta.maxLength = MAX_LEN; ta.placeholder = 'Write a message';
-        var err = el('p', 'err hidden'); err.setAttribute('role', 'alert');
-        var row = el('div', 'mt-2 flex items-center justify-between gap-3');
-        row.appendChild(el('p', 'text-sm text-muted', 'Enter sends. Shift+Enter adds a new line.'));
-        var send = el('button', 'btn', 'Send'); send.type = 'submit'; row.appendChild(send);
-        form.appendChild(lab); form.appendChild(ta); form.appendChild(err); form.appendChild(row);
+        var hint = el('span', 'sr-only', 'Enter sends. Shift plus Enter adds a new line.'); hint.id = 'msg-hint';
+        var ta = el('textarea', 'field min-h-[44px] flex-1 resize-none'); ta.id = 'msg-input'; ta.rows = 1; ta.maxLength = MAX_LEN; ta.placeholder = 'Write a message';
+        ta.setAttribute('aria-describedby', 'msg-hint');
+        var err = el('p', 'err hidden mb-2'); err.setAttribute('role', 'alert');
+        var row = el('div', 'flex items-end gap-2');
+        var send = el('button', 'btn gap-2 !px-4', 'Send'); send.type = 'submit'; send.insertBefore(svgIcon(ICON_SEND, 'h-5 w-5'), send.firstChild);
+        row.appendChild(ta); row.appendChild(send);
+        var cnt = el('p', 'mt-1 hidden text-right text-xs text-muted');
+        ta.addEventListener('input', function () {
+          ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight + 2, 140) + 'px';
+          var left = MAX_LEN - ta.value.length; cnt.hidden = left > 150; cnt.textContent = left + ' left';
+        });
+        form.appendChild(lab); form.appendChild(hint); form.appendChild(err); form.appendChild(row); form.appendChild(cnt);
         box.appendChild(form);
         convoPane.appendChild(box);
 
@@ -501,7 +542,7 @@
           if (!thread && state.draft) thread = M.ensureThread(state.draft);
           var res = M.send(thread.id, user, ta.value);
           if (!res.ok) { ta.setAttribute('aria-invalid', 'true'); err.textContent = res.error; err.classList.remove('hidden'); ta.focus(); return; }
-          ta.value = '';
+          ta.value = ''; ta.style.height = 'auto'; cnt.hidden = true;
           if (state.draft) { state.draft = null; state.activeId = thread.id; setUrl(thread.id); }
           renderList(); renderLog(); ta.focus();
         });
@@ -519,13 +560,21 @@
         if (!msgs.length) {
           log.appendChild(el('p', 'note', isLandlord ? 'No messages yet. Write the first one below.' : 'No messages yet.'));
         }
+        var lastDay = '';
         msgs.forEach(function (m) {
+          var day = new Date(m.createdAt).toDateString();
+          if (day !== lastDay) {
+            lastDay = day;
+            var dv = el('div', 'flex justify-center'); dv.appendChild(el('span', 'rounded-full bg-tint px-3 py-1 text-xs font-medium text-muted', dayLabel(m.createdAt))); log.appendChild(dv);
+          }
           var mine = m.senderRole === role;
-          var item = el('div', 'flex ' + (mine ? 'justify-end' : 'justify-start'));
-          var bubble = el('div', 'max-w-[85%] rounded-2xl border px-4 py-2.5 ' + (mine ? 'border-forest bg-forest text-white' : 'border-line bg-tint text-ink'));
-          bubble.appendChild(el('p', 'text-sm font-semibold ' + (mine ? 'text-white' : 'text-forest'), (mine ? 'You' : (isLandlord ? m.senderName : 'Dormitory office')) + ' \u00B7 ' + when(m.createdAt, true)));
-          bubble.appendChild(el('p', 'mt-0.5 whitespace-pre-wrap break-words text-base', m.body));
-          item.appendChild(bubble); log.appendChild(item);
+          var item = el('div', 'flex flex-col ' + (mine ? 'items-end' : 'items-start'));
+          var bubble = el('div', 'max-w-[85%] border px-4 py-2.5 ' + (mine ? 'rounded-2xl rounded-br-md border-forest bg-forest text-white' : 'rounded-2xl rounded-bl-md border-line bg-tint text-ink'));
+          bubble.appendChild(el('span', 'sr-only', (mine ? 'You' : (isLandlord ? m.senderName : 'Dormitory office')) + ': '));
+          bubble.appendChild(el('p', 'whitespace-pre-wrap break-words text-base', m.body));
+          item.appendChild(bubble);
+          item.appendChild(el('p', 'mt-1 px-1 text-xs text-muted', timeOnly(m.createdAt)));
+          log.appendChild(item);
         });
         log.scrollTop = log.scrollHeight;
         if (t && M.unreadMap(user)[t.id] > 0) { M.markRead(t.id, user); renderList(); if (M.refreshBadge) M.refreshBadge(); }
