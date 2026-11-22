@@ -7,12 +7,13 @@
   <meta name="description" content="Tell Homebase your budget and needs. It ranks the available Ariate Dormitory rooms by fit.">
 
   <!--
-    Design Read: room matching screen, same forest + lime language as home.html and rooms.html.
-    Less text, more picture: a budget slider with one dot per available room, a bar showing how the 100 points are shared,
-    a score ring on the best match, short check/cross chips instead of sentences, and four small bars for the score parts.
-    Layout: sticky form on the left, ranked rooms on the right. Rank 1 is the big forest card, the rest are plain rows with a picture.
+    Design Read: room matching screen, same forest + lime language as home.html and rooms.html. Built to be looked at, not read:
+    - Form (left): a budget slider with one dot per available room, room type as tiles with bed icons, amenities as icon tiles,
+      and a bar that shows how the 100 points are shared for "Matters most".
+    - Results (right): a "fit against price" chart (one dot per room, your budget as a dashed line; select a dot to jump to the room),
+      then the best match as a big picture with a score ring and a radar of the four score parts,
+      then every other room as a picture card with its score on the picture. Short check / cross chips say why.
     Score rules are in the script, search "SCORING". Commute and safety are not criteria (your decision).
-
     Storage written by this page: homebase_preferences, homebase_topMatch (Home reads it), homebase_savedRooms (Home reads it).
   -->
 
@@ -113,12 +114,11 @@
 
           <fieldset>
             <legend class="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">Room type</legend>
-            <div class="grid grid-cols-5 gap-1.5">
-              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Any" checked><span class="choice text-[11px] sm:text-xs min-h-[34px] !px-1 text-center justify-center">Any</span></label>
-              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Single"><span class="choice text-[11px] sm:text-xs min-h-[34px] !px-1 text-center justify-center">Single</span></label>
-              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Double"><span class="choice text-[11px] sm:text-xs min-h-[34px] !px-1 text-center justify-center">Double</span></label>
-              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Triple"><span class="choice text-[11px] sm:text-xs min-h-[34px] !px-1 text-center justify-center">Triple</span></label>
-              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Quad"><span class="choice text-[11px] sm:text-xs min-h-[34px] !px-1 text-center justify-center">Quad</span></label>
+            <div class="grid grid-cols-4 gap-1.5">
+              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Any" checked><span class="choice !min-h-[64px] flex-col gap-1 !px-1 !py-1.5 text-[11px] sm:text-xs"><span class="flex"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg></span>Any</span></label>
+              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Single"><span class="choice !min-h-[64px] flex-col gap-1 !px-1 !py-1.5 text-[11px] sm:text-xs"><span class="flex"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 00-3-3h-7v6"/></svg></span>Single</span></label>
+              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Double"><span class="choice !min-h-[64px] flex-col gap-1 !px-1 !py-1.5 text-[11px] sm:text-xs"><span class="flex"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 00-3-3h-7v6"/></svg><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 00-3-3h-7v6"/></svg></span>Double</span></label>
+              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Quad"><span class="choice !min-h-[64px] flex-col gap-1 !px-1 !py-1.5 text-[11px] sm:text-xs"><span class="flex"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 00-3-3h-7v6"/></svg><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 00-3-3h-7v6"/></svg><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 00-3-3h-7v6"/></svg><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 00-3-3h-7v6"/></svg></span>Quad</span></label>
             </div>
           </fieldset>
 
@@ -133,7 +133,7 @@
               <span id="amenity-badge" class="text-xs font-semibold text-muted">0 selected</span>
             </div>
             <div class="max-h-48 overflow-y-auto rounded-xl border border-line bg-white p-2">
-              <div id="amenity-list" class="grid grid-cols-2 gap-1.5"></div>
+              <div id="amenity-list" class="grid grid-cols-3 gap-1.5"></div>
             </div>
           </fieldset>
 
@@ -179,13 +179,12 @@
         </div>
 
         <div data-state="empty" hidden class="rounded-[20px] border border-dashed border-edge p-6 sm:p-8">
-          <div class="flex items-center gap-5">
-            <svg viewBox="0 0 120 120" class="h-20 w-20 shrink-0 -rotate-90" aria-hidden="true" focusable="false"><circle cx="60" cy="60" r="52" fill="none" stroke="currentColor" stroke-opacity=".15" stroke-width="10"/></svg>
-            <div>
-              <p class="font-display text-2xl font-bold tracking-tight text-muted">No matches yet</p>
-              <p class="mt-1 text-base text-muted">Set your budget, then press Find my matches.</p>
-            </div>
-          </div>
+          <p class="font-display text-2xl font-bold tracking-tight text-muted">No matches yet</p>
+          <ol class="mt-6 grid grid-cols-3" aria-label="How it works">
+            <li class="relative flex flex-col items-center text-center"><span class="relative z-10 grid h-12 w-12 place-items-center rounded-full border-2 border-forest bg-white font-display text-lg font-bold text-forest">1</span><span class="mt-2 text-sm font-semibold">Set a budget</span></li>
+            <li class="relative flex flex-col items-center text-center"><span class="absolute right-1/2 top-6 h-0.5 w-full bg-line" aria-hidden="true"></span><span class="relative z-10 grid h-12 w-12 place-items-center rounded-full border-2 border-line bg-white font-display text-lg font-bold text-muted">2</span><span class="mt-2 text-sm text-muted">Pick your needs</span></li>
+            <li class="relative flex flex-col items-center text-center"><span class="absolute right-1/2 top-6 h-0.5 w-full bg-line" aria-hidden="true"></span><span class="relative z-10 grid h-12 w-12 place-items-center rounded-full border-2 border-line bg-white font-display text-lg font-bold text-muted">3</span><span class="mt-2 text-sm text-muted">See your matches</span></li>
+          </ol>
         </div>
 
         <div data-state="none" hidden class="rounded-[20px] border border-line bg-white p-6 sm:p-8">
@@ -195,12 +194,13 @@
 
         <div data-state="list" hidden>
           <div id="summary" class="flex flex-wrap items-center gap-2"></div>
+          <div id="chart" hidden></div>
           <div id="top" class="mt-4"></div>
-          <ol id="rest" class="mt-4 space-y-3"></ol>
+          <ul id="rest" class="mt-4 grid gap-4 sm:grid-cols-2"></ul>
           <section id="over-box" hidden class="mt-8">
             <h2 class="font-display text-xl font-bold tracking-tight">A little over budget</h2>
             <p id="over-note" class="mt-1 text-base text-muted"></p>
-            <ol id="over" class="mt-4 space-y-3"></ol>
+            <ul id="over" class="mt-4 grid gap-4 sm:grid-cols-2"></ul>
           </section>
         </div>
 
@@ -262,17 +262,45 @@
         }
       }
 
+      // one small picture per amenity (matched by words in its name, so amenities the office adds still get an icon)
+      var AM_ICONS = [
+        [/wi.?fi/i, '<path d="M2 9a15 15 0 0120 0M5 12.5a10 10 0 0114 0M8.5 16a5 5 0 017 0"/><circle cx="12" cy="19.5" r="1"/>'],
+        [/fan/i, '<circle cx="12" cy="12" r="2"/><path d="M12 10C12 5 9 3 8 5s1 5 4 5zM14 12c5 0 7 3 5 4s-5-1-5-4zM12 14c0 5 3 7 4 5s-1-5-4-5zM10 12c-5 0-7-3-5-4s5 1 5 4z"/>'],
+        [/air|a\/c|cooling/i, '<path d="M12 2v20M4 7l16 10M20 7L4 17"/>'],
+        [/desk|study/i, '<path d="M3 8h18v2H3zM5 10v9M19 10v9M9 14h6"/>'],
+        [/wardrobe|closet|locker/i, '<rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M12 3v18M9.500 12h.01M14.500 12h.01"/>'],
+        [/heater|shower|hot/i, '<path d="M12 3s5 4.5 5 9a5 5 0 01-10 0c0-2 1-3 2-4 .5 2 1.5 2.500 2.500 2.500C11 8 12 3 12 3z"/>'],
+        [/bath|toilet|restroom/i, '<path d="M3 12h18v3a5 5 0 01-5 5H8a5 5 0 01-5-5zM6 12V6a2 2 0 014 0"/>'],
+        [/outlet|power|plug|socket/i, '<path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 01-12 0zM12 17v4"/>'],
+        [/refriger|fridge/i, '<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M6 10h12M9 5v3M9 13v3"/>'],
+        [/kitchen|cook|stove/i, '<path d="M6 3v7a2 2 0 002 2v9M10 3v7M8 3v7M16 21V3c-3 1-4 4-4 8h4"/>'],
+        [/balcony|window|view/i, '<rect x="4" y="3" width="16" height="18" rx="1"/><path d="M12 3v18M4 12h16"/>'],
+        [/cctv|camera|security/i, '<rect x="3" y="7" width="13" height="9" rx="2"/><path d="M16 10l5-3v10l-5-3"/>'],
+        [/gate|curfew|entrance|lock/i, '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>'],
+        [/fire|smoke|extinguisher/i, '<path d="M12 3s5 4.5 5 9a5 5 0 01-10 0c0-2 1-3 2-4 .5 2 1.5 2.500 2.500 2.500C11 8 12 3 12 3z"/>'],
+        [/water|drinking|purified/i, '<path d="M12 3s6 6.5 6 11a6 6 0 01-12 0c0-4.5 6-11 6-11z"/>'],
+        [/laundry|washing/i, '<rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="14" r="4"/><path d="M8 7h.01M11 7h.01"/>']
+      ];
+      function amenIcon(name) {
+        var path = '<path d="M5 12l5 5 9-10"/>';
+        for (var i = 0; i < AM_ICONS.length; i++) if (AM_ICONS[i][0].test(name)) { path = AM_ICONS[i][1]; break; }
+        var sv = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        sv.setAttribute('viewBox', '0 0 24 24'); sv.setAttribute('class', 'h-6 w-6 shrink-0'); sv.setAttribute('fill', 'none'); sv.setAttribute('stroke', 'currentColor');
+        sv.setAttribute('stroke-width', '2'); sv.setAttribute('stroke-linecap', 'round'); sv.setAttribute('stroke-linejoin', 'round'); sv.setAttribute('aria-hidden', 'true'); sv.innerHTML = path;
+        return sv;
+      }
       function createAmenityPill(name, id) {
-        var label = el('label', 'relative block cursor-pointer');
+        var label = el('label', 'relative block cursor-pointer'); label.title = name;
         var input = el('input', 'peer sr-only'); input.type = 'checkbox'; input.name = 'amenity'; input.value = name; input.id = id;
-        var span = el('span', 'flex min-h-[32px] items-center rounded-lg border border-line/70 bg-tint/40 px-2 py-1 text-xs font-medium text-ink transition-colors hover:border-edge peer-checked:border-forest peer-checked:bg-forest peer-checked:text-white', name);
+        var span = el('span', 'flex min-h-[68px] flex-col items-center justify-center gap-1 rounded-xl border border-line/70 bg-white px-1 py-1.5 text-center text-[11px] font-medium leading-tight text-ink transition-colors hover:border-edge peer-checked:border-forest peer-checked:bg-forest peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-forest peer-focus-visible:ring-offset-1');
+        span.appendChild(amenIcon(name)); span.appendChild(el('span', 'line-clamp-2 break-words', name.replace(/\s*\(.*\)\s*$/, '')));
         label.appendChild(input); label.appendChild(span);
         input.addEventListener('change', updateAmenityBadge);
         return label;
       }
 
       // Room amenities
-      var roomHead = el('p', 'col-span-2 text-[11px] font-semibold uppercase tracking-wider text-muted -mb-0.5', 'Inside the room');
+      var roomHead = el('p', 'col-span-3 text-[11px] font-semibold uppercase tracking-wider text-muted -mb-0.5', 'Inside the room');
       $('amenity-list').appendChild(roomHead);
       AMENITIES.forEach(function (a, i) {
         $('amenity-list').appendChild(createAmenityPill(a, 'am-' + i));
@@ -281,7 +309,7 @@
       // Building-level amenities (parking, CCTV, water station, etc.)
       var bCatalogue = (window.HB_BUILDING && HB_BUILDING.catalogue) ? HB_BUILDING.catalogue() : [];
       if (bCatalogue.length) {
-        var bHead = el('p', 'col-span-2 text-[11px] font-semibold uppercase tracking-wider text-muted mt-2 -mb-0.5', 'Building');
+        var bHead = el('p', 'col-span-3 text-[11px] font-semibold uppercase tracking-wider text-muted mt-2 -mb-0.5', 'Building');
         $('amenity-list').appendChild(bHead);
         bCatalogue.forEach(function (ba, i) {
           $('amenity-list').appendChild(createAmenityPill(ba, 'bam-' + i));
@@ -420,23 +448,32 @@
       // ---- rendering ----
       var FIT_TONE = { 'Great fit': 'ok', 'Good fit': 'ok', 'Okay fit': 'warn', 'Weak fit': 'muted' };
 
-      // four small bars: how many of each part's points the room earned
-      function scoreBars(s, dark) {
-        var parts = [['Budget', 'budget'], ['Amenities', 'amenities'], ['Type', 'type'], ['Floor', 'floor']];
-        var grid = el('div', 'grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4');
-        grid.setAttribute('role', 'img');
-        grid.setAttribute('aria-label', parts.map(function (p) { return p[0] + ' ' + s.pts[p[1]] + ' of ' + s.w[p[1]]; }).join(', '));
-        parts.forEach(function (p) {
-          var d = el('div'), top = el('div', 'flex items-baseline justify-between text-xs ' + (dark ? 'text-white/85' : 'text-muted'));
-          top.appendChild(el('span', '', p[0])); top.appendChild(el('span', 'font-semibold', s.pts[p[1]] + '/' + s.w[p[1]]));
-          var track = el('div', 'mt-1 h-1.5 overflow-hidden rounded-full ' + (dark ? 'bg-white/20' : 'bg-track'));
-          var fill = el('div', 'h-full rounded-full ' + (dark ? 'bg-lime' : 'bg-forest'));
-          fill.style.width = (s.w[p[1]] ? Math.round(100 * s.pts[p[1]] / s.w[p[1]]) : 0) + '%';
-          track.appendChild(fill); d.appendChild(top); d.appendChild(track); grid.appendChild(d);
-        });
-        return grid;
+      // the four parts of a score as a small radar: the bigger the shape, the better the fit
+      function radar(s, w, dark) {
+        var axes = [['Budget', 'budget'], ['Amenities', 'amenities'], ['Type', 'type'], ['Floor', 'floor']];
+        var cx = 100, cy = 70, R = 46, dir = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+        function pt(i, f) { return (cx + dir[i][0] * R * f).toFixed(1) + ',' + (cy + dir[i][1] * R * f).toFixed(1); }
+        function poly(f) { return [0, 1, 2, 3].map(function (i) { return pt(i, f); }).join(' '); }
+        var data = axes.map(function (a, i) { var f = s.w[a[1]] ? Math.max(0, Math.min(1, s.pts[a[1]] / s.w[a[1]])) : 0; return pt(i, f); }).join(' ');
+        var label = axes.map(function (a) { return a[0] + ' ' + s.pts[a[1]] + ' of ' + s.w[a[1]]; }).join(', ');
+        var txt = dark ? 'rgba(255,255,255,.85)' : 'currentColor';
+        var wrap = el('div', (dark ? '' : 'text-muted ') + 'shrink-0');
+        wrap.style.width = w + 'px';
+        wrap.setAttribute('role', 'img'); wrap.setAttribute('aria-label', label);
+        wrap.innerHTML = '<svg viewBox="0 0 200 140" class="block h-auto w-full" aria-hidden="true" focusable="false">' +
+          '<g fill="none" stroke="' + (dark ? 'rgba(255,255,255,.28)' : 'currentColor') + '" stroke-opacity="' + (dark ? '1' : '.35') + '" stroke-width="1">' +
+          '<polygon points="' + poly(1) + '"/><polygon points="' + poly(0.5) + '"/>' +
+          '<path d="M' + cx + ' ' + (cy - R) + 'V' + (cy + R) + 'M' + (cx - R) + ' ' + cy + 'H' + (cx + R) + '"/></g>' +
+          '<g style="color:' + (dark ? '#C6F24E' : 'var(--forest, #1E4D36)') + '"><polygon points="' + data + '" fill="currentColor" fill-opacity=".3" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/></g>' +
+          '<g font-size="10" font-family="inherit" fill="' + txt + '">' +
+          '<text x="' + cx + '" y="12" text-anchor="middle">Budget</text>' +
+          '<text x="' + (cx + R + 8) + '" y="' + (cy + 3) + '">Amenities</text>' +
+          '<text x="' + cx + '" y="136" text-anchor="middle">Type</text>' +
+          '<text x="' + (cx - R - 8) + '" y="' + (cy + 3) + '" text-anchor="end">Floor</text></g></svg>';
+        return wrap;
       }
 
+      // short reasons as chips (a check is a good point, a cross is a gap)
       function whyRow(s, dark) {
         var ul = el('ul', 'flex flex-wrap gap-1.5');
         whyChips(s).forEach(function (c) {
@@ -455,101 +492,164 @@
         var cls = 'rounded-lg border px-2.5 py-1 text-sm font-medium ' + (dark ? 'border-white/30 text-white' : 'border-line bg-tint');
         ul.appendChild(el('li', cls, 'Floor ' + r.floor));
         ul.appendChild(el('li', cls, r.type));
-        ul.appendChild(el('li', cls, HB.capacity(r) > 1 ? peso(r.price) + ' / person' : peso(r.price)));
         var i = HB.bedsInfo(r, user.id), beds = el('li', 'inline-flex items-center gap-0.5');
         for (var n = 0; n < i.capacity; n++) beds.appendChild(icon('bed', 'h-5 w-5 ' + (n < i.free ? (dark ? 'text-lime' : 'text-forest') : (dark ? 'text-white/30' : 'text-edge'))));
         beds.appendChild(el('span', 'sr-only', i.capacity > 1 ? i.free + ' of ' + i.capacity + ' beds free' : '1 bed, free'));
         ul.appendChild(beds);
         return ul;
       }
+      function priceText(r) { return HB.capacity(r) > 1 ? peso(r.price) + ' per person' : peso(r.price) + ' a month'; }
 
-      function ring(pct) {
-        var wrap = el('div', 'relative mx-auto h-32 w-32 shrink-0 sm:mx-0');
+      // a score as a ring; the number sits in the middle
+      function ring(pct, px, dark) {
+        var wrap = el('div', 'relative shrink-0');
+        wrap.style.width = wrap.style.height = px + 'px';
         wrap.setAttribute('role', 'img'); wrap.setAttribute('aria-label', pct + ' percent fit');
+        var big = px > 80;
         wrap.innerHTML = '<svg viewBox="0 0 120 120" class="h-full w-full -rotate-90" aria-hidden="true" focusable="false">' +
-          '<circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="10"/>' +
-          '<circle data-ring cx="60" cy="60" r="52" fill="none" stroke="#C6F24E" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="326.7" style="transition: stroke-dashoffset 800ms ease-out"/></svg>' +
-          '<div class="absolute inset-0 grid place-content-center text-center"><span class="font-display text-3xl font-bold leading-none">' + pct + '%</span></div>';
+          '<circle cx="60" cy="60" r="52" fill="none" stroke="' + (dark ? 'rgba(255,255,255,.18)' : 'rgba(20,33,26,.12)') + '" stroke-width="' + (big ? 10 : 13) + '"/>' +
+          '<circle data-ring cx="60" cy="60" r="52" fill="none" stroke="' + (dark ? '#C6F24E' : '#1E4D36') + '" stroke-width="' + (big ? 10 : 13) + '" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="326.7" style="transition: stroke-dashoffset 800ms ease-out"/></svg>' +
+          '<div class="absolute inset-0 grid place-content-center text-center"><span class="font-display ' + (big ? 'text-3xl' : 'text-base') + ' font-bold leading-none">' + pct + (big ? '%' : '<span class="text-xs">%</span>') + '</span></div>';
         var c = wrap.querySelector('[data-ring]');
         requestAnimationFrame(function () { requestAnimationFrame(function () { c.style.strokeDashoffset = String(326.7 * (1 - pct / 100)); }); });
         return wrap;
       }
 
+      // ---- the best match: a big picture, the score, the shape of the score ----
       function renderTop(s) {
         var box = $('top'); box.textContent = '';
-        var card = el('article', 'overflow-hidden rounded-[28px] bg-forest p-6 text-white sm:p-8');
-        card.appendChild(el('p', 'font-display text-base font-semibold text-white/85', 'Best match'));
+        var pct = Math.max(0, Math.min(100, Math.round(s.total)));
+        var card = el('article', 'overflow-hidden rounded-[28px] bg-forest text-white'); card.id = 'match-' + s.room.id; card.className += ' scroll-mt-28';
 
-        var grid = el('div', 'mt-4 grid items-center gap-6 sm:grid-cols-[auto_minmax(0,1fr)] xl:grid-cols-[auto_minmax(0,1fr)_200px]');
-        grid.appendChild(ring(Math.max(0, Math.min(100, Math.round(s.total)))));
-        var mid = el('div', 'min-w-0 text-center sm:text-left');
-        mid.appendChild(el('p', 'text-sm font-semibold uppercase tracking-wider text-lime', fitLabel(s)));
-        mid.appendChild(el('p', 'font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl', s.room.name));
-        var f = factsRow(s.room, true); f.className += ' mt-3 justify-center sm:justify-start'; mid.appendChild(f);
-        grid.appendChild(mid);
-        var pic = el('div', 'hidden aspect-[8/5] overflow-hidden rounded-2xl bg-forest-deep xl:block');
-        var im = el('img', 'h-full w-full object-cover'); im.src = HB.roomImage(s.room); im.alt = ''; im.width = 640; im.height = 400; pic.appendChild(im);
-        grid.appendChild(pic);
-        card.appendChild(grid);
+        var hero = el('div', 'relative aspect-[16/8] bg-forest-deep sm:aspect-[16/6]');
+        var im = el('img', 'h-full w-full object-cover'); im.src = HB.roomImage(s.room); im.alt = ''; im.width = 640; im.height = 400; hero.appendChild(im);
+        var fade = el('div', 'absolute inset-0'); fade.style.background = 'linear-gradient(to top, var(--forest, #0B4A2F) 4%, rgba(11,74,47,0) 70%)'; hero.appendChild(fade);
+        var cap = el('div', 'absolute inset-x-0 bottom-0 flex flex-wrap items-end justify-between gap-3 p-5 sm:p-6');
+        var capL = el('div', 'min-w-0');
+        capL.appendChild(el('p', 'text-sm font-semibold uppercase tracking-wider text-lime', 'Best match, ' + fitLabel(s)));
+        capL.appendChild(el('p', 'font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl', s.room.name));
+        cap.appendChild(capL);
+        var pr = el('div', 'text-right'); pr.appendChild(el('p', 'font-display text-2xl font-bold leading-tight', peso(s.room.price))); pr.appendChild(el('p', 'text-sm text-white/85', HB.capacity(s.room) > 1 ? 'per person / month' : 'per month'));
+        cap.appendChild(pr); hero.appendChild(cap); card.appendChild(hero);
 
-        var chips = el('ul', 'mt-5 flex flex-wrap gap-2');
+        var body = el('div', 'p-5 sm:p-7');
+        var grid = el('div', 'grid items-center gap-5 sm:grid-cols-[auto_auto_minmax(0,1fr)]');
+        var rg = ring(pct, 128, true); rg.className += ' mx-auto sm:mx-0'; grid.appendChild(rg);
+        var rd = radar(s, 210, true); rd.className += ' mx-auto sm:mx-0'; grid.appendChild(rd);
+        var info = el('div', 'min-w-0');
+        info.appendChild(factsRow(s.room, true));
+        var chips = el('ul', 'mt-3 flex flex-wrap gap-1.5');
         s.room.amenities.forEach(function (a) {
           var on = s.matched.indexOf(a) !== -1;
-          chips.appendChild(el('li', 'rounded-lg border px-2.5 py-1 text-sm ' + (on ? 'border-lime bg-lime text-ink font-semibold' : 'border-white/40 text-white'), a));
+          chips.appendChild(el('li', 'rounded-lg border px-2.5 py-1 text-sm ' + (on ? 'border-lime bg-lime font-semibold text-ink' : 'border-white/40 text-white'), a));
         });
         s.matched.filter(function (a) { return s.room.amenities.indexOf(a) === -1; }).forEach(function (a) {
-          chips.appendChild(el('li', 'rounded-lg border border-lime bg-lime text-ink px-2.5 py-1 text-sm font-semibold', a + ' (building)'));
+          chips.appendChild(el('li', 'rounded-lg border border-lime bg-lime px-2.5 py-1 text-sm font-semibold text-ink', a + ' (building)'));
         });
-        card.appendChild(chips);
+        info.appendChild(chips);
+        var w = el('div', 'mt-3'); w.appendChild(whyRow(s, true)); info.appendChild(w);
+        grid.appendChild(info); body.appendChild(grid);
 
-        var w = el('div', 'mt-4'); w.appendChild(whyRow(s, true)); card.appendChild(w);
-        var sb = el('div', 'mt-4'); sb.appendChild(scoreBars(s, true)); card.appendChild(sb);
-
-        var actions = el('div', 'mt-5 flex flex-wrap items-center gap-2');
+        var actions = el('div', 'mt-6 flex flex-wrap items-center gap-2');
         if (!hasActive) actions.appendChild(requestButton(s.room, 'btn-lime'));
         actions.appendChild(saveButton(s.room, 'on-dark'));
         if (window.HB_MSG) actions.appendChild(HB_MSG.askButton(s.room, user, 'on-dark'));
-        card.appendChild(actions);
-        card.appendChild(cmp.checkbox(s.room, { dark: true, cls: 'mt-2' }));
-        box.appendChild(card);
+        body.appendChild(actions);
+        body.appendChild(cmp.checkbox(s.room, { dark: true, cls: 'mt-2' }));
+        card.appendChild(body); box.appendChild(card);
       }
 
-      // one room as a row. number is its rank in the list (or null for the "a little over budget" section)
-      function rowFor(s, number) {
-        var li = el('li', 'grid gap-4 rounded-[20px] border border-line bg-white p-4 sm:grid-cols-[150px_minmax(0,1fr)] sm:p-5');
-        var pic = el('div', 'relative hidden aspect-[8/5] self-start overflow-hidden rounded-xl bg-track sm:block');
-        var im = el('img', 'h-full w-full object-cover'); im.src = HB.roomImage(s.room); im.alt = ''; im.width = 640; im.height = 400; im.loading = 'lazy'; pic.appendChild(im);
-        li.appendChild(pic);
+      // ---- every other room: a picture card with the score on the picture ----
+      function cardFor(s, number) {
+        var li = el('li', 'flex scroll-mt-28 flex-col overflow-hidden rounded-[20px] border border-line bg-white'); li.id = 'match-' + s.room.id;
+        var frame = el('div', 'relative aspect-[8/5] bg-track');
+        var im = el('img', 'h-full w-full object-cover'); im.src = HB.roomImage(s.room); im.alt = ''; im.width = 640; im.height = 400; im.loading = 'lazy'; frame.appendChild(im);
+        var tag = el('span', 'absolute left-3 top-3'); tag.appendChild(HB.chip(fitLabel(s), FIT_TONE[fitLabel(s)] || 'muted')); frame.appendChild(tag);
+        var badge = el('span', 'absolute right-3 top-3 rounded-full bg-white p-1 text-ink'); badge.appendChild(ring(Math.round(s.total), 52, false)); frame.appendChild(badge);
+        if (number) { var rk = el('span', 'absolute bottom-3 left-3 grid h-8 w-8 place-items-center rounded-full bg-forest font-display text-sm font-bold text-white', String(number)); rk.setAttribute('aria-hidden', 'true'); frame.appendChild(rk); }
+        li.appendChild(frame);
 
-        var right = el('div', 'min-w-0');
-        var head = el('div', 'flex flex-wrap items-center gap-x-3 gap-y-1');
-        head.appendChild(el('p', 'font-display text-lg font-semibold tracking-tight', (number ? number + '. ' : '') + s.room.name));
-        head.appendChild(HB.chip(fitLabel(s), FIT_TONE[fitLabel(s)] || 'muted'));
-        head.appendChild(el('span', 'font-display text-lg font-bold text-forest', Math.round(s.total) + '%'));
-        right.appendChild(head);
-        var f = factsRow(s.room, false); f.className += ' mt-2'; right.appendChild(f);
-        var w = el('div', 'mt-3'); w.appendChild(whyRow(s, false)); right.appendChild(w);
-        var sb = el('div', 'mt-3'); sb.appendChild(scoreBars(s, false)); right.appendChild(sb);
+        var body = el('div', 'flex flex-1 flex-col p-4 sm:p-5');
+        var head = el('div', 'flex items-start justify-between gap-3');
+        head.appendChild(el('p', 'font-display text-lg font-semibold tracking-tight', (number ? 'No. ' + number + ', ' : '') + s.room.name));
+        head.appendChild(el('p', 'text-right font-display text-lg font-bold leading-tight', peso(s.room.price)));
+        body.appendChild(head);
+        var f = factsRow(s.room, false); f.className += ' mt-2'; body.appendChild(f);
 
-        var btns = el('div', 'mt-4 flex flex-wrap items-center gap-2');
+        var mid = el('div', 'mt-3 grid items-center gap-3 sm:grid-cols-[minmax(0,1fr)_auto]');
+        mid.appendChild(whyRow(s, false));
+        var rd = radar(s, 132, false); rd.className += ' hidden sm:block'; mid.appendChild(rd);
+        body.appendChild(mid);
+
+        var btns = el('div', 'mt-auto flex flex-wrap items-center gap-2 pt-4');
         if (!hasActive) btns.appendChild(requestButton(s.room, ''));
         btns.appendChild(saveButton(s.room, ''));
         if (window.HB_MSG) btns.appendChild(HB_MSG.askButton(s.room, user, ''));
-        right.appendChild(btns);
-        right.appendChild(cmp.checkbox(s.room, { cls: 'mt-1' }));
-        li.appendChild(right);
+        body.appendChild(btns);
+        body.appendChild(cmp.checkbox(s.room, { cls: 'mt-1' }));
+        li.appendChild(body);
         return li;
       }
       function renderRest(rest) {
-        var ol = $('rest'); ol.textContent = '';
-        rest.forEach(function (s, i) { ol.appendChild(rowFor(s, i + 2)); });
+        var ul = $('rest'); ul.textContent = '';
+        rest.forEach(function (s, i) { ul.appendChild(cardFor(s, i + 2)); });
       }
       function renderOver(list) {
-        var ol = $('over'); ol.textContent = '';
+        var ul = $('over'); ul.textContent = '';
         $('over-box').hidden = list.length === 0;
         if (!list.length) return;
         $('over-note').textContent = 'Up to 20% above your limit.' + (current.moreOver ? ' Showing the best ' + list.length + ' of ' + current.moreOver + '.' : '');
-        list.forEach(function (s) { ol.appendChild(rowFor(s, null)); });
+        list.forEach(function (s) { ul.appendChild(cardFor(s, null)); });
+      }
+
+      // ---- fit against price: one dot per room, your budget as a line ----
+      function renderChart(items, prefs) {
+        var box = $('chart'); box.textContent = '';
+        if (items.length < 2) { box.hidden = true; return; }
+        box.hidden = false;
+        var W = 640, H = 230, L = 40, Rm = 18, T = 26, B = 36;
+        var prices = items.map(function (s) { return Number(s.room.price) || 0; }).concat([prefs.budget]);
+        var lo = Math.min.apply(null, prices), hi = Math.max.apply(null, prices);
+        var pad = Math.max(200, (hi - lo) * 0.08); lo = Math.max(0, lo - pad); hi = hi + pad;
+        function X(p) { return L + (p - lo) / (hi - lo) * (W - L - Rm); }
+        function Y(score) { return T + (1 - score / 100) * (H - T - B); }
+        var NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg');
+        svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('class', 'block h-auto w-full text-muted'); svg.setAttribute('role', 'group');
+        svg.setAttribute('aria-label', 'Fit against price. Each dot is a room. Select a dot to jump to that room.');
+        function add(tag, attrs, text, parent) { var n = document.createElementNS(NS, tag); for (var k in attrs) n.setAttribute(k, attrs[k]); if (text != null) n.textContent = text; (parent || svg).appendChild(n); return n; }
+        [0, 50, 100].forEach(function (v) {
+          add('line', { x1: L, x2: W - Rm, y1: Y(v), y2: Y(v), stroke: 'currentColor', 'stroke-opacity': '.2' });
+          add('text', { x: L - 8, y: Y(v) + 4, 'text-anchor': 'end', 'font-size': '11', fill: 'currentColor' }, v + '%');
+        });
+        // the budget line
+        var bx = X(prefs.budget);
+        add('rect', { x: bx, y: T, width: Math.max(0, W - Rm - bx), height: H - T - B, fill: 'currentColor', 'fill-opacity': '.07' });
+        add('line', { x1: bx, x2: bx, y1: T - 6, y2: H - B, stroke: '#1E4D36', 'stroke-width': '2', 'stroke-dasharray': '5 4' });
+        add('text', { x: bx, y: T - 10, 'text-anchor': bx > W - 90 ? 'end' : 'middle', 'font-size': '11', 'font-weight': '600', fill: 'currentColor' }, 'Your budget ' + peso(prefs.budget));
+        [lo + pad, hi - pad].forEach(function (p, i) { add('text', { x: X(p), y: H - 12, 'text-anchor': i ? 'end' : 'start', 'font-size': '11', fill: 'currentColor' }, peso(Math.round(p / 100) * 100)); });
+        // the dots (a link each)
+        var seen = {};
+        items.forEach(function (s, idx) {
+          var x = X(Number(s.room.price) || 0), y = Y(Math.round(s.total)), key = Math.round(x) + ':' + Math.round(y);
+          seen[key] = (seen[key] || 0) + 1; x += (seen[key] - 1) * 14;
+          var over = !!s.over, best = idx === 0 && !over;
+          var a = add('a', { href: '#match-' + s.room.id, 'aria-label': s.room.name + ', ' + Math.round(s.total) + ' percent fit, ' + peso(s.room.price) + (over ? ', over budget' : '') });
+          a.addEventListener('click', function (e) { var t = document.getElementById('match-' + s.room.id); if (t) { e.preventDefault(); t.scrollIntoView({ block: 'center' }); } });
+          add('circle', { cx: x, cy: y, r: '16', fill: 'transparent' }, null, a);
+          if (best) add('circle', { cx: x, cy: y, r: '12', fill: 'none', stroke: '#1E4D36', 'stroke-width': '2' }, null, a);
+          add('circle', { cx: x, cy: y, r: best ? '7' : '6', fill: over ? 'none' : '#1E4D36', stroke: over ? '#93B4A2' : '#1E4D36', 'stroke-width': over ? '3' : '2' }, null, a);
+          add('text', { x: x, y: y - 14 - (best ? 4 : 0), 'text-anchor': 'middle', 'font-size': '10', 'font-weight': '600', fill: 'currentColor' }, String(s.room.name).replace(/^Room\s*/i, ''), a);
+        });
+        var card = el('section', 'mt-4 rounded-[20px] border border-line bg-white p-4 sm:p-5');
+        var head = el('div', 'flex flex-wrap items-center justify-between gap-2');
+        head.appendChild(el('h2', 'text-xs font-semibold uppercase tracking-wider text-muted', 'Fit against price'));
+        var lg = el('ul', 'flex items-center gap-4 text-xs text-muted');
+        [['In budget', '#1E4D36', true], ['Over budget', '#93B4A2', false]].forEach(function (p) {
+          var li = el('li', 'inline-flex items-center gap-1.5'), d = el('i', 'inline-block h-3 w-3 rounded-full'); d.setAttribute('aria-hidden', 'true');
+          d.style.border = '2px solid ' + p[1]; if (p[2]) d.style.background = p[1];
+          li.appendChild(d); li.appendChild(document.createTextNode(p[0])); lg.appendChild(li);
+        });
+        head.appendChild(lg); card.appendChild(head); card.appendChild(svg); box.appendChild(card);
       }
 
       // numbers instead of a sentence
@@ -575,6 +675,7 @@
         if (res.over.length) sum.appendChild(statChip(res.over.length, ' a little over', 'warn'));
         sum.appendChild(statChip(res.taken, ' full or taken', 'muted'));
         if (PRIORITY_LABEL[prefs.priority] && prefs.priority !== 'balanced') sum.appendChild(el('span', 'rounded-full border border-forest px-3.5 py-1.5 text-sm font-semibold text-forest', PRIORITY_LABEL[prefs.priority] + ' first'));
+        renderChart(res.list.concat(shownOver), prefs);
         if (res.list.length) {
           var best = res.list[0];
           renderTop(best); renderRest(res.list.slice(1));
