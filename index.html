@@ -19,7 +19,7 @@
   <script src="assets/js/theme.js"></script>
 
   <style>
-    /* Custom brand color variables matching the design */
+    /* Theme brand colors */
     :root {
       --hb-forest: #1E4D36;
       --hb-forest-dark: #153A28;
@@ -38,7 +38,7 @@
       font-family: 'Sora', system-ui, -apple-system, sans-serif;
     }
 
-    /* Custom input focus & styling */
+    /* Form input styling and focus states */
     .input-box {
       border: 1.5px solid #D1D5DB;
       transition: all 0.2s ease;
@@ -53,7 +53,7 @@
       box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
     }
 
-    /* Smooth transitions */
+    /* Button and interaction transitions */
     .btn-transition {
       transition: all 0.18s ease-in-out;
     }
@@ -62,12 +62,12 @@
       display: none !important;
     }
 
-    /* Smooth scroll to the room preview (skipped for people who ask for less motion) */
+    /* Smooth scroll behavior (respects user reduced-motion preference) */
     @media (prefers-reduced-motion: no-preference) {
       html { scroll-behavior: smooth; }
     }
 
-    /* The shared buttons and chips use the app palette; on this page they follow the landing page's green instead */
+    /* Button and tag color overrides for landing page */
     html:not(.dark) #hero-cta,
     html:not(.dark) #rooms-preview,
     html:not(.dark) #room-dialog {
@@ -90,49 +90,45 @@
   <main class="min-h-screen grid grid-cols-1 lg:grid-cols-[1.18fr_1fr]">
 
     <!-- ==========================================
-         LEFT PANEL: BRANDING, HERO & GRAPHIC MOTIFS
+         LEFT PANEL: BRANDING & HERO SECTION
          ========================================== -->
     <section class="relative min-h-[620px] lg:min-h-screen bg-white overflow-hidden flex flex-col justify-start px-8 sm:px-12 lg:px-16 xl:px-20 pt-8 sm:pt-10 lg:pt-12 pb-12 lg:border-r lg:border-gray-200" aria-label="About Homebase">
 
-      <!-- TOP DECORATIVE PILLS (Hanging from top edge) -->
+      <!-- Decorative top pill shapes -->
       <div class="absolute top-0 right-8 sm:right-12 lg:right-14 flex items-start gap-4 sm:gap-6 lg:gap-7 pointer-events-none z-0" aria-hidden="true">
-        <!-- Pill 1 (Left track: short) -->
+        <!-- Left pill (short) -->
         <div class="w-11 sm:w-13 lg:w-16 h-20 sm:h-24 lg:h-28 bg-[#2F6A4F] rounded-b-[24px] sm:rounded-b-[28px] lg:rounded-b-[32px]"></div>
-        <!-- Pill 2 (Middle track: long) -->
+        <!-- Middle pill (tall) -->
         <div class="w-11 sm:w-13 lg:w-16 h-48 sm:h-56 lg:h-72 bg-[#2F6A4F] rounded-b-[24px] sm:rounded-b-[28px] lg:rounded-b-[32px]"></div>
-        <!-- Pill 3 (Right track: medium) -->
+        <!-- Right pill (medium) -->
         <div class="w-11 sm:w-13 lg:w-16 h-36 sm:h-44 lg:h-52 bg-[#2F6A4F] rounded-b-[24px] sm:rounded-b-[28px] lg:rounded-b-[32px]"></div>
       </div>
 
-      <!-- BOTTOM DECORATIVE ELEMENTS -->
-      <!-- Sage green quarter-circle in bottom-left corner -->
+      <!-- Decorative bottom shapes -->
+      <!-- Bottom-left accent quarter-circle -->
       <div class="absolute -bottom-8 -left-8 sm:-bottom-6 sm:-left-6 w-64 h-64 sm:w-80 sm:h-80 lg:w-[400px] lg:h-[400px] bg-[#93B4A2] rounded-tr-[100%] pointer-events-none z-0" aria-hidden="true"></div>
 
-      <!-- Bottom pill bars rising from bottom edge -->
+      <!-- Bottom pill bars -->
       <div class="absolute bottom-0 right-8 sm:right-12 lg:right-14 flex items-end gap-4 sm:gap-6 lg:gap-7 pointer-events-none z-0" aria-hidden="true">
-        <!-- Pill 1 (Left track: short) -->
+        <!-- Left pill (short) -->
         <div class="w-11 sm:w-13 lg:w-16 h-20 sm:h-24 lg:h-28 bg-[#2F6A4F] rounded-t-[24px] sm:rounded-t-[28px] lg:rounded-t-[32px]"></div>
-        <!-- Pill 2 (Middle track: tall) -->
+        <!-- Middle pill (tall) -->
         <div class="w-11 sm:w-13 lg:w-16 h-52 sm:h-60 lg:h-76 bg-[#2F6A4F] rounded-t-[24px] sm:rounded-t-[28px] lg:rounded-t-[32px]"></div>
-        <!-- Pill 3 (Right track: medium) -->
+        <!-- Right pill (medium) -->
         <div class="w-11 sm:w-13 lg:w-16 h-28 sm:h-36 lg:h-44 bg-[#2F6A4F] rounded-t-[24px] sm:rounded-t-[28px] lg:rounded-t-[32px]"></div>
       </div>
 
-      <!-- TOP-LEFT: LOGO AREA -->
+      <!-- Logo and brand link -->
       <header class="relative z-20">
         <a href="index.html" class="inline-flex items-center gap-3.5 no-underline outline-none focus-visible:ring-2 focus-visible:ring-[#1E4D36] rounded-xl group" aria-label="Homebase Home">
-          <!-- Official Homebase Logo -->
+          <!-- Logo image -->
           <img src="assets/images/logo.png" alt="Homebase Logo" class="w-12 h-12 rounded-full object-contain shadow-sm transition-transform group-hover:scale-105">
-          <!-- Brand Wordmark -->
+          <!-- Brand text -->
           <span class="font-display text-2xl sm:text-[1.75rem] font-bold text-[#143826] tracking-tight">Homebase</span>
         </a>
       </header>
 
-      <!-- HERO HEADLINE & TAGLINE
-           TWEAK POSITION HERE:
-           - Move Down / Up: change 'lg:mt-32 xl:mt-36' (e.g. mt-28, mt-36, mt-40)
-           - Move Right / Left: change 'lg:ml-12 xl:ml-20' (e.g. ml-8, ml-16, ml-24, or mx-auto)
-      -->
+      <!-- Hero headline, tagline, and room preview link -->
       <div id="hero-text-block" class="relative z-10 max-w-lg mt-16 sm:mt-24 lg:mt-32 xl:mt-36 lg:ml-12 xl:ml-20">
         <h1 class="font-display text-4xl sm:text-5xl lg:text-[3.25rem] xl:text-[3.5rem] font-bold text-[#143826] leading-[1.14] tracking-tight">
           Find a room<br>
@@ -145,11 +141,11 @@
           <p class="text-lg sm:text-xl font-bold text-[#143826] tracking-tight">
             Easy. Safe. Convenient.
           </p>
-          <!-- Underline Accent Bar directly under Easy. Safe. -->
+          <!-- Accent underline below tagline -->
           <div class="mt-2.5 sm:mt-3 w-[74px] sm:w-[82px] h-[3.5px] bg-[#143826] rounded-full"></div>
         </div>
 
-        <!-- See the rooms before signing up -->
+        <!-- Call to action: preview rooms without logging in -->
         <div id="hero-cta" class="mt-9 sm:mt-10">
           <a href="#rooms-preview" class="btn btn-outline gap-2">
             See the rooms
@@ -162,27 +158,25 @@
 
 
     <!-- ==========================================
-         RIGHT PANEL: AUTHENTICATION / LOGIN FORM
+         RIGHT PANEL: LOGIN & AUTHENTICATION
          ========================================== -->
     <section id="login" aria-label="Log in" class="flex min-h-[500px] lg:min-h-screen items-center justify-center bg-white px-6 sm:px-12 lg:px-16 py-12">
       <div class="w-full max-w-[420px]">
 
-        <!-- ================= SIGNED-OUT VIEW ================= -->
+        <!-- Signed-out state: login form -->
         <div id="auth-view">
-          <!-- Heading -->
           <h2 class="font-display text-2xl sm:text-[1.75rem] font-bold text-[#143826] text-center tracking-tight">
             Log into Homebase
           </h2>
 
-          <!-- Login Form -->
+          <!-- Login form -->
           <form id="form-login" novalidate class="mt-8 space-y-4">
-            <!-- Server / Auth Error Alert -->
+            <!-- Error message container -->
             <div id="login-error" role="alert" class="hidden rounded-xl border border-red-200 bg-red-50 p-3.5 text-sm font-medium text-red-700"></div>
 
-            <!-- Email Field -->
+            <!-- Email input -->
             <div>
               <div id="box-email" class="input-box relative flex items-center rounded-2xl bg-white px-4 py-3.5">
-                <!-- Mail Icon -->
                 <svg class="w-5 h-5 text-gray-400 shrink-0 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                 </svg>
@@ -200,10 +194,9 @@
               <p class="err hidden mt-1.5 text-xs text-red-600 font-medium pl-1" id="login-email-err"></p>
             </div>
 
-            <!-- Password Field -->
+            <!-- Password input with show/hide toggle -->
             <div>
               <div id="box-password" class="input-box relative flex items-center rounded-2xl bg-white px-4 py-3.5">
-                <!-- Lock Icon -->
                 <svg class="w-5 h-5 text-gray-400 shrink-0 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                 </svg>
@@ -216,7 +209,6 @@
                   placeholder="Password" 
                   aria-describedby="login-password-err" 
                   required>
-                <!-- Toggle Password Visibility Button -->
                 <button 
                   type="button" 
                   data-toggle-password="login-password" 
@@ -229,7 +221,7 @@
               <p class="err hidden mt-1.5 text-xs text-red-600 font-medium pl-1" id="login-password-err"></p>
             </div>
 
-            <!-- Log In Submit Button -->
+            <!-- Submit button -->
             <button 
               type="submit" 
               id="login-submit" 
@@ -238,26 +230,26 @@
             </button>
           </form>
 
-          <!-- Divider with "or" -->
+          <!-- Divider -->
           <div class="relative flex py-6 items-center" aria-hidden="true">
             <div class="flex-grow border-t border-gray-200"></div>
             <span class="flex-shrink mx-3 text-xs text-gray-400 font-normal">or</span>
             <div class="flex-grow border-t border-gray-200"></div>
           </div>
 
-          <!-- Create New Account Button -->
+          <!-- Register button -->
           <a 
             href="register.html" 
             class="btn-transition w-full py-3.5 rounded-full border border-gray-300 bg-white text-[#143826] font-semibold text-base hover:bg-gray-50 active:scale-[0.99] text-center block outline-none focus-visible:ring-2 focus-visible:ring-[#1E4D36] focus-visible:ring-offset-2">
             Create new account
           </a>
 
-          <!-- Browse first -->
+          <!-- Quick link to room preview -->
           <p class="mt-5 text-center">
             <a href="#rooms-preview" class="textlink text-sm">Not sure yet? See the rooms first</a>
           </p>
 
-          <!-- Subtle matching info link -->
+          <!-- "How matching works" modal trigger -->
           <p class="mt-1 text-center">
             <button type="button" id="open-how" aria-haspopup="dialog" class="text-xs text-gray-500 hover:text-[#1E4D36] underline underline-offset-4 outline-none transition-colors">
               How matching works
@@ -266,7 +258,7 @@
         </div>
 
 
-        <!-- ================= SIGNED-IN VIEW ================= -->
+        <!-- Signed-in state: active user summary -->
         <div id="session-view" hidden class="text-center">
           <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#E3EEE7] text-[#1E4D36]">
             <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -299,7 +291,8 @@
   </main>
 
   <!-- ==========================================
-       ROOM PREVIEW: anyone can look, no account needed
+       SECTION: PUBLIC ROOM PREVIEW
+       Browse available rooms without needing an account
        ========================================== -->
   <section id="rooms-preview" aria-labelledby="rooms-preview-title" class="border-t border-line bg-tint px-6 sm:px-12 lg:px-16 xl:px-20 py-16 sm:py-20">
     <div class="mx-auto max-w-6xl">
@@ -310,7 +303,7 @@
         This is what Ariate Dormitory has right now. If a room looks right for you, create an account to request it.
       </p>
 
-      <!-- Filters -->
+      <!-- Room type and availability filter buttons -->
       <div class="mt-8 flex flex-wrap items-center gap-2" role="group" aria-label="Filter rooms">
         <button type="button" class="choice" data-type="All" aria-pressed="true">All rooms</button>
         <button type="button" class="choice" data-type="Single" aria-pressed="false">Single</button>
@@ -323,7 +316,7 @@
 
       <p id="rp-count" class="mt-4 text-base text-muted" aria-live="polite"></p>
 
-      <!-- States -->
+      <!-- Async state indicators (loading, error, empty results) -->
       <div id="rp-loading" class="mt-6" role="status">
         <p class="text-base text-muted">Loading rooms...</p>
       </div>
@@ -344,7 +337,7 @@
 
       <p class="mt-6 text-sm text-muted">Prices are per person per month. Pictures without a photo are illustrations.</p>
 
-      <!-- Sign-up nudge -->
+      <!-- Registration call-to-action banner -->
       <div id="rp-cta" class="mt-12 flex flex-col gap-6 rounded-[28px] bg-[#1E4D36] p-7 text-white sm:p-9 md:flex-row md:items-center md:justify-between">
         <div class="max-w-xl">
           <h3 id="rp-cta-title" class="font-display text-2xl font-bold tracking-tight" style="color:#fff">Found one you like?</h3>
@@ -360,7 +353,7 @@
     </div>
   </section>
 
-  <!-- ROOM DETAIL DIALOG -->
+  <!-- MODAL: Room details, amenities, and photos -->
   <dialog id="room-dialog" aria-labelledby="room-title" class="w-[calc(100vw-2rem)] max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-gray-200 bg-white p-0 text-[#143826] shadow-2xl backdrop:bg-black/40">
     <div class="p-5 sm:p-6">
       <div class="flex items-start justify-between gap-3">
@@ -396,7 +389,7 @@
     </div>
   </dialog>
 
-  <!-- HOW MATCHING WORKS MODAL DIALOG -->
+  <!-- MODAL: Explanation of how roommate & room matching works -->
   <dialog id="how-dialog" aria-labelledby="how-title" class="w-[calc(100vw-2rem)] max-w-md rounded-2xl border border-gray-200 bg-white p-0 text-[#143826] shadow-2xl backdrop:bg-black/40">
     <div class="p-6">
       <div class="flex items-center justify-between pb-3 border-b border-gray-100">
@@ -426,7 +419,7 @@
     </div>
   </dialog>
 
-  <!-- Scripts: Supabase & Auth Handling -->
+  <!-- Client-side scripts and Supabase authentication -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/supabase.js"></script>
   <script src="assets/js/auth.js"></script>
@@ -440,22 +433,22 @@
 
       var $ = function (id) { return document.getElementById(id); };
 
-      // Where each role lands after logging in.
+      // Return dashboard URL corresponding to user role
       function homeFor(role) { return role === 'landlord' ? 'landlord.html' : 'home.html'; }
 
-      // Storage helpers
+      // LocalStorage read and remove helper functions
       function read(key, fallback) {
         try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
         catch (e) { return fallback; }
       }
       function clear(key) { try { localStorage.removeItem(key); } catch (e) {} }
 
-      // Dialog controls
+      // HTML5 modal dialog helpers (with fallback for browsers lacking showModal)
       var how = $('how-dialog');
       function openDialog(d) { if (d.showModal) d.showModal(); else d.setAttribute('open', ''); }
       function closeDialog(d) { if (d.close) d.close(); else d.removeAttribute('open'); }
 
-      // Show / Hide Password toggle
+      // Toggle password input visibility between text and password
       document.querySelectorAll('[data-toggle-password]').forEach(function (btn) {
         btn.addEventListener('click', function () {
           var input = $(btn.getAttribute('data-toggle-password'));
@@ -466,7 +459,7 @@
         });
       });
 
-      // Error indicators
+      // Field and form validation error messaging helpers
       function setFieldError(inputId, boxId, message) {
         var input = $(inputId), box = $(boxId), p = $(inputId + '-err');
         if (message) {
@@ -501,7 +494,7 @@
         btn.textContent = busy ? busyText : idleText;
       }
 
-      // Session view rendering
+      // Render either the login form or the active session summary
       function renderSession() {
         var user = read(CURRENT_KEY, null);
         var signedIn = !!(user && user.email);
@@ -522,7 +515,7 @@
         return signedIn;
       }
 
-      // Login form submission
+      // Process login submission with validation and Supabase auth
       $('form-login').addEventListener('submit', function (e) {
         e.preventDefault();
         clearLoginErrors();
@@ -571,13 +564,13 @@
             setBusy(btn, false, 'Log in', 'Logging in...');
           });
         } else {
-          // Fallback if auth module not initialized
+          // Fallback if the authentication service is offline or unreachable
           setBusy(btn, false, 'Log in', 'Logging in...');
           setFormError('login-error', 'Authentication service unavailable.');
         }
       });
 
-      // Logout handler
+      // Sign out handler: clear storage, sign out of Supabase, and reset view
       $('logout').addEventListener('click', function () {
         clear(CURRENT_KEY);
         if (window.HB_DB && window.HB_DB.auth) window.HB_DB.auth.signOut();
@@ -586,18 +579,18 @@
         $('login-email').focus();
       });
 
-      // Dialog handlers
+      // Event listeners for the "How matching works" dialog
       $('open-how').addEventListener('click', function () { openDialog(how); });
       $('close-how').addEventListener('click', function () { closeDialog(how); });
       if ($('close-how-x')) $('close-how-x').addEventListener('click', function () { closeDialog(how); });
       how.addEventListener('click', function (e) { if (e.target === how) closeDialog(how); });
 
-      // Initialize session view
+      // Check for an existing session on page load
       renderSession();
     })();
   </script>
 
-  <!-- Room preview (read only, works without an account) -->
+  <!-- Live Room Preview: fetches real-time room listings with offline caching -->
   <script>
     (function () {
       'use strict';
@@ -616,13 +609,13 @@
       function peso(n) { return '\u20B1' + Number(n).toLocaleString('en-PH'); }
       function chip(text, tone) { var n = el('span', 'chip chip-' + tone, text); return n; }
 
-      // who is looking: nobody, a student, or the office
+      // Check if a user is currently logged in
       function session() {
         try { var u = JSON.parse(localStorage.getItem('homebase_currentUser') || 'null'); return u && u.email ? u : null; }
         catch (e) { return null; }
       }
 
-      // a database row turned into the room shape the rest of the site uses
+      // Map a database row into the standard room object format
       function rowToRoom(x) {
         var r = { id: x.id, name: x.name, floor: x.floor, type: x.type, price: x.price, amenities: x.amenities || [], available: !!x.available };
         if (x.beds_taken) r.bedsTaken = x.beds_taken;
@@ -634,7 +627,7 @@
 
       function capOf(r) { return HB ? HB.capacity(r) : ({ Single: 1, Double: 2, Triple: 3, Quad: 4 }[r.type] || 1); }
 
-      // beds and state. Exact bed counts need the occupancy numbers; without them we only say what we know.
+      // Calculate room capacity, reserved beds, and current availability status
       function info(r) {
         var cap = capOf(r);
         var outside = Math.max(0, Math.min(cap, Number(r.bedsTaken) || 0));
@@ -659,7 +652,7 @@
         });
       }
 
-      // ---------- cards ----------
+      // Render an individual room card component
       function card(r) {
         var i = info(r);
         var li = el('li', 'flex flex-col overflow-hidden rounded-[20px] border border-line bg-white');
@@ -706,11 +699,12 @@
         return li;
       }
 
-      // ---------- list ----------
+      // Switch active UI state container (loading, error, empty, or room grid)
       function show(which) {
         ['rp-loading', 'rp-error', 'rp-empty', 'rp-grid'].forEach(function (id) { $(id).hidden = (id !== which); });
       }
 
+      // Render filtered room list and update summary counts
       function render() {
         if (!state.loaded) { show('rp-loading'); $('rp-count').textContent = ''; return; }
         if (!state.rooms) { show('rp-error'); $('rp-count').textContent = ''; return; }
@@ -734,7 +728,7 @@
         show('rp-grid');
       }
 
-      // ---------- filters ----------
+      // Event listeners for room filters (type, availability, and reset)
       document.querySelectorAll('#rooms-preview [data-type]').forEach(function (b) {
         b.addEventListener('click', function () {
           state.type = b.getAttribute('data-type');
@@ -755,7 +749,7 @@
       });
       $('rp-retry').addEventListener('click', load);
 
-      // ---------- detail dialog ----------
+      // Room detail modal controller
       var dlg = $('room-dialog');
       function closeDlg() { if (dlg.close) dlg.close(); else dlg.removeAttribute('open'); }
       $('room-close-x').addEventListener('click', closeDlg);
@@ -771,7 +765,7 @@
         var c = $('room-chip'); c.textContent = ''; c.appendChild(chip(LABEL[i.st], TONE[i.st]));
         $('room-beds').textContent = i.beds;
 
-        // pictures: real photos if the office added them, otherwise the drawn illustration
+        // Display photos if available; otherwise use default room illustration
         var photos = (r.images && r.images.length) ? r.images : (r.image ? [r.image] : []);
         var thumbs = $('room-thumbs'); thumbs.textContent = '';
         if (!photos.length) {
@@ -798,7 +792,7 @@
         state.perks.forEach(function (a) { pk.appendChild(el('li', 'rounded-lg border border-line bg-tint px-2.5 py-1 text-sm', a)); });
         $('room-perks-wrap').hidden = !state.perks.length;
 
-        // what the visitor can do next
+        // Action buttons based on current visitor's session and role
         var acts = $('room-actions'); acts.textContent = '';
         var u = session();
         if (!u) {
@@ -815,7 +809,7 @@
         if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
       }
 
-      // ---------- sign-up nudge changes with who is looking ----------
+      // Update call-to-action banner depending on visitor or landlord role
       function paintCta() {
         var u = session();
         if (!u) return;
@@ -828,9 +822,7 @@
         box.appendChild(go); box.appendChild(m);
       }
 
-      // ---------- loading ----------
-      // Rooms come straight from the database, so a visitor sees the real list. If the database cannot be reached,
-      // fall back to the copy this browser already holds (never to the sample rooms).
+      // Fetch room data from Supabase; fall back to LocalStorage cache if offline
       function fromCache() {
         try {
           var occ = JSON.parse(localStorage.getItem('homebase_occupancy') || 'null');
