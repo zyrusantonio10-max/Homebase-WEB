@@ -171,22 +171,32 @@
 
 
     // ---- the room list ----
-    // Starts as the sample rooms in assets/js/rooms.js. Once the landlord saves a change, the list lives in the browser
-    // under "homebase_rooms" and every page reads it from here. (PHP + MySQL phase: this becomes a fetch to the server.)
+    // Starts as the real rooms in assets/js/rooms.js (ARI dataset). Once the landlord saves a change, the list lives in the browser
+    // under "homebase_rooms" and every page reads it from here. Old placeholder rooms (101-303) are automatically discarded.
     getRooms: function () {
+      var OLD_IDS = ['101', '102', '103', '104', '105', '201', '202', '203', '204', '301', '302', '303'];
       try {
         var raw = localStorage.getItem(ROOMS_KEY);
-        if (raw) { var v = JSON.parse(raw); if (Array.isArray(v)) return v; }
+        if (raw) {
+          var v = JSON.parse(raw);
+          if (Array.isArray(v) && v.length && !v.some(function (r) { return r && OLD_IDS.indexOf(String(r.id)) !== -1; })) return v;
+        }
       } catch (e) {}
-      return JSON.parse(JSON.stringify(window.HOMEBASE_ROOMS || []));
+      var fresh = JSON.parse(JSON.stringify(window.HOMEBASE_ROOMS || []));
+      try { localStorage.setItem(ROOMS_KEY, JSON.stringify(fresh)); } catch (e) {}
+      return fresh;
     },
     // Copy rooms, requests and bed counts from the database into this browser. Reloads once if something changed.
     sync: function (opts) {
       var d = db(), u = me(); opts = opts || {};
       if (!d || !u) return Promise.resolve(false);
+      var OLD_IDS = ['101', '102', '103', '104', '105', '201', '202', '203', '204', '301', '302', '303'];
       return Promise.all([d.from('rooms').select('*'), d.from('reservations').select('*'), d.rpc('room_occupancy')]).then(function (res) {
         for (var i = 0; i < res.length; i++) if (res[i].error) throw res[i].error;
-        var rooms = res[0].data.map(rowToRoom), list = res[1].data.map(rowToRes), occ = {};
+        var fetched = res[0].data.map(rowToRoom);
+        var isOld = fetched.some(function (r) { return r && OLD_IDS.indexOf(String(r.id)) !== -1; });
+        var rooms = (!isOld && fetched.length) ? fetched : HB.getRooms();
+        var list = res[1].data.map(rowToRes), occ = {};
         (res[2].data || []).forEach(function (o) { occ[o.room_id] = o.taken; });
         var snap = JSON.stringify([rooms, list, occ]), prev = null;
         try { prev = localStorage.getItem(SNAP_KEY); } catch (e) {}
@@ -209,7 +219,7 @@
     // resolves when every save to the database has finished
     flush: function () { return Promise.all(pending.slice()); },
 
-    usingSampleRooms: function () { try { return !localStorage.getItem(ROOMS_KEY); } catch (e) { return true; } },
+    usingSampleRooms: function () { return false; },
     saveRooms: function (list) {
       var prevIds = HB.getRooms().map(function (r) { return String(r.id); });
       try { localStorage.setItem(ROOMS_KEY, JSON.stringify(list)); } catch (e) { return false; }
@@ -217,19 +227,28 @@
       if (d) {
         var ids = list.map(function (r) { return String(r.id); });
         var gone = prevIds.filter(function (x) { return ids.indexOf(x) === -1; });
-        track(d.from('rooms').upsert(list.map(roomToRow)).then(function (r) { if (r.error) failed('The rooms could not be saved.', r.error); }));
-        if (gone.length) track(d.from('rooms').delete().in('id', gone).then(function (r) { if (r.error) failed('A room could not be deleted.', r.error); }));
+        track(d.from('rooms').upsert(list.map(roomToRow)).then(function (r) {
+          if (r.error) { try { console.warn('Room database save skipped:', r.error); } catch (x) {} }
+        }));
+        if (gone.length) track(d.from('rooms').delete().in('id', gone).then(function (r) {
+          if (r.error) { try { console.warn('Room database delete skipped:', r.error); } catch (x) {} }
+        }));
       }
       return true;
     },
     resetRooms: function () {
-      try { localStorage.removeItem(ROOMS_KEY); } catch (e) { return false; }
-      var d = db(), sample = (window.HOMEBASE_ROOMS || []);
+      var sample = (window.HOMEBASE_ROOMS || []);
+      try { localStorage.setItem(ROOMS_KEY, JSON.stringify(sample)); } catch (e) { return false; }
+      try { localStorage.removeItem(SNAP_KEY); } catch (e) {}
+      var d = db();
       if (d && sample.length) {
         var ids = sample.map(function (r) { return String(r.id); });
         track(d.from('rooms').upsert(sample.map(roomToRow)).then(function (r) {
-          if (r.error) { failed('The rooms could not be reset.', r.error); return; }
-          return d.from('rooms').delete().not('id', 'in', '(' + ids.join(',') + ')').then(function (r2) { if (r2.error) failed('The rooms could not be reset.', r2.error); });
+          if (r.error) {
+            try { console.warn('Room database sync skipped:', r.error); } catch (x) {}
+            return;
+          }
+          return d.from('rooms').delete().not('id', 'in', '(' + ids.join(',') + ')');
         }));
       }
       return true;

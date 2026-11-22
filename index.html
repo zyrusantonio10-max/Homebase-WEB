@@ -833,12 +833,10 @@
       // fall back to the copy this browser already holds (never to the sample rooms).
       function fromCache() {
         try {
-          if (HB && !HB.usingSampleRooms()) {
-            var occ = JSON.parse(localStorage.getItem('homebase_occupancy') || 'null');
-            return { rooms: HB.getRooms(), occ: occ && typeof occ === 'object' ? occ : null };
-          }
+          var occ = JSON.parse(localStorage.getItem('homebase_occupancy') || 'null');
+          return { rooms: (HB && HB.getRooms) ? HB.getRooms() : (window.HOMEBASE_ROOMS || []), occ: occ && typeof occ === 'object' ? occ : null };
         } catch (e) {}
-        return null;
+        return { rooms: window.HOMEBASE_ROOMS || [], occ: null };
       }
       function defaultPerks() { return (window.HB_BUILDING && HB_BUILDING.get) ? HB_BUILDING.get() : []; }
 
@@ -852,13 +850,13 @@
           d.from('building_perks').select('name')
         ]).then(function (res) {
           if (res[0].error) throw res[0].error;
-          var rooms = (res[0].data || []).map(rowToRoom);
+          var OLD_IDS = ['101', '102', '103', '104', '105', '201', '202', '203', '204', '301', '302', '303'];
+          var fetched = (res[0].data || []).map(rowToRoom);
+          var isOld = fetched.some(function (r) { return r && OLD_IDS.indexOf(String(r.id)) !== -1; });
+          var rooms = (!isOld && fetched.length) ? fetched : (HB.getRooms() || window.HOMEBASE_ROOMS || []);
           var occ = null;
           if (!res[1].error && res[1].data) { occ = {}; res[1].data.forEach(function (o) { occ[o.room_id] = o.taken; }); }
           var perks = (!res[2].error && res[2].data && res[2].data.length) ? res[2].data.map(function (x) { return x.name; }) : defaultPerks();
-
-          // the database answered with nothing: use the browser's own copy if there is one
-          if (!rooms.length) { var c = fromCache(); if (c && c.rooms.length) { rooms = c.rooms; occ = c.occ; } }
 
           state.rooms = rooms; state.occ = occ; state.perks = perks; state.loaded = true;
           render();
@@ -869,7 +867,7 @@
       }
       function fail() {
         var c = fromCache();
-        state.rooms = c ? c.rooms : null; state.occ = c ? c.occ : null; state.perks = defaultPerks(); state.loaded = true;
+        state.rooms = c ? c.rooms : (window.HOMEBASE_ROOMS || []); state.occ = c ? c.occ : null; state.perks = defaultPerks(); state.loaded = true;
         render();
       }
 
