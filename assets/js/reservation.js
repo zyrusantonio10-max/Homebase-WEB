@@ -82,6 +82,7 @@
       '<rect x="293" y="190" width="54" height="40" rx="4" fill="' + D + '"/><rect x="298" y="195" width="44" height="30" rx="2" fill="' + B + '"/>';
     if (room.type === 'Single') o += bed(60, 244, 150);
     else if (room.type === 'Double') o += bed(40, 244, 150) + bed(450, 244, 150);
+    else if (room.type === 'Triple') o += bed(20, 244, 130) + bed(255, 244, 130) + bed(490, 244, 130);
     else [40, 470].forEach(function (x) {
       o += '<rect x="' + x + '" y="186" width="8" height="114" fill="' + D + '"/><rect x="' + (x + 122) + '" y="186" width="8" height="114" fill="' + D + '"/>' + bed(x + 8, 244, 114) + bed(x + 8, 190, 114);
     });
@@ -253,7 +254,7 @@
     },
 
     // beds in a room: a Double fits 2 students and a Quad fits 4
-    capacity: function (room) { return Number(room.capacity) || { Single: 1, Double: 2, Quad: 4 }[room.type] || 1; },
+    capacity: function (room) { return Number(room.capacity) || { Single: 1, Double: 2, Triple: 3, Quad: 4 }[room.type] || 1; },
     bedsInfo: function (room, userId) {
       var cap = HB.capacity(room);
       var active = load().list.filter(function (r) { return r.roomId === room.id && isActive(r); });

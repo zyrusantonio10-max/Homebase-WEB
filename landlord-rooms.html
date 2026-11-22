@@ -107,9 +107,10 @@
 
         <fieldset>
           <legend class="label">Room type</legend>
-          <div class="grid grid-cols-3 gap-2">
+          <div class="grid grid-cols-4 gap-2">
             <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="rtype" value="Single" checked><span class="choice !min-h-[64px] flex-col gap-1 !px-1 !py-2 text-sm"><span class="flex"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 00-3-3h-7v6"/></svg></span>Single</span></label>
             <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="rtype" value="Double"><span class="choice !min-h-[64px] flex-col gap-1 !px-1 !py-2 text-sm"><span class="flex"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 00-3-3h-7v6"/></svg><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 00-3-3h-7v6"/></svg></span>Double</span></label>
+            <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="rtype" value="Triple"><span class="choice !min-h-[64px] flex-col gap-1 !px-1 !py-2 text-sm"><span class="flex"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 00-3-3h-7v6"/></svg><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 00-3-3h-7v6"/></svg><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 00-3-3h-7v6"/></svg></span>Triple</span></label>
             <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="rtype" value="Quad"><span class="choice !min-h-[64px] flex-col gap-1 !px-1 !py-2 text-sm"><span class="flex"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 00-3-3h-7v6"/></svg><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 00-3-3h-7v6"/></svg><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 00-3-3h-7v6"/></svg><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 00-3-3h-7v6"/></svg></span>Quad</span></label>
           </div>
         </fieldset>
@@ -211,7 +212,7 @@
       $('board').hidden = false;
 
       var AMENITIES = window.HOMEBASE_AMENITIES || [];
-      var TYPES = ['Single', 'Double', 'Quad'];
+      var TYPES = ['Single', 'Double', 'Triple', 'Quad'];
       var rooms = HB.getRooms();
       var floorFilter = 'all';
       var ui = { kind: null, id: null };     // inline question that is open: "delete"
@@ -501,7 +502,7 @@
         if (!isFinite(floor) || floor < 1 || floor > 20 || Math.floor(floor) !== floor) fieldErr('f-floor', 'Enter a floor from 1 to 20.');
         if (!isFinite(price) || price < 1 || price > 1000000 || Math.floor(price) !== price) fieldErr('f-price', 'Enter the monthly price as a whole number, like 4500.');
         var typeSel = TYPES.indexOf(typeVal()) !== -1 ? typeVal() : 'Single';
-        var cap = typeSel === 'Quad' ? 4 : typeSel === 'Double' ? 2 : 1;
+        var cap = typeSel === 'Quad' ? 4 : typeSel === 'Triple' ? 3 : typeSel === 'Double' ? 2 : 1;
         var beds = typeSel === 'Single' ? 0 : Number($('f-beds').value || 0);
         var activeCount = editingId === null ? 0 : activeList(editingId).length;
         if (typeSel === 'Single') {

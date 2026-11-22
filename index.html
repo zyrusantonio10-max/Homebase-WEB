@@ -315,6 +315,7 @@
         <button type="button" class="choice" data-type="All" aria-pressed="true">All rooms</button>
         <button type="button" class="choice" data-type="Single" aria-pressed="false">Single</button>
         <button type="button" class="choice" data-type="Double" aria-pressed="false">Double</button>
+        <button type="button" class="choice" data-type="Triple" aria-pressed="false">Triple</button>
         <button type="button" class="choice" data-type="Quad" aria-pressed="false">Quad</button>
         <span class="mx-1 hidden h-6 w-px bg-line sm:block" aria-hidden="true"></span>
         <button type="button" class="choice" id="rp-avail" aria-pressed="false">Available only</button>
@@ -631,7 +632,7 @@
         return r;
       }
 
-      function capOf(r) { return HB ? HB.capacity(r) : ({ Single: 1, Double: 2, Quad: 4 }[r.type] || 1); }
+      function capOf(r) { return HB ? HB.capacity(r) : ({ Single: 1, Double: 2, Triple: 3, Quad: 4 }[r.type] || 1); }
 
       // beds and state. Exact bed counts need the occupancy numbers; without them we only say what we know.
       function info(r) {
