@@ -6,18 +6,10 @@
   <title>Concerns | Homebase</title>
   <meta name="description" content="Tell the dormitory office about a problem in your room or the house, and follow it until it is fixed.">
 
-  <!--
-    Design Read: "I have a problem in my room. Did the office see it, and is it fixed?"
-    Same forest + lime language as the other student pages. This page is for students who live here. Less text, more picture:
-    - A banner with your room and one button, Report a concern, and three number tiles: Open, Is it fixed?, Fixed.
-    - Each concern is a card: a category icon, the state as a chip, and four connected dots (Received, In progress, Resolved, Fixed).
-      The office's notes and the tenant's notes are chat-style bubbles; long histories fold into "n updates".
-    - When the office marks a concern resolved, the tenant decides: it is fixed, or reopen it. The office cannot close it alone.
-    - Only the tenant and the landlord can see a concern. All logic and storage live in assets/js/concerns.js (also used by the landlord page).
-  -->
+  <!-- Student concerns page: submit and track room/dorm maintenance issues and resolution status -->
 
   <script>
-    // Guard: must be logged in. Landlords go to landlord.html.
+    // Authentication guard: ensure user is logged in; redirect landlords to landlord portal
     (function () {
       try {
         var u = JSON.parse(localStorage.getItem('homebase_currentUser') || 'null');

@@ -1,8 +1,6 @@
 /*
-  Homebase room photos (office side).
-  Photos are shrunk in the browser, uploaded to the Supabase Storage bucket "room-photos",
-  and only their public links are saved on the room (rooms.images).
-  Needs: supabase.js (HB_DB) and the "room-photos" bucket with the office upload policies.
+  Room photo management module.
+  Handles client-side image resizing and Supabase Storage uploads for room listings.
 */
 (function () {
   'use strict';
@@ -12,7 +10,7 @@
     return (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
       : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) { var r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); });
   }
-  // shrink to at most 1200 px on the long side, as a JPEG
+  // Resize image to fit within max bounds as JPEG
   function shrink(file) {
     return new Promise(function (resolve, reject) {
       if (!file || file.type.indexOf('image/') !== 0) { reject(new Error('That file is not a picture.')); return; }
@@ -33,7 +31,7 @@
 
   window.HB_PHOTOS = {
     MAX: MAX_PHOTOS,
-    // Resolves to the public link of the uploaded photo.
+    // Upload photo and resolve with public URL
     upload: function (roomId, file) {
       if (!window.HB_DB) return Promise.reject(new Error('Cannot reach the database right now.'));
       return shrink(file).then(function (blob) {
@@ -44,7 +42,7 @@
         });
       });
     },
-    // Deletes the stored file behind a link (ignores links that are not ours).
+    // Remove photo from storage by URL
     remove: function (url) {
       var p = pathOf(url);
       if (p && window.HB_DB) HB_DB.storage.from(BUCKET).remove([p]).then(function () {}, function () {});

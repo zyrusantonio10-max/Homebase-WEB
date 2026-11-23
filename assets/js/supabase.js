@@ -1,4 +1,4 @@
-// NEVER put the service_role / secret key here.
+// Public Supabase client configuration (uses anon/public key only)
 (function () {
   var SUPABASE_URL = 'https://syuskixgldpzdghrvvfm.supabase.co';
   var SUPABASE_ANON_KEY = 'sb_publishable_anE-2WrhxidcH01tpVpnVQ_lZTCFqjH';

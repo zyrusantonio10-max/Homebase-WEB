@@ -1,23 +1,7 @@
 /*
-  Homebase student sign-up: the rules for every field, and creating the account.
-  Used by register.html. Needs assets/js/auth.js (HB_AUTH) loaded first.
-
-  The page checks each field as the student types. registerStudent() checks EVERYTHING again before saving,
-  so the rules cannot be skipped by editing the page. (Once there is a database, the server must do this check too.)
-
-  What is collected, and why (kept to what a dormitory really needs):
-    name, email, password          sign in, and the office knows who is asking for a room
-    date of birth                  to know if the student is under 18 and a parent or guardian must approve. It cannot be edited later.
-    mobile number                  the office can reach the student about the request
-    school, student ID, course,    confirms the person is a student and tells the office who they are housing
-      year level, home province (optional)
-    emergency contact              adults: someone to call in an emergency
-    parent or guardian             students under 18: who approves the account (and is the emergency contact)
-
-  Account shape saved in homebase_users:
-    { id, name, email, role: 'student', password (scrambled), dob, mobile, school, studentId, course, yearLevel, province,
-      guardianStatus: 'not_needed' | 'pending' | 'approved', guardian: { name, relationship, mobile, email },
-      guardianCode (only while pending), acceptedTermsAt, createdAt }
+  User registration validation and account creation service.
+  Handles client-side validation rules and Supabase Auth sign-up.
+  Supports both student and non-student resident accounts.
 */
 (function (global) {
   'use strict';
@@ -31,7 +15,7 @@
 
   function squash(v) { return String(v == null ? '' : v).trim().replace(/\s+/g, ' '); }
 
-  // "0917 123 4567", "09171234567", "+63 917 123 4567" and "639171234567" are all fine. Stored as 0917 123 4567.
+  // Normalize Philippine mobile numbers to standard format
   function normMobile(v) {
     var d = String(v || '').replace(/[\s\-().]/g, '');
     if (/^\+639\d{9}$/.test(d)) d = '0' + d.slice(3);
@@ -40,7 +24,7 @@
     return d.slice(0, 4) + ' ' + d.slice(4, 7) + ' ' + d.slice(7);
   }
 
-  // every rule returns '' when the value is fine, or a plain sentence saying what to fix
+  // Field validation rules
   var V = {
     name: function (v, label) {
       v = squash(v);
@@ -93,7 +77,7 @@
 
   function readUsers() { try { var u = JSON.parse(localStorage.getItem(USERS_KEY) || '[]'); return Array.isArray(u) ? u : []; } catch (e) { return []; } }
 
-  // Check every field. Returns null when all is fine, or { step, field, error } for the first problem.
+  // Validate full registration payload
   function validate(d) {
     var e, bad = function (step, field, error) { return { step: step, field: field, error: error }; };
     var isStudent = d.isStudent !== false && d.userType !== 'non_student';

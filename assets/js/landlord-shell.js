@@ -1,16 +1,9 @@
 /*
-  The landlord's navigation, shared by every landlord page so they all look and behave the same.
-  Pages that use it: landlord.html, landlord-rooms.html, landlord-messages.html, landlord-reviews.html, and profile.html (landlord only).
-
-  What it draws (the styles are in assets/css/components.css, the ".ll-" section):
-    laptops (768px and wider)  a sidebar on the left: logo, six links, then the landlord's name and Log out
-    phones                     a slim top bar with a menu to access all pages and Log out
-
-  How to use it: put <script src="assets/js/landlord-shell.js"></script> as the FIRST thing inside <body>, and do not add a navbar to the page.
-  It does nothing for students, so profile.html can load it for everyone.
-
-  It keeps the ids the pages already use (nav-avatar, nav-name, logout, logout-m), so each page's own script still works.
-  The Messages link carries the unread badge (data-msg-badge), which assets/js/messages.js fills in.
+  Landlord navigation shell component.
+  Renders responsive navigation for landlord management pages:
+    Desktop (>= 768px): fixed left sidebar with navigation links and profile.
+    Mobile (< 768px): top header with expandable navigation dropdown.
+  Supports badge indicators for incoming messages and pending maintenance tickets.
 */
 (function () {
   'use strict';
@@ -55,12 +48,12 @@
   function mark(a, item) { if (here === item.href) a.setAttribute('aria-current', 'page'); }
 
   document.body.classList.add('ll-body');
-  document.documentElement.style.scrollPaddingTop = '5rem'; // so #links do not land under the phone top bar
+  document.documentElement.style.scrollPaddingTop = '5rem'; // Offset anchor links below mobile header
 
-  // ---- skip link ----
+  // Skip link
   var skip = el('a', 'll-skip', 'Skip to main content'); skip.href = '#main';
 
-  // ---- sidebar (laptops) ----
+  // Desktop sidebar
   var side = el('aside', 'll-side');
   side.appendChild(brand());
   side.appendChild(el('p', 'll-sub', 'Ariate Dormitory \u00B7 Landlord'));
@@ -80,7 +73,7 @@
   var who = el('span', 'll-who'); var nm = el('span', 'll-name', String(user.name || user.email || '')); nm.id = 'nav-name';
   who.appendChild(nm); who.appendChild(el('span', 'll-role', 'Landlord')); meLink.appendChild(who);
   
-  // Dark mode toggle button placed directly next to the landlord's profile
+  // Theme toggle button
   var themeToggle = (window.HB_THEME && HB_THEME.createButton) ? HB_THEME.createButton() : el('button', 'hb-theme-toggle');
   themeToggle.setAttribute('data-theme-toggle', '');
   if (!themeToggle.innerHTML) themeToggle.innerHTML = '<svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg><svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>';
@@ -93,7 +86,7 @@
   out.addEventListener('click', logout);
   me.appendChild(meRow); me.appendChild(out); side.appendChild(me);
 
-  // ---- top bar (phones) ----
+  // Mobile top navigation bar
   var top = el('header', 'll-top');
   top.appendChild(brand());
   var right = el('div', 'll-top-right');
@@ -108,7 +101,7 @@
   menuBtn.type = 'button'; menuBtn.id = 'menu-btn'; menuBtn.setAttribute('aria-expanded', 'false');
   right.appendChild(pl); right.appendChild(menuBtn); top.appendChild(right);
 
-  // ---- mobile menu dropdown (phones) ----
+  // Mobile dropdown menu
   var menu = el('div', 'll-menu');
   menu.id = 'menu'; menu.hidden = true;
   var mul = el('ul');
@@ -142,7 +135,7 @@
   [skip, side, top, menu].forEach(function (n) { frag.appendChild(n); });
   document.body.insertBefore(frag, document.body.firstChild);
 
-  // the Concerns badge: how many are new (status "received", same rule as HB_CONCERNS.newCount)
+  // Pending maintenance ticket count badge
   function paintConcerns() {
     var n = 0; try { n = JSON.parse(localStorage.getItem('homebase_concerns') || '[]').filter(function (c) { return c.status === 'received'; }).length; } catch (e) {}
     document.querySelectorAll('[data-concern-badge]').forEach(function (b) { b.textContent = n + ' new'; b.classList.toggle('hidden', n === 0); });
@@ -151,10 +144,10 @@
   window.addEventListener('storage', function (e) { if (!e.key || e.key === 'homebase_concerns') paintConcerns(); });
   window.addEventListener('hb-concerns', paintConcerns);
 
-  // the skip link needs somewhere to land
+  // Ensure skip link target exists and remove legacy header elements
   document.addEventListener('DOMContentLoaded', function () {
     var old = document.querySelectorAll('body > header:not(.ll-top)');
-    for (var i = 0; i < old.length; i++) old[i].parentNode.removeChild(old[i]); // its ids would clash with the sidebar's
+    for (var i = 0; i < old.length; i++) old[i].parentNode.removeChild(old[i]);
     var main = document.querySelector('main');
     if (main && !main.id) main.id = 'main';
     if (main) main.setAttribute('tabindex', '-1');

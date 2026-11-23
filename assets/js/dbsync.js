@@ -1,13 +1,9 @@
 /*
-  Homebase database sync for reviews, messages, concerns and building perks.
-  (Rooms and room requests are synced by reservation.js.)
-
-  The pages keep reading and writing localStorage, exactly as before. This file does two jobs:
-    1. On every page load it copies the database into localStorage (pull).
-    2. When a module saves a list (reviews.js, messages.js, concerns.js, building.js call HB_SYNC.saved),
-       it works out what is new, changed or removed since the last known copy and sends only that to the database (push).
-  Pushes run one after another, so a new conversation always exists in the database before its first message.
-  Needs: supabase.js (HB_DB) and auth.js (HB_AUTH).
+  Database synchronization service for reviews, messages, concerns, and amenities.
+  Synchronizes local storage with Supabase database tables:
+    1. Pull: loads remote table changes into localStorage on page init.
+    2. Push: serializes local mutations and commits diffs to remote tables.
+    3. Realtime: subscribes to remote postgres changes via Supabase Realtime.
 */
 (function () {
   'use strict';
@@ -19,7 +15,7 @@
   function fts(v) { return v || ''; }
   function uuidOrNull(v) { return UUID_RE.test(String(v || '')) ? v : null; }
 
-  // ---- what each saved list looks like in the database ----
+  // Table schemas and data transformation mappings
   var REG = {
     concerns: {
       key: 'homebase_concerns',
@@ -114,15 +110,15 @@
   };
   var NAMES = Object.keys(REG);
 
-  // ---- helpers ----
+  // Helper functions for normalization and serialization
   function readLocal(key) { try { var v = JSON.parse(localStorage.getItem(key) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
-  // the same row with every date written one way ("...Z" and "...+00:00" are the same moment)
+  // Normalize date fields to standard ISO strings
   function normRow(r) {
     var o = {};
     for (var k in r) { var v = r[k]; o[k] = (typeof v === 'string' && /^\d{4}-\d\d-\d\dT/.test(v) && !isNaN(Date.parse(v))) ? new Date(v).toISOString() : v; }
     return o;
   }
-  // compare two copies of a list: same data, whatever the date format
+  // Compare serialized representations of collection rows
   function canon(reg, rows) {
     return JSON.stringify(reg.tables.map(function (t) {
       return (rows[t.table] || []).slice().sort(function (a, b) { return String(a[t.idKey]).localeCompare(String(b[t.idKey])); }).map(normRow);
@@ -137,12 +133,12 @@
     return true;
   }
 
-  // the last copy we know is in the database (starts as what this browser already holds)
+  // Snapshot of current database state
   var snap = {};
   NAMES.forEach(function (n) { try { snap[n] = REG[n].toRows(readLocal(REG[n].key)); } catch (e) { snap[n] = {}; } });
   var queue = Promise.resolve(), lastWrite = 0;
 
-  // ---- pull: database to browser ----
+  // Pull remote changes into localStorage
   function pull(name, force) {
     var reg = REG[name];
     return Promise.all(reg.tables.map(function (t) { return db().from(t.table).select('*'); })).then(function (res) {
@@ -155,10 +151,10 @@
       return changed ? reg.key : null;
     }).catch(function (e) { try { console.warn('Homebase sync failed for', name, e); } catch (x) {} return null; });
   }
-  // resolves to the list of localStorage keys that changed
+  // Fetch updates across all registered collections
   function pullAll(force) { return Promise.all(NAMES.map(function (n) { return pull(n, force); })).then(function (rs) { return rs.filter(Boolean); }); }
 
-  // ---- push: browser to database ----
+  // Push local changes to database tables
   function failed(text, err) {
     try { console.error('Homebase:', text, err); } catch (e) {}
     pullAll(true).then(function () { window.alert(text + ' The page will reload with what is really saved.'); window.location.reload(); });
@@ -191,7 +187,7 @@
     });
     return chain;
   }
-  // called by reviews.js, messages.js, concerns.js and building.js right after they save a list locally
+  // Queue push operation for modified collection
   function saved(name, list) {
     var reg = REG[name];
     if (!reg || !db() || !me() || !Array.isArray(list)) return;
@@ -208,10 +204,7 @@
     Promise.all(jobs).then(function (rs) { if (((rs[0] && rs[0].length) || rs[1]) && canReload()) window.location.reload(); });
   }
 
-  // ---------------- live updates (Supabase Realtime) ----------------
-  // When anyone changes a table, we copy the new data into this browser and tell the page.
-  //  - Messages and concerns screens already redraw on a "storage" event, so we send them one.
-  //  - Other pages (requests, rooms, reviews) refresh quietly: never while a form is open or you are typing.
+  // Realtime subscription and live updates
   var LIVE_TABLES = ['rooms', 'reservations', 'reviews', 'threads', 'messages', 'concerns', 'concern_updates', 'building_perks'];
   var RELOAD_KEYS = ['homebase_rooms', 'homebase_reservations', 'homebase_reviews', 'homebase_building_amenities'];
   var liveTimer = null, liveBusy = false, liveAgain = false;

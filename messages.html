@@ -6,18 +6,10 @@
   <title>Messages | Homebase</title>
   <meta name="description" content="Ask the landlord about a room and read the replies.">
 
-  <!--
-    Design Read: the student's inbox: "did the landlord answer my question about this room?"
-    Same forest + lime language as the other student pages. Less text, more picture:
-    - Two panes on wide screens (conversations left, one open conversation right). On a phone one pane shows at a time, with a Back button.
-    - Each conversation shows the room's picture, so you know which room it is about at a glance. The header says whether the room still has a bed free.
-    - Chat bubbles with day dividers and times; the composer is one line with a Send button.
-    - Unread is shown as bold text and the words "N new", never by color alone.
-    - All logic and storage live in assets/js/messages.js (also used by landlord-messages.html). This page only mounts it.
-  -->
+  <!-- Student messages page: inquire about rooms and chat with the landlord/office -->
 
   <script>
-    // Guard: must be logged in. Landlords go to landlord.html.
+    // Authentication guard: ensure user is logged in; redirect landlords to landlord portal
     (function () {
       try {
         var u = JSON.parse(localStorage.getItem('homebase_currentUser') || 'null');
@@ -115,7 +107,7 @@
       document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !menu.hidden) { setMenu(false); menuBtn.focus(); } });
 
       if (!window.HB || !window.HB_MSG) { $('inbox').hidden = true; $('error').hidden = false; return; }
-      HB_MSG.bindBadge(user); // before mount, so reading a conversation refreshes the navbar count
+      HB_MSG.bindBadge(user); // Bind message badge to keep navbar unread counter updated
       HB_MSG.mount($('inbox'), { user: user, threadId: new URLSearchParams(window.location.search).get('thread') });
     })();
   </script>

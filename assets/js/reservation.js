@@ -1,27 +1,13 @@
 /*
-  Reservation requests: shared by Home, My Matches, Explore Rooms and the landlord pages.
-  Stored in localStorage under "homebase_reservations" as a list. Each item has the same columns a MySQL
-  "reservations" table would have, so the move to PHP + MySQL later only swaps load() and save():
-
-    { id, userId, studentName, studentEmail, roomId, roomName, floor, type, price,
-      moveIn: "2026-11-02", message, status: "pending" | "approved" | "confirmed" | "declined" | "cancelled" | "expired" | "ended",
-      paymentDays, paymentDueAt, approvedAt, confirmedAt, endedAt (filled in as the request moves along), createdAt, updatedAt }
-
-  Rules: a student can have ONE active request (pending or approved) at a time.
-         Rooms have beds: Single 1, Double 2, Quad 4. Every active request takes ONE bed, so a shared room stays open for booking
-         until its last bed is taken. (room.bedsTaken is an optional number of beds already taken outside Homebase.)
-         A room is "available" (a bed is free), "full", "taken" (closed by the landlord), or "yours" (you hold a bed in it).
-         Prices are per person per month.
-         Life of a request: pending -> approved -> confirmed -> ended. Side exits: declined, cancelled (student), expired (not paid in time).
-         The landlord sets the payment window (days) when approving. An approved request that is not marked paid by its deadline becomes "expired".
-         The student who asked for it sees it as "yours".
-  Payment is NOT handled here. The dormitory office handles payment and the contract.
+  Room reservation and bed allocation management.
+  Tracks reservation lifecycle (pending -> approved -> confirmed -> ended).
+  Bed capacity rules: Single (1), Double (2), Triple (3), Quad (4).
 */
 (function () {
   var KEY = 'homebase_reservations';
   var ROOMS_KEY = 'homebase_rooms';
 
-  // The house rules posted at Ariate Dormitory (kept close to the sign's own wording).
+  // Dormitory house rules
   var RULES = [
     'Everyone in the house shares the cleaning of common spaces: bathrooms, toilets, the wash area, hallways and doormats. Clean not only your room but also the common places.',
     'Respect your housemates\u2019 privacy and things. If it is not yours, do not touch it.',
@@ -35,7 +21,7 @@
     'The reservation payment is good for 1 week only. If you do not confirm within 1 week, your reservation is forfeited.',
     'Pay your room rent on time to avoid a 5% charge.'
   ];
-  // The ones students most need to know before they ask for a room.
+  // Key house rules displayed before reservation submission
   var KEY_RULES = [
     'No smoking and no drinking alcohol.',
     'Visitors are not allowed to enter the room.',
@@ -48,7 +34,7 @@
     try {
       var raw = localStorage.getItem(KEY), v = raw ? JSON.parse(raw) : [];
       var list = Array.isArray(v) ? v : [], changed = false, now = Date.now();
-      // approved requests that were not paid by their deadline expire here, so every page agrees
+      // Auto-expire approved reservations past due date
       list.forEach(function (r) {
         if (r.status === 'approved' && r.paymentDueAt && Date.parse(r.paymentDueAt) < now) { r.status = 'expired'; r.updatedAt = nowIso(); changed = true; }
       });
@@ -60,7 +46,7 @@
   function isActive(r) { return r.status === 'pending' || r.status === 'approved' || r.status === 'confirmed'; }
   function nowIso() { return new Date().toISOString(); }
 
-  // A small picture of a room, drawn from its type and amenities (an illustration, not a photo).
+  // Room illustration vector graphic generator
   function roomArt(room) {
     var F = '#0B4A2F', D = '#083A25', B = '#0E5435', L = '#C6F24E', am = room.amenities || [];
     function bed(x, y, w) {
@@ -171,8 +157,7 @@
 
 
     // ---- the room list ----
-    // Starts as the real rooms in assets/js/rooms.js (ARI dataset). Once the landlord saves a change, the list lives in the browser
-    // under "homebase_rooms" and every page reads it from here. Old placeholder rooms (101-303) are automatically discarded.
+    // Retrieve active room catalog from local storage or fallback to default seed
     getRooms: function () {
       var OLD_IDS = ['101', '102', '103', '104', '105', '201', '202', '203', '204', '301', '302', '303'];
       try {
@@ -186,7 +171,7 @@
       try { localStorage.setItem(ROOMS_KEY, JSON.stringify(fresh)); } catch (e) {}
       return fresh;
     },
-    // Copy rooms, requests and bed counts from the database into this browser. Reloads once if something changed.
+    // Synchronize rooms, reservations, and bed occupancy counts from database
     sync: function (opts) {
       var d = db(), u = me(); opts = opts || {};
       if (!d || !u) return Promise.resolve(false);
@@ -254,25 +239,25 @@
       return true;
     },
 
-    // a real photo if the room has an "image" path, otherwise the drawn illustration
+    // Resolve room thumbnail or SVG illustration fallback
     hasPhoto: function (room) { return !!(room && (room.image || (room.images && room.images.length))); },
     roomImage: function (room) { return room.image || ('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(roomArt(room))); },
 
     isActive: isActive,
 
-    // newest first
+    // User reservations sorted newest first
     forUser: function (userId) {
       return load().list.filter(function (r) { return r.userId === userId; })
         .sort(function (a, b) { return String(b.createdAt).localeCompare(String(a.createdAt)); });
     },
     activeFor: function (userId) { return HB.forUser(userId).filter(isActive)[0] || null; },
-    // the stay a student is living in right now: paid (confirmed) and the move-in date has arrived. Concerns need this.
+    // Active confirmed stay past move-in date (required for maintenance concerns)
     currentStay: function (userId) {
       var d = new Date(), p = function (n) { return String(n).padStart(2, '0'); }, today = d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
       return HB.forUser(userId).filter(function (r) { return r.status === 'confirmed' && r.moveIn && r.moveIn <= today; })[0] || null;
     },
 
-    // beds in a room: a Double fits 2 students and a Quad fits 4
+    // Calculate total bed capacity by room type
     capacity: function (room) { return Number(room.capacity) || { Single: 1, Double: 2, Triple: 3, Quad: 4 }[room.type] || 1; },
     bedsInfo: function (room, userId) {
       var cap = HB.capacity(room);
@@ -285,7 +270,7 @@
         mine: !!userId && active.some(function (r) { return r.userId === userId; })
       };
     },
-    // "available" (a bed is free) | "full" | "taken" (closed) | "yours" (you hold a bed here)
+    // Room occupancy state ("available" | "full" | "taken" | "yours")
     roomState: function (room, userId) {
       var i = HB.bedsInfo(room, userId);
       if (i.mine) return 'yours';
@@ -295,7 +280,7 @@
     bedsText: function (room) { var cap = HB.capacity(room); return cap > 1 ? HB.bedsInfo(room).free + ' of ' + cap + ' beds free' : ''; },
     priceLabel: function (room) { return '\u20B1' + Number(room.price).toLocaleString('en-PH') + (HB.capacity(room) > 1 ? ' per person per month' : ' per month'); },
 
-    // a student under 18 cannot request a room until a parent or guardian has approved the account
+    // Guardian verification gate for underage applicants
     canRequest: function (user) {
       var msg = (user && window.HB_AUTH && HB_AUTH.requestBlock) ? HB_AUTH.requestBlock(user.id) : '';
       return msg ? { ok: false, error: msg } : { ok: true };
@@ -355,7 +340,7 @@
       return okSave;
     },
 
-    // landlord approves and sets the payment window (1 to 30 days)
+    // Landlord approves request and defines payment grace period (1 to 30 days)
     approve: function (id, days) {
       days = Math.floor(Number(days));
       if (!isFinite(days) || days < 1 || days > 30) return false;
@@ -368,7 +353,7 @@
       if (okSave) push(id, { status: 'approved', payment_days: days, approved_at: hit.approvedAt, payment_due_at: hit.paymentDueAt });
       return okSave;
     },
-    // landlord marks that the office received payment
+    // Landlord records payment confirmation
     confirmPayment: function (id) {
       var all = load(); if (!all.ok) return false;
       var hit = all.list.filter(function (r) { return r.id === id && r.status === 'approved'; })[0];
@@ -377,7 +362,7 @@
       var okSave = save(all.list); if (okSave) push(id, { status: 'confirmed', confirmed_at: hit.confirmedAt });
       return okSave;
     },
-    // landlord ends the stay, the room becomes available again
+    // Landlord concludes stay and releases room occupancy
     endStay: function (id) {
       var all = load(); if (!all.ok) return false;
       var hit = all.list.filter(function (r) { return r.id === id && r.status === 'confirmed'; })[0];
@@ -387,7 +372,7 @@
       return okSave;
     },
 
-    // ---- the house rules window ----
+    // House rules modal dialog
     openRules: function () {
       var dlg = document.getElementById('hb-rules');
       if (!dlg) {

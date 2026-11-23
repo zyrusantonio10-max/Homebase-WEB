@@ -1,20 +1,7 @@
 /*
-  Student reviews for Ariate Dormitory. Needs assets/js/reservation.js (window.HB) loaded first.
-
-  Who can review: a student whose stay is confirmed (paid) and whose move-in date has arrived, or whose stay has ended.
-  One review per stay (per reservation). The student can edit it later. Commute and safety live here, as reviews.
-
-  The office (landlord) can do two things, and only two:
-    - reply in public under a review, and
-    - hide ONE review's comment text, always with a visible reason. Ratings are never hidden or changed, so scores
-      like commute and safety cannot be moved by the office. Hidden comments can be restored.
-
-  Stored in localStorage "homebase_reviews" (PHP + MySQL phase: a "reviews" table with the same columns):
-    { id, reservationId, userId, authorName ("Zyrus A."), roomId, roomName,
-      ratings: { overall, commute, safety, cleanliness } (whole numbers 1 to 5), comment,
-      reply: { text, at } | absent, hidden: { reason, at } | absent, createdAt, updatedAt }
-
-  No review is made up: with no reviews, every place that shows them says so.
+  Student reviews and ratings service.
+  Eligible residents (with confirmed stays past move-in date) can submit one review per stay.
+  Landlords can publish public replies or moderate comment visibility with a stated reason.
 */
 (function () {
   var KEY = 'homebase_reviews';
@@ -42,7 +29,7 @@
   function ratingLine(r) { return CATS.map(function (c) { return c[1] + ' ' + r.ratings[c[0]] + '/5'; }).join(', '); }
   function plural(n, word) { return n + ' ' + word + (n === 1 ? '' : 's'); }
 
-  // ---- visual pieces: stars, dots and bars (also used by landlord-reviews.html) ----
+  // Rating visualization components (stars, score indicators, and progress bars)
   var STAR = '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>';
   function svg(path, cls, filled) {
     var s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');

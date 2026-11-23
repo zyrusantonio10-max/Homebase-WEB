@@ -6,18 +6,10 @@
   <title>Concerns | Homebase</title>
   <meta name="description" content="Tenant concerns for Ariate Dormitory: repairs, water and electricity, noise and more.">
 
-  <!--
-    Design Read: the landlord's list of tenant concerns for Ariate Dormitory: "what is broken, who is waiting, what is urgent?"
-    Same shell as the other landlord pages (assets/js/landlord-shell.js). Less text, more picture:
-    - Four stage tiles (New, In progress, Resolved, All) are the filter, with an "n urgent" tag on New.
-    - A small bar chart shows what is open by type (repairs, water and electricity, noise...), so patterns are visible at a glance.
-    - Open concerns are sorted urgent first, then oldest first, so nothing waits quietly at the bottom.
-    - The office can start work, mark resolved, and leave a note for the tenant. Only the tenant can close a concern (Fixed).
-    - Not built on purpose: assigning to staff, due dates, deleting a concern.
-  -->
+  <!-- Landlord concerns dashboard: review and update tenant maintenance tickets and issue reports -->
 
   <script>
-    // Guard: landlords only. Students go to home.html.
+    // Authentication guard: ensure user has landlord role; redirect students to home dashboard
     (function () {
       try {
         var u = JSON.parse(localStorage.getItem('homebase_currentUser') || 'null');

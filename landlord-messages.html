@@ -6,16 +6,10 @@
   <title>Messages | Homebase</title>
   <meta name="description" content="Read and answer student questions about rooms at Ariate Dormitory.">
 
-  <!--
-    Design Read: the landlord's inbox for Ariate Dormitory: "which students are waiting for my reply?"
-    Same layout as the student inbox (assets/js/messages.js). The landlord sees every student conversation, newest first.
-    - Opening this page from a request on the Dashboard (?res=...) starts a conversation with that student about that room.
-      Nothing is saved until the first message is sent, so empty conversations never pile up.
-    - Not built on purpose: attachments, deleting messages, typing indicators.
-  -->
+  <!-- Landlord messages inbox: communicate with prospective and current student residents -->
 
   <script>
-    // Guard: landlords only. Students go to home.html.
+    // Authentication guard: ensure user has landlord role; redirect students to home dashboard
     (function () {
       try {
         var u = JSON.parse(localStorage.getItem('homebase_currentUser') || 'null');
@@ -71,7 +65,7 @@
       HB_MSG.bindBadge(user);
 
       var q = new URLSearchParams(window.location.search), opts = { user: user, threadId: q.get('thread') };
-      var resId = q.get('res'); // ?res=<reservation id>: open (or start) a chat with that student about that room
+      var resId = q.get('res'); // Handle ?res=<reservation id> query parameter to open or create conversation thread
       if (resId) {
         var r = HB.load().list.filter(function (x) { return x.id === resId; })[0];
         if (r) opts.draft = { studentId: r.userId, studentName: r.studentName, studentEmail: r.studentEmail, roomId: r.roomId, roomName: r.roomName };

@@ -6,20 +6,10 @@
   <title>Dashboard | Homebase</title>
   <meta name="description" content="Review and answer student room requests for Ariate Dormitory.">
 
-  <!--
-    Design Read: one working screen for the landlord at Ariate Dormitory: "which requests need my answer?"
-    Same forest + lime language as the student pages. Less text, more picture:
-    - A banner with the one number that is the job today, a bed ring (free / requested / taken), and four number shortcuts.
-    - The four stage tiles (Pending, Awaiting payment, Confirmed, All active) are the filter, so the pipeline is the control.
-    - Each request is a card: room picture, student avatar, facts as chips, the student's message as a bubble,
-      and Requested > Approved > Paid as three connected dots. A payment countdown turns red at 2 days or less.
-    - Approve is immediate. Decline asks first, because a student is waiting on it and it cannot be undone from this page.
-    - No invented requests: the list only holds what students really sent (assets/js/reservation.js).
-    - Not built on purpose: reversing an approval or editing a request. Payment is handled by the dormitory office.
-  -->
+  <!-- Landlord dashboard: review pending room reservation requests, track occupancy, and manage building operations -->
 
   <script>
-    // Guard: landlords only. Students go to home.html.
+    // Authentication guard: ensure user has landlord role; redirect students to home dashboard
     (function () {
       try {
         var u = JSON.parse(localStorage.getItem('homebase_currentUser') || 'null');
@@ -64,7 +54,7 @@
     <section id="glance-box" hidden aria-labelledby="glance-title" class="mt-6">
       <h2 id="glance-title" class="sr-only">At a glance</h2>
 
-      <!-- the one number that is the landlord's job today -->
+      <!-- Primary action metric: pending requests requiring landlord review -->
       <div class="stat-hero">
         <div>
           <p class="stat-eyebrow">Needs your answer</p>
@@ -75,12 +65,12 @@
       </div>
 
       <div class="mt-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-        <!-- beds: free / requested / taken -->
+        <!-- Bed occupancy distribution chart: free, requested, and occupied -->
         <div class="flex items-center gap-5 rounded-[20px] border border-line bg-white p-5">
           <div id="beds-ring" class="relative h-32 w-32 shrink-0" role="img"></div>
           <ul id="beds-legend" class="min-w-0 space-y-2"></ul>
         </div>
-        <!-- four shortcuts with numbers -->
+        <!-- Quick access operational metrics tiles -->
         <div id="glance" class="grid grid-cols-2 gap-4"></div>
       </div>
 
@@ -108,13 +98,13 @@
     </div>
 
     <div id="board" hidden class="scroll-mt-24">
-      <!-- the pipeline, and the filter: pick a stage -->
+      <!-- Reservation pipeline stage filter tabs -->
       <div id="chips" role="group" aria-label="Show requests" class="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4"></div>
       <p id="none" hidden class="mt-6 rounded-[20px] border border-dashed border-edge p-6 text-base text-muted"></p>
       <ul id="list" class="mt-6 space-y-4" aria-live="polite"></ul>
     </div>
 
-    <!-- HISTORY OF PAST REQUESTS AND STAYS -->
+    <!-- Historical reservations and completed stays -->
     <section id="history" class="mt-14 border-t border-line pt-10">
       <h2 class="font-display text-2xl font-bold tracking-tight">History</h2>
 
@@ -144,7 +134,7 @@
       <ul id="history-list" class="mt-6 space-y-3" aria-live="polite"></ul>
     </section>
 
-    <!-- BUILDING AMENITIES MODAL DIALOG -->
+    <!-- Building-wide amenities configuration modal -->
     <dialog id="building-dialog" aria-labelledby="building-dialog-title" class="max-h-[90vh] w-[calc(100vw-2rem)] max-w-[560px] overflow-y-auto rounded-2xl border border-line bg-white p-0 text-ink shadow-xl backdrop:bg-ink/50">
       <div class="p-6">
         <div class="flex items-start justify-between gap-4">
@@ -199,7 +189,7 @@
         return months + ' month' + (months === 1 ? '' : 's') + (rem > 0 ? ', ' + rem + ' day' + (rem === 1 ? '' : 's') : '');
       }
 
-      // ---- small visual helpers ----
+      // SVG icon definitions and avatar render helpers
       var ICO = {
         users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0M16 4.5a3.5 3.5 0 010 7M18 14.5a6.5 6.5 0 013.5 5.5"/>',
         chat: '<path d="M4 5h16v11H9l-5 4z"/>',
@@ -234,7 +224,7 @@
       function pill(text, strong) { return el('li', 'rounded-lg border border-line bg-tint px-2.5 py-1 text-sm ' + (strong ? 'font-semibold' : 'font-medium'), text); }
       function daysLeft(iso) { var d = new Date(iso); return isNaN(d) ? null : Math.ceil((d.getTime() - Date.now()) / 86400000); }
 
-      // Requested -> Approved -> Paid, as three connected dots
+      // Reservation lifecycle progression step indicator (Requested -> Approved -> Paid)
       function miniSteps(status) {
         var st = { pending: ['done', 'now', 'todo'], approved: ['done', 'done', 'now'], confirmed: ['done', 'done', 'done'] }[status];
         if (!st) return null;
@@ -292,7 +282,7 @@
         ended: 'Stay ended'
       };
       var activeFilter = 'pending';
-      var ui = { kind: null, id: null, error: '' }; // which inline question is open: "approve", "decline" or "end"
+      var ui = { kind: null, id: null, error: '' }; // Active inline confirmation prompt: "approve", "decline", or "end"
 
       var HIST_FILTERS = [
         ['all', 'All history'],
@@ -357,7 +347,7 @@
         return acts;
       }
 
-      // ---- resident detailed dossier modal ----
+      // Resident profile modal dialog
       function openResidentModal(r, prof) {
         var dlg = document.getElementById('hb-resident-modal');
         if (!dlg) {
@@ -378,7 +368,7 @@
                 '<button type="button" id="hb-res-close-x" class="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line text-muted hover:border-forest hover:text-ink transition-colors" aria-label="Close">&times;</button>' +
               '</div>' +
 
-              '<!-- Contact Info Card -->' +
+              '<!-- Contact Information -->' +
               '<div class="mt-5 rounded-2xl border border-line bg-tint/60 p-4">' +
                 '<h4 class="text-xs font-semibold uppercase tracking-wider text-muted mb-2.5">Student Contact</h4>' +
                 '<div class="grid gap-2 text-sm sm:grid-cols-2">' +
@@ -388,7 +378,7 @@
                 '</div>' +
               '</div>' +
 
-              '<!-- Emergency Contact Box -->' +
+              '<!-- Emergency Contact Details -->' +
               '<div class="mt-4 rounded-2xl border border-forest/20 bg-tint p-4">' +
                 '<div class="flex items-center gap-2 mb-2">' +
                   '<svg viewBox="0 0 24 24" class="h-5 w-5 text-forest" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/></svg>' +
@@ -397,13 +387,13 @@
                 '<div id="hb-res-emer-content" class="grid gap-2 text-sm sm:grid-cols-2"></div>' +
               '</div>' +
 
-              '<!-- Bio -->' +
+              '<!-- Personal Bio -->' +
               '<div id="hb-res-bio-box" class="mt-4 hidden">' +
                 '<h4 class="text-xs font-semibold uppercase tracking-wider text-muted mb-1">Student Bio</h4>' +
                 '<p id="hb-res-bio" class="text-sm leading-relaxed text-ink bg-tint/40 p-3 rounded-xl border border-line/60"></p>' +
               '</div>' +
 
-              '<!-- Lifestyle & Living Habits -->' +
+              '<!-- Lifestyle Profile -->' +
               '<div class="mt-5">' +
                 '<h4 class="text-xs font-semibold uppercase tracking-wider text-muted">Dorm Living & Lifestyle Profile</h4>' +
                 '<div class="mt-2.5 grid gap-2.5">' +
@@ -422,7 +412,7 @@
                 '</div>' +
               '</div>' +
 
-              '<!-- Reservation Request Context -->' +
+              '<!-- Reservation Details -->' +
               '<div class="mt-5 rounded-2xl border border-line bg-white p-4 text-sm">' +
                 '<h4 class="text-xs font-semibold uppercase tracking-wider text-muted mb-2">Request Overview</h4>' +
                 '<div class="grid gap-1.5 text-xs text-muted">' +
@@ -518,7 +508,7 @@
         if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
       }
 
-      // ---- one active request ----
+      // Render active reservation card
       function row(r) {
         var li = el('li', 'rounded-[20px] border border-line bg-white p-4 sm:p-5');
         var prof = (window.HB_AUTH && HB_AUTH.getProfile) ? (HB_AUTH.getProfile(r.userId) || {}) : {};
@@ -560,7 +550,7 @@
         var steps = miniSteps(r.status); if (steps) main.appendChild(steps);
         wrap.appendChild(main); li.appendChild(wrap);
 
-        // decision buttons on the left, profile and message on the right
+        // Card action buttons (approve/decline/end stay, view profile, direct message)
         var foot = el('div', 'mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4');
         var a = actions(r); foot.appendChild(a || el('span'));
         var tools = el('div', 'flex flex-wrap gap-2');
@@ -576,7 +566,7 @@
         return li;
       }
 
-      // ---- one past request or stay ----
+      // Render historical reservation card
       function historyRow(r) {
         var li = el('li', 'rounded-[20px] border border-line bg-white p-4 transition-colors hover:border-edge sm:p-5');
         var prof = (window.HB_AUTH && HB_AUTH.getProfile) ? (HB_AUTH.getProfile(r.userId) || {}) : {};
@@ -618,7 +608,7 @@
         return li;
       }
 
-      // ---- the pipeline, which is also the filter ----
+      // Pipeline stage filter chips with request counts
       function renderChips(activeList) {
         var box = $('chips'); box.textContent = '';
         ACTIVE_FILTERS.forEach(function (f) {
@@ -715,7 +705,7 @@
         });
       }
 
-      // ---- at a glance: beds, and the shortcuts ----
+      // Bed occupancy ring chart and summary statistics
       var RING_COLORS = { free: '#1E4D36', requested: '#93B4A2', taken: '#C9D3CD' };
       function renderBeds(free, requested, taken) {
         var total = free + requested + taken, box = $('beds-ring'), C = 2 * Math.PI * 52;
@@ -819,7 +809,7 @@
     })();
   </script>
 
-  <!-- Building amenities UI -->
+  <!-- Building amenities configuration handler -->
   <script>
     (function () {
       var $ = function (id) { return document.getElementById(id); };
@@ -840,7 +830,7 @@
         tick.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" class="h-4 w-4"><path d="M4.5 10.5l3 3 8-8"/></svg>';
         label.appendChild(cb); label.appendChild(tick); label.appendChild(span);
 
-        // visual feedback on check
+        // Update selection styling on checkbox toggle
         cb.addEventListener('change', function () {
           label.classList.toggle('border-forest', cb.checked);
           label.classList.toggle('bg-tint', cb.checked);

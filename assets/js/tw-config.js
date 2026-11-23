@@ -1,9 +1,8 @@
 /*
-  The ONE place for the palette. Change a color here and every page follows.
-
-  1) Tailwind reads it, so classes like bg-forest, text-danger, border-warn-line, hover:bg-lime-deep, bg-paper work.
-  2) The same colors are also published as CSS variables (--forest, --danger-soft, --paper, ...) for the CSS files.
-  3) Handles Dark Mode class configuration and theme asset loading.
+  Color palette and theme configuration.
+  1. Extends Tailwind CSS theme with application colors and typography.
+  2. Injects equivalent CSS custom properties into :root.
+  3. Pre-initializes dark mode class to prevent flash of unstyled content.
 */
 (function () {
   // Prevent light flash: apply saved dark theme immediately
@@ -47,7 +46,7 @@
     };
   }
 
-  // the same colors as CSS variables
+  // Export color values as CSS custom properties
   var css = ':root{';
   Object.keys(colors).forEach(function (name) {
     var v = colors[name];

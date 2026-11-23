@@ -1,25 +1,10 @@
 /*
-  Homebase – Building (Property‑wide) Amenities Module
-  =====================================================
-  Building amenities are features that apply to the whole dormitory or
-  apartment, not to any single room.  Every tenant in the building has
-  access to them.  Different properties may offer different ones.
-
-  The catalogue below is based on common student‑housing standards in
-  Philippine universities (CHED CMO 9 s.2013 – Student Housing &
-  Services Guidelines) and typical dormitory offerings near colleges
-  such as UNC, UP Diliman, UST, and DLSU.
-
-  The landlord selects which ones their building offers via the
-  "Building amenities" section on the Dashboard.  Students see
-  the selected items on every room card and in their match results.
-  =====================================================
+  Building-wide amenities catalogue and state management.
+  Amenities apply to the entire property rather than individual rooms.
+  Landlords configure active amenities from the dashboard.
 */
 
-/*
-  Master catalogue of building‑level amenities.
-  Grouped conceptually; each entry is shown as a checkbox for the landlord.
-*/
+/* Master catalogue of building-wide amenities */
 window.HOMEBASE_BUILDING_AMENITIES = [
   // Security & safety
   'CCTV / Security cameras',
@@ -48,7 +33,7 @@ window.HOMEBASE_BUILDING_AMENITIES = [
   'Housekeeping (common areas)',
 ];
 
-/* ---- localStorage persistence & default property profile ---- */
+/* Local storage persistence and default values */
 var HB_BUILDING_KEY = 'homebase_building_amenities';
 
 // Realistic defaults for Ariate Dormitory (Naga City / UNC) - notably no parking
@@ -80,7 +65,7 @@ function _saveBA(list, noSync) {
   return true;
 }
 
-/* ---- public API ---- */
+/* Public API */
 window.HB_BUILDING = {
   /** The full catalogue of possible building amenities. */
   catalogue: function () {

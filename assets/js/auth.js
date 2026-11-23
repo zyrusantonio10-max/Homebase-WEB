@@ -1,20 +1,13 @@
 /*
-  Homebase Authentication & Session Management
-  Shared across all pages: index.html, home.html, landlord.html, matches.html, rooms.html, floorplan.html, profile.html.
-
-  Storage keys:
-    homebase_users        List of registered user accounts: [{ id, name, email, role, password }]
-    homebase_currentUser Currently active user session: { id, name, email, role }
-        landlord account: manager@ariatedorm.com 
-        password        : set in the seed below (see README, change it before real use)
-    homebase_profile_<id> User profile details: { photo, phone, bio, course, yearLevel, emergencyName, emergencyPhone, emergencyRel, sleepSchedule, studyHabit, social, ... }
+  Homebase authentication and user session management.
+  Handles login, profile caching, guardian approval flow, and role-based redirects.
 */
 (function (global) {
   'use strict'; 
   var USERS_KEY = 'homebase_users';
   var CURRENT_KEY = 'homebase_currentUser';
 
-  // ---- Safe localStorage helpers ----
+  // Safe localStorage helpers
   function readStorage(key, fallback) {
     try {
       var v = localStorage.getItem(key);
@@ -85,7 +78,7 @@
   }
   // (demo accounts removed: accounts now live in Supabase)
 
-  // ---- Client-side password hashing (prototype layer before PHP/MySQL) ----
+  // Client-side password hashing utility
   function hashPassword(pw) {
     if (global.crypto && global.crypto.subtle && global.TextEncoder) {
       return global.crypto.subtle.digest('SHA-256', new TextEncoder().encode('homebase:' + pw)).then(function (buf) {
@@ -101,9 +94,7 @@
     return role === 'landlord' ? 'landlord.html' : 'home.html';
   }
 
-  // ---- Supabase glue ----
-  // Supabase holds the real accounts. We keep a copy of the logged-in profile in localStorage so the pages
-  // that are not migrated yet can still read the user synchronously.
+  // Supabase authentication integration and profile caching
   function db() { return global.HB_DB || null; }
   function loadProfile(uid) { return db().from('profiles').select('*').eq('id', uid).single(); }
   function rowToRecord(p) {

@@ -6,24 +6,10 @@
   <title>Reviews | Homebase</title>
   <meta name="description" content="Read student reviews, reply in public, and hide a comment with a visible reason.">
 
-  <!--
-    Design Read: where the office answers student reviews, "which reviews need my reply, and is anything abusive?"
-    Same forest + lime language as the other pages. Less text, more picture:
-    - A big score with stars, a small bar chart of how many gave 5, 4, 3, 2, 1 stars, and bars for commute, safety and cleanliness.
-    - Three tiles (All, No reply yet, Hidden comment) are the filter.
-    - Each review is a card: avatar, stars, three small dot ratings, the comment as a bubble, the office reply as a bubble.
-    The rules (chosen with the project owner), so the office cannot bend the scores:
-    - The office can REPLY in public under any review.
-    - The office can HIDE only a review's comment text, never its ratings, and must pick a reason that students can see.
-      A hidden comment can be restored. If the student edits their comment, it can be looked at again.
-    - Ratings always count, so commute and safety scores cannot be changed from this page.
-    The landlord sees the full comment even when hidden, so the decision can be reviewed.
-    The stars, dots and bars come from assets/js/reviews.js, so students see the same look in room details and on Home.
-    Not built: a neutral second person to check hiding (a real system would have an admin for that).
-  -->
+  <!-- Landlord reviews moderation: monitor student ratings, publish official replies, and moderate comments -->
 
   <script>
-    // Guard: landlords only. Students go to home.html.
+    // Authentication guard: ensure user has landlord role; redirect students to home dashboard
     (function () {
       try {
         var u = JSON.parse(localStorage.getItem('homebase_currentUser') || 'null');
@@ -82,7 +68,7 @@
     </div>
 
     <div id="board" hidden>
-      <!-- the score, how the stars are spread, and the three parts -->
+      <!-- Overall rating summary, rating distribution histogram, and category breakdown -->
       <div id="summary" class="mt-6 grid gap-4 md:grid-cols-2"></div>
       <div id="chips" role="group" aria-label="Show reviews" class="mt-4 grid grid-cols-3 gap-3"></div>
       <p id="none" hidden class="mt-6 rounded-[20px] border border-dashed border-edge p-6 text-base text-muted"></p>
@@ -128,7 +114,7 @@
       var R = HBReviews;
       var FILTERS = [['all', 'All'], ['noreply', 'No reply yet'], ['hidden', 'Hidden comment']];
       var filter = 'all';
-      var ui = { kind: null, id: null, error: '' };   // inline question that is open: "reply" or "hide"
+      var ui = { kind: null, id: null, error: '' };   // Active inline action form: "reply" or "hide"
 
       function notice(t) { var n = $('notice'); n.textContent = t || ''; n.hidden = !t; }
       function fail(t) { var e = $('page-error'); e.textContent = t || ''; e.hidden = !t; }
@@ -147,7 +133,7 @@
         var box = el('div', 'mt-4 space-y-3');
         var asking = ui.id === r.id ? ui.kind : null;
 
-        // ----- reply -----
+        // Reply composition form
         if (asking === 'reply') {
           var wrap = el('div');
           var lab = el('label', 'mb-1.5 block text-sm font-medium', 'Public reply'); lab.setAttribute('for', 'reply-' + r.id);
@@ -163,7 +149,7 @@
           wrap.appendChild(row); box.appendChild(wrap);
         }
 
-        // ----- hide comment -----
+        // Comment moderation and hiding dialog
         if (asking === 'hide') {
           var w2 = el('div');
           var l2 = el('label', 'mb-1.5 block text-sm font-medium', 'Reason (students will see it)'); l2.setAttribute('for', 'reason-' + r.id);
@@ -226,7 +212,7 @@
         return li;
       }
 
-      // the score, and how the stars are spread
+      // Render aggregated rating statistics and breakdown
       function renderSummary(all) {
         var s = R.summary(all), box = $('summary'); box.textContent = '';
         var left = el('section', 'rounded-[20px] border border-line bg-tint p-5'); left.setAttribute('aria-label', 'Overall score');

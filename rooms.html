@@ -6,16 +6,10 @@
   <title>Explore Rooms | Homebase</title>
   <meta name="description" content="Every Ariate Dormitory room, available or taken, with price and amenities.">
 
-  <!--
-    Design Read: room catalog for anyone choosing a room at Ariate Dormitory, same forest + lime language as home.html.
-    Less text, more picture: three tiles at a glance (one green segment per free room, free beds, price range), compact filter chips,
-    and cards that put the state and the save heart on the picture, with bed icons (green = free, grey = taken) instead of sentences.
-    Every room is still shown, taken ones included. Numbers come from the room list (assets/js/rooms.js or the database).
-    Radius: pill for buttons, 20px cards, 12px chips. No shadows, no glow.
-  -->
+  <!-- Room catalog page: browse all dormitory rooms, availability, pricing, amenities, and current occupants -->
 
   <script>
-    // Guard: must be logged in. Landlords go to landlord.html.
+    // Authentication guard: ensure user is authenticated; redirect landlords to landlord dashboard
     (function () {
       try {
         var u = JSON.parse(localStorage.getItem('homebase_currentUser') || 'null');
@@ -88,14 +82,14 @@
       <p id="count" class="text-base font-medium text-muted" aria-live="polite"></p>
     </div>
 
-    <!-- AT A GLANCE: three tiles, no reading -->
+    <!-- Key metrics summary tiles -->
     <section aria-label="At a glance" class="mt-6 grid gap-4 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)]">
       <div class="rounded-[20px] border border-line bg-white p-4 sm:p-5">
         <div class="flex items-center gap-3">
           <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-forest text-white"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg></span>
           <p class="min-w-0"><span id="sum-avail" class="font-display text-3xl font-bold leading-none tracking-tight">0</span> <span id="sum-total" class="text-base text-muted"></span></p>
         </div>
-        <!-- one segment per room: green = a bed is free -->
+        <!-- Visual room availability status bar -->
         <div id="sum-bar" class="mt-4 flex gap-1" role="img" aria-label="Rooms with a free bed"></div>
       </div>
       <div class="flex flex-col justify-between rounded-[20px] border border-line bg-white p-4 sm:p-5">
@@ -110,7 +104,7 @@
 
     <div id="reviews-strip" class="mt-6"></div>
 
-    <!-- FILTERS: apply as soon as you change them -->
+    <!-- Room filter and sort options -->
     <form id="filters" class="mt-6 flex flex-wrap items-end gap-x-6 gap-y-4 rounded-[20px] border border-line bg-tint p-4 sm:p-5" onsubmit="return false">
       <fieldset>
         <legend class="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">Show</legend>
@@ -187,7 +181,7 @@
       function peso(n) { return '\u20B1' + n.toLocaleString('en-PH'); }
       function setState(s) { document.querySelectorAll('#results [data-state]').forEach(function (n) { n.hidden = n.getAttribute('data-state') !== s; }); }
 
-      // ---- navbar ----
+      // Navigation bar setup and user display
       var user = (read(K.user).value) || {};
       var fullName = String(user.name || user.email || '');
       if (window.HB_AUTH && HB_AUTH.renderAvatar) {
@@ -203,11 +197,11 @@
       menuBtn.addEventListener('click', function () { setMenu(menu.hidden); });
       document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !menu.hidden) { setMenu(false); menuBtn.focus(); } });
 
-      // ---- data ----
+      // Load room data
       var ROOMS = window.HB ? HB.getRooms() : null;
       if (!Array.isArray(ROOMS) || !window.HB) { setState('error'); return; }
 
-      // ---- saved rooms (same list Home and My Matches use) ----
+      // Saved rooms persistence and bookmarking
       function savedIds() { var r = read(K.saved).value; return Array.isArray(r) ? r.map(function (x) { return x.id; }) : []; }
       function paintSave(btn, on, name) {
         btn.textContent = on ? 'Saved' : 'Save room';
@@ -227,11 +221,11 @@
       var hasActive = !!HB.activeFor(user.id);
       $('active-note').hidden = !hasActive;
 
-      // ---- comparing rooms (shared with My Matches, see assets/js/compare.js) ----
+      // Room comparison widget initialization
       var cmp = HBCompare.mount({ rooms: ROOMS, user: user, hasActive: hasActive });
       if (window.HBReviews) $('reviews-strip').appendChild(HBReviews.summaryBox());
 
-      // ---- occupant profile modal ----
+      // Current occupant profile modal dialog
       function openOccupantModal(prof, occName, room) {
         var dlg = document.getElementById('hb-occupant-modal');
         if (!dlg) {
@@ -348,7 +342,7 @@
         d.appendChild(el('p', 'text-xs text-muted', shared ? 'per person / month' : 'per month'));
         return d;
       }
-      // one bed icon per bed: green = free, grey = taken
+      // Render bed capacity indicators with color-coded availability
       function bedsRow(r) {
         var i = HB.bedsInfo(r, user.id), wrap = el('span', 'inline-flex items-center gap-0.5');
         for (var n = 0; n < i.capacity; n++) wrap.appendChild(icon('bed', 'h-5 w-5 ' + (n < i.free ? 'text-forest' : 'text-edge')));
@@ -364,7 +358,7 @@
         btn.classList.toggle('text-danger', on);
       }
 
-      // ---- at a glance ----
+      // Calculate and render summary statistics
       function renderSummary() {
         var avail = 0, beds = 0, lo = Infinity, hi = 0, bar = $('sum-bar');
         bar.textContent = '';
@@ -384,7 +378,7 @@
         $('sample-note').hidden = !HB.usingSampleRooms();
       }
 
-      // ---- one room, all its details, in a window ----
+      // Room detail dialog modal
       var detailDlg = null;
       function openDetail(room) {
         if (!detailDlg) {
@@ -396,7 +390,7 @@
         var st = HB.roomState(room, user.id), box = el('div', 'p-4 sm:p-6');
         detailDlg.textContent = '';
 
-        // picture with the state on it
+        // Room preview image and status chip
         var hero = el('div', 'relative overflow-hidden rounded-2xl bg-track');
         var pic = el('img', 'aspect-[8/5] w-full object-cover');
         pic.src = HB.roomImage(room); pic.alt = room.name + ', ' + room.type.toLowerCase() + ' room on floor ' + room.floor + (HB.hasPhoto(room) ? '' : ' (illustration)'); pic.width = 640; pic.height = 400; pic.decoding = 'async';
@@ -418,7 +412,7 @@
           box.appendChild(strip);
         }
 
-        // name + price, then floor / type / beds
+        // Room name, price, and basic details
         var head = el('div', 'mt-4 flex items-start justify-between gap-4');
         var h = el('h2', 'font-display text-2xl font-bold tracking-tight', room.name); h.id = 'room-detail-title';
         head.appendChild(h); head.appendChild(priceBlock(room));
@@ -428,7 +422,7 @@
         var bw = el('span', 'inline-flex items-center rounded-lg border border-line bg-tint px-2.5 py-1'); bw.appendChild(bedsRow(room)); facts.appendChild(bw);
         box.appendChild(facts);
 
-        // amenities
+        // In-room and building amenities list
         box.appendChild(el('h3', 'mt-5 text-xs font-semibold uppercase tracking-wider text-muted', 'In the room'));
         var chips = el('ul', 'mt-2 flex flex-wrap gap-1.5');
         room.amenities.forEach(function (a) { var li = el('li', 'inline-flex items-center gap-1 rounded-lg border border-line bg-tint px-2.5 py-1 text-sm'); li.appendChild(icon('check', 'h-4 w-4 text-forest')); li.appendChild(document.createTextNode(a)); chips.appendChild(li); });
@@ -466,12 +460,12 @@
         if (detailDlg.showModal) detailDlg.showModal(); else detailDlg.setAttribute('open', '');
       }
 
-      // ---- one room card ----
+      // Render individual room catalog card
       function card(r, saved) {
         var li = el('li', 'flex flex-col overflow-hidden rounded-[20px] border border-line bg-white');
         var st = HB.roomState(r, user.id);
 
-        // picture with the state and the save heart on it
+        // Room image with status chip and bookmark toggle
         var frame = el('div', 'relative bg-track');
         var open = el('button', 'block aspect-[8/5] w-full cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-forest');
         open.type = 'button'; open.setAttribute('aria-label', 'See details of ' + r.name);
@@ -494,7 +488,7 @@
 
         var body = el('div', 'flex flex-1 flex-col p-4 sm:p-5');
 
-        // name + price
+        // Room title and price block
         var head = el('div', 'flex items-start justify-between gap-3');
         var h3 = el('h3', 'min-w-0 font-display text-lg font-semibold leading-tight tracking-tight');
         var nameBtn = el('button', 'rounded text-left outline-none hover:underline hover:underline-offset-4 focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2', r.name);
@@ -503,13 +497,13 @@
         h3.appendChild(nameBtn); head.appendChild(h3); head.appendChild(priceBlock(r));
         body.appendChild(head);
 
-        // floor, type, beds
+        // Room specification pills and bed indicators
         var meta = el('div', 'mt-3 flex flex-wrap items-center gap-2');
         meta.appendChild(pill('Floor ' + r.floor)); meta.appendChild(pill(r.type));
         meta.appendChild(bedsRow(r));
         body.appendChild(meta);
 
-        // a few amenities, the rest in the details
+        // Amenity preview chips
         var am = r.amenities || [];
         if (am.length) {
           var chips = el('ul', 'mt-3 flex flex-wrap gap-1.5');
@@ -518,7 +512,7 @@
           body.appendChild(chips);
         }
 
-        // residents: a stack of avatars (profiles of students under 18 are never shown to other students)
+        // Current resident avatars (excludes minor students for privacy)
         var occs = HB.load().list.filter(function (res) {
           return res.roomId === r.id && (res.status === 'confirmed' || res.status === 'approved') &&
             !(window.HB_AUTH && HB_AUTH.isMinor && HB_AUTH.isMinor(res.userId));
@@ -543,7 +537,7 @@
 
         if (window.HBReviews) { var rl = HBReviews.roomLine(r, { quiet: true }); if (rl) { var rw = el('div', 'mt-3'); rw.appendChild(rl); body.appendChild(rw); } }
 
-        // actions
+        // Card action buttons (request, details, compare)
         var foot = el('div', 'mt-auto pt-4');
         var canRequest = st === 'available' && !hasActive;
         var row = el('div', canRequest || st === 'yours' ? 'grid grid-cols-2 gap-2' : '');
@@ -567,7 +561,7 @@
         return li;
       }
 
-      // ---- filters ----
+      // Catalog filter and sorting logic
       var form = $('filters');
       var floorList = [];
       ROOMS.forEach(function (r) { if (floorList.indexOf(r.floor) === -1) floorList.push(r.floor); });
@@ -606,11 +600,11 @@
       renderSummary();
       render();
 
-      // opened from a link on Home: rooms.html?compare=204,301
+      // Handle URL query parameter for comparing rooms (e.g. ?compare=204,301)
       var fromUrl = (new URLSearchParams(window.location.search).get('compare') || '').split(',').filter(function (id) { return ROOMS.some(function (r) { return r.id === id; }); }).slice(0, 3);
       if (fromUrl.length > 1) { cmp.setPicked(fromUrl); cmp.open(fromUrl); }
 
-      // opened from a saved room on Home: rooms.html?room=103
+      // Handle URL query parameter for direct room detail view (e.g. ?room=103)
       var roomParam = new URLSearchParams(window.location.search).get('room');
       var linked = roomParam ? ROOMS.filter(function (r) { return r.id === roomParam; })[0] : null;
       if (linked && fromUrl.length < 2) openDetail(linked);

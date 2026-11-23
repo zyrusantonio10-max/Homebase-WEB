@@ -1,25 +1,7 @@
 /*
-  Concerns: a tenant tells the office about a problem during their stay, and follows it until it is fixed.
-  Used by: concerns.html (tenant), landlord-concerns.html (landlord), landlord.html (the "Open concerns" tile).
-  Load order: auth.js, rooms.js, reservation.js, then this file. Needs window.HB.
-
-  Who can report: a student whose stay is confirmed (paid) and whose move-in date has arrived (HB.currentStay).
-  Who can see a concern: the student who wrote it and the landlord. Nobody else, ever.
-
-  Stored in localStorage "homebase_concerns" as one list. Each item has the columns a database table would have:
-    { id, userId, studentName, studentEmail, reservationId, roomId, roomName,
-      category, description, urgent: true | false, photo: "" | "data:image/jpeg;base64,...",
-      status: "received" | "in_progress" | "resolved",
-      updates: [ { id, kind: "note" | "status" | "reopen" | "confirm", by: "student" | "landlord", name, text, status, at } ],
-      createdAt, updatedAt, resolvedAt, confirmedAt, reopenedAt }
-
-  Life of a concern: received -> in_progress -> resolved (by the office) -> the tenant confirms "it is fixed" (closed)
-  or reopens it (back to received). A closed concern takes no more notes.
-  Rule used by the landlord sidebar badge (assets/js/landlord-shell.js): "new" = status is "received".
-
-  SUPABASE LATER: only the `store` object touches storage. Swap its two functions for table reads and writes, keep the photo in
-  Supabase Storage (not in the row), and replace the "storage" event listeners with a realtime subscription.
-  Supabase calls are async, so the functions that call `store` will return Promises at that point. Nothing is connected yet.
+  Maintenance concern ticket service.
+  Allows active residents to report issues and track resolution progress.
+  Landlords manage status lifecycle: received -> in_progress -> resolved.
 */
 (function () {
   'use strict';
@@ -29,13 +11,13 @@
   var STATUS_TEXT = { received: 'Received', in_progress: 'In progress', resolved: 'Resolved' };
   var MIN_DESC = 10, MAX_DESC = 500, MAX_NOTE = 300;
 
-  // ---- storage: the ONE place to swap for Supabase ----
+  // Local storage persistence layer
   var store = {
     all: function () { try { var v = JSON.parse(localStorage.getItem(KEY) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } },
     save: function (list) {
       try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) { return false; }
       if (window.HB_SYNC) HB_SYNC.saved('concerns', list);
-      try { window.dispatchEvent(new Event('hb-concerns')); } catch (e) {} // the storage event only reaches OTHER tabs
+      try { window.dispatchEvent(new Event('hb-concerns')); } catch (e) {}
       return true;
     }
   };
@@ -51,7 +33,7 @@
   }
   function day(iso) { var d = new Date(iso); return isNaN(d) ? '' : d.toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' }); }
 
-  // ---- small visual helpers ----
+  // Ticket icons and badge indicators
   var ICO = {
     Repairs: '<path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 005.4-5.4l-2.4 2.4-2.6-.6-.6-2.6z"/>',
     'Water and electricity': '<path d="M12 3s6 6.5 6 11a6 6 0 01-12 0c0-4.5 6-11 6-11z"/>',

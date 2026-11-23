@@ -6,11 +6,7 @@
   <title>My Profile | Homebase</title>
   <meta name="description" content="View and edit your personal information, profile picture, lifestyle preferences, and account settings.">
 
-  <!--
-    Design Read: User profile screen for both students and landlords at Ariate Dormitory.
-    Shares the same forest green + lime visual language as home.html and index.html.
-    Dial ENERGY 2 / RHYTHM 2 / MOTION 1.
-  -->
+  <!-- User profile page: manage personal information, profile photo, lifestyle preferences, and account security -->
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/supabase.js"></script>
@@ -90,7 +86,7 @@
         <span>Homebase</span>
       </a>
 
-      <!-- Desktop Nav links: dynamically adjusted for Student vs Landlord -->
+      <!-- Desktop navigation links (rendered dynamically based on user role) -->
       <ul id="nav-links" class="hidden items-center gap-1 md:flex">
         <!-- Rendered by JS based on role -->
       </ul>
@@ -112,7 +108,7 @@
       </div>
     </nav>
 
-    <!-- Mobile menu -->
+    <!-- Mobile navigation menu -->
     <div id="menu" hidden class="mx-auto mt-2 max-w-6xl rounded-[20px] border border-line bg-white p-2 md:hidden">
       <ul id="menu-links" class="grid gap-1">
         <!-- Rendered by JS -->
@@ -125,7 +121,7 @@
 
   <main class="mx-auto max-w-4xl px-4 pb-20 pt-6 sm:px-6 sm:pt-8">
 
-    <!-- PAGE HEADER -->
+    <!-- Page header -->
     <div class="flex flex-wrap items-center justify-between gap-4">
       <div>
         <h1 class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">Profile & Account</h1>
@@ -136,24 +132,24 @@
       </a>
     </div>
 
-    <!-- NOTIFICATION BANNER / TOAST -->
+    <!-- Notification banner alert -->
     <div id="alert-banner" hidden role="status" class="mt-6 rounded-2xl border px-5 py-3.5 text-base font-medium flex items-center justify-between gap-3 transition-all">
       <span id="alert-message"></span>
       <button type="button" id="alert-close" class="text-sm font-bold opacity-75 hover:opacity-100" aria-label="Dismiss">&times;</button>
     </div>
 
-    <!-- SECTION 1: HERO PROFILE CARD -->
+    <!-- Section 1: Profile card summary -->
     <section aria-labelledby="card-profile-heading" class="mt-8 rounded-[28px] border border-line bg-tint p-6 sm:p-8">
       <h2 id="card-profile-heading" class="sr-only">Profile Overview</h2>
 
       <div class="flex flex-col items-center gap-6 text-center sm:flex-row sm:text-left">
-        <!-- AVATAR UPLOADER -->
+        <!-- Avatar photo uploader -->
         <div class="relative group">
           <button type="button" id="avatar-trigger" class="avatar-trigger relative block rounded-full focus-visible:ring-4 focus-visible:ring-forest outline-none" aria-label="Upload profile picture">
             <span id="hero-avatar" class="grid h-28 w-28 sm:h-32 sm:w-32 shrink-0 place-items-center rounded-full bg-forest font-display text-4xl sm:text-5xl font-bold text-white shadow-sm overflow-hidden" aria-hidden="true">
               <!-- JS loads image or initial -->
             </span>
-            <!-- Camera overlay icon -->
+            <!-- Camera upload icon overlay -->
             <span class="avatar-badge absolute inset-0 grid place-items-center rounded-full bg-forest-deep/60 text-white opacity-0 group-hover:opacity-100 transition-opacity">
               <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
@@ -164,7 +160,7 @@
           <input type="file" id="photo-file-input" accept="image/png, image/jpeg, image/webp" class="sr-only" aria-hidden="true" tabindex="-1">
         </div>
 
-        <!-- DETAILS & BADGES -->
+        <!-- User identity details and role badge -->
         <div class="flex-1 min-w-0">
           <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
             <h3 id="hero-name" class="font-display text-2xl font-bold tracking-tight text-ink"></h3>
@@ -187,10 +183,10 @@
       </div>
     </section>
 
-    <!-- UNIFIED PROFILE FORM -->
+    <!-- Profile edit form -->
     <form id="form-profile" novalidate class="mt-8 space-y-8">
 
-      <!-- SECTION 2: BASIC PERSONAL INFORMATION -->
+      <!-- Section 2: Personal information -->
       <section aria-labelledby="personal-heading" class="rounded-[20px] border border-line bg-white p-6 sm:p-8">
         <div class="flex items-center justify-between border-b border-line pb-4">
           <div>
@@ -261,7 +257,7 @@
         </div>
       </section>
 
-      <!-- SECTION 3: DORM LIFE & ROOMMATE PREFERENCES (For students) -->
+      <!-- Section 3: Roommate compatibility and lifestyle habits -->
       <section id="section-lifestyle" aria-labelledby="lifestyle-heading" class="rounded-[20px] border border-line bg-white p-6 sm:p-8">
         <div class="border-b border-line pb-4">
           <h2 id="lifestyle-heading" class="card-title">Dorm Living & Lifestyle Habits</h2>
@@ -328,7 +324,7 @@
         </div>
       </section>
 
-      <!-- SECTION 4: EMERGENCY CONTACT -->
+      <!-- Section 4: Emergency contact information -->
       <section aria-labelledby="emergency-heading" class="rounded-[20px] border border-line bg-white p-6 sm:p-8">
         <div class="border-b border-line pb-4">
           <h2 id="emergency-heading" class="card-title">Emergency Contact</h2>
@@ -355,7 +351,7 @@
         </div>
       </section>
 
-      <!-- SINGLE UNIFIED SAVE ACTION BAR -->
+      <!-- Save all changes action bar -->
       <div class="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-forest/20 bg-tint/80 p-5 shadow-sm">
         <div>
           <p class="font-display text-base font-bold text-ink">Save all your profile changes</p>
@@ -372,7 +368,7 @@
       </div>
     </form>
 
-      <!-- SECTION 5: CHANGE PASSWORD -->
+      <!-- Section 5: Password update form -->
       <section aria-labelledby="password-heading" class="rounded-[20px] border border-line bg-white p-6 sm:p-8">
         <div class="border-b border-line pb-4">
           <h2 id="password-heading" class="card-title">Security & Password</h2>
@@ -406,7 +402,7 @@
         </form>
       </section>
 
-      <!-- SECTION 6: DANGER ZONE -->
+      <!-- Section 6: Account deletion -->
       <section aria-labelledby="danger-heading" class="rounded-[20px] border border-danger/30 bg-[#FFFDFD] p-6 sm:p-8">
         <h2 id="danger-heading" class="card-title text-danger">Danger Zone</h2>
         <p class="note text-sm mt-1">Once your account is deleted, your reservations, room matches, and preferences cannot be recovered.</p>
@@ -432,7 +428,7 @@
 
       var isLandlord = user.role === 'landlord';
 
-      // ---- 1. SETUP NAVIGATION FOR ROLE ----
+      // 1. Configure navigation links based on user role (student vs landlord)
       var logoLink = $('logo-link');
       var backLink = $('back-link');
       var navLinks = $('nav-links');
@@ -457,7 +453,7 @@
           '<li><a class="nav-link w-full" href="landlord-messages.html">Messages<span data-msg-badge class=\"chip chip-warn ml-2 hidden\"></span></a></li>' +
           '<li><a class="nav-link w-full" href="profile.html" aria-current="page">Profile</a></li>';
 
-        // Hide student specific blocks
+        // Hide student-specific fields for landlords
         $('student-academic-box').hidden = true;
         $('student-year-box').hidden = true;
         $('section-lifestyle').hidden = true;
@@ -483,13 +479,13 @@
           '<li><a class="nav-link w-full" href="profile.html" aria-current="page">Profile</a></li>';
       }
 
-      // Logout buttons
+      // Bind logout button events
       HB_AUTH.bindLogout();
 
-      // Unread messages badge (the nav links above were just built)
+      // Initialize unread messages badge indicator
       if (window.HB_MSG) HB_MSG.bindBadge();
 
-      // Mobile Menu
+      // Mobile navigation drawer toggle
       var menuBtn = $('menu-btn');
       var menu = $('menu');
       function setMenu(open) {
@@ -502,7 +498,7 @@
         if (e.key === 'Escape' && !menu.hidden) { setMenu(false); menuBtn.focus(); }
       });
 
-      // ---- 2. ALERT BANNER SYSTEM ----
+      // 2. Alert banner notification system
       var alertBanner = $('alert-banner');
       var alertMsg = $('alert-message');
       var alertClose = $('alert-close');
@@ -516,13 +512,13 @@
         } else {
           alertBanner.className = 'mt-6 rounded-2xl border px-5 py-3.5 text-base font-medium flex items-center justify-between gap-3 border-forest/40 bg-tint text-forest-deep';
         }
-        // Do not scrollIntoView so user never gets yanked away from what they were editing
+        // Display notification without disruptive auto-scrolling
         clearTimeout(alertTimer);
         alertTimer = setTimeout(function () { alertBanner.hidden = true; }, 5000);
       }
       alertClose.addEventListener('click', function () { alertBanner.hidden = true; });
 
-      // ---- 3. PROFILE DATA HANDLING ----
+      // 3. Profile data loading and binding
       function getStoredProfile() {
         return HB_AUTH.getProfile(user.id || user.email);
       }
@@ -539,7 +535,7 @@
         $('hero-role-badge').textContent = isLandlord ? 'Landlord' : (isNonStudent ? 'Resident' : 'Student');
         $('hero-sub').textContent = isLandlord ? 'Ariate Dormitory Office' : (prof.course || (isNonStudent ? 'Ariate Dormitory Resident' : 'Student'));
 
-        // Render avatars
+        // Render user avatar elements
         HB_AUTH.renderAvatar($('nav-avatar'), user);
         HB_AUTH.renderAvatar($('hero-avatar'), user);
 
@@ -567,7 +563,7 @@
         $('f-bio').value = prof.bio || '';
         $('bio-counter').textContent = (prof.bio ? prof.bio.length : 0) + ' / 300';
 
-        // Lifestyle radio selection
+        // Select lifestyle option radio buttons
         function selectRadio(name, val) {
           if (!val) return;
           var match = document.querySelector('input[name="' + name + '"][value="' + val + '"]');
@@ -594,12 +590,12 @@
       updateHero();
       populateForms();
 
-      // Bio live character counter
+      // Update bio character counter in real time
       $('f-bio').addEventListener('input', function () {
         $('bio-counter').textContent = this.value.length + ' / 300';
       });
 
-      // ---- 4. PHOTO UPLOAD & RESIZE ----
+      // 4. Photo upload, client-side canvas crop and compression
       var photoInput = $('photo-file-input');
       $('avatar-trigger').addEventListener('click', function () { photoInput.click(); });
       $('btn-upload-photo').addEventListener('click', function () { photoInput.click(); });
@@ -613,7 +609,7 @@
           return;
         }
 
-        // Max 5 MB before client resize
+        // Validate file size under 5 MB before client-side processing
         if (file.size > 5 * 1024 * 1024) {
           showAlert('Selected file is too large. Please select an image under 5MB.', 'error');
           return;
@@ -623,7 +619,7 @@
         reader.onload = function (e) {
           var img = new Image();
           img.onload = function () {
-            // Resize to 320x320 centered crop/fit on canvas
+            // Crop to center and resize to 320x320 using HTML5 canvas
             var canvas = document.createElement('canvas');
             var ctx = canvas.getContext('2d');
             var TARGET = 320;
@@ -665,7 +661,7 @@
         showAlert('Profile photo removed.');
       });
 
-      // ---- 5. SINGLE UNIFIED SAVE FOR WHOLE PROFILE ----
+      // 5. Unified profile save handler
       var formProfile = $('form-profile');
       var saveStatus = $('save-status');
       var saveStatusTimer = null;
@@ -673,7 +669,7 @@
       formProfile.addEventListener('submit', function (e) {
         e.preventDefault();
 
-        // Clear errors
+        // Reset validation error messages
         $('f-name-err').hidden = true;
         $('f-email-err').hidden = true;
         $('f-name').removeAttribute('aria-invalid');
@@ -702,7 +698,7 @@
 
         if (!valid) return;
 
-        // Check email uniqueness across other accounts
+        // Validate email uniqueness across existing registered accounts
         var users = JSON.parse(localStorage.getItem('homebase_users') || '[]');
         var duplicate = users.some(function (u) {
           return u.email === email && String(u.id) !== String(user.id);
@@ -716,7 +712,7 @@
           return;
         }
 
-        // 1. Update user in homebase_users list
+        // 1. Update user record in local user list
         for (var i = 0; i < users.length; i++) {
           if (String(users[i].id) === String(user.id) || String(users[i].email) === String(user.email)) {
             users[i].name = name;
@@ -726,12 +722,12 @@
         }
         localStorage.setItem('homebase_users', JSON.stringify(users));
 
-        // 2. Update active session
+        // 2. Update active session user record
         user.name = name;
         user.email = email;
         localStorage.setItem('homebase_currentUser', JSON.stringify(user));
 
-        // 3. Update extra profile details
+        // 3. Save extended profile and lifestyle data
         var prof = getStoredProfile();
         prof.name = name;
         prof.email = email;
@@ -756,7 +752,7 @@
 
         updateHero();
 
-        // Show status inline right where the user is looking
+        // Display inline confirmation indicator
         if (saveStatus) {
           saveStatus.hidden = false;
           clearTimeout(saveStatusTimer);
@@ -765,7 +761,7 @@
         showAlert('All profile details updated successfully!');
       });
 
-      // ---- 8. CHANGE PASSWORD ----
+      // 6. Change password handler via Supabase Auth
       $('form-password').addEventListener('submit', function (e) {
         e.preventDefault();
 
@@ -820,7 +816,7 @@
         });
       });
 
-      // ---- 9. DANGER ZONE: ACCOUNT DELETION ----
+      // 7. Account deletion and data purge handler
       var deletePanel = $('delete-panel');
       var btnDeleteInit = $('btn-delete-init');
 
@@ -855,7 +851,7 @@
           users = users.filter(function (u) { return u.id !== user.id; });
           localStorage.setItem('homebase_users', JSON.stringify(users));
 
-          // Clean all user keys
+          // Remove all local storage keys associated with the account
           try {
             localStorage.removeItem('homebase_currentUser');
             localStorage.removeItem('homebase_profile_' + user.id);
@@ -864,8 +860,7 @@
             localStorage.removeItem('homebase_comparisons_' + user.id);
             localStorage.removeItem('homebase_preferences_' + user.id);
 
-            // Requests and reviews are shared lists, so remove this student's entries from them.
-            // Without this, a deleted student's request would keep holding a bed in its room forever.
+            // Remove user's reservations and reviews from shared collections to free bed allocations
             ['homebase_reservations', 'homebase_reviews'].forEach(function (k) {
               var list = JSON.parse(localStorage.getItem(k) || '[]');
               if (Array.isArray(list)) localStorage.setItem(k, JSON.stringify(list.filter(function (x) { return x.userId !== user.id; })));

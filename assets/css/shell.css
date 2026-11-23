@@ -1,17 +1,10 @@
 /*
-  Navigation for every signed-in page (drawn by assets/js/app-shell.js, which loads this file itself).
-
-  Design Read: mobile-first dormitory app for students and the dorm office, warm green-and-paper, ENERGY 2 / RHYTHM 2 / MOTION 1.
-
-  Why each choice:
-    paper ground        warm off-white so white cards read as cards, instead of white on white
-    dark green sidebar  the brand color gets one big, calm surface on laptops; the lime accent marks only the current page
-    12px link radius    navigation items are not pills; the pill is kept for buttons so the main action stands out
-    no motion           only color changes on hover; nothing moves on its own
+  Student application navigation shell (managed by assets/js/app-shell.js).
+  Provides responsive sidebar navigation on desktop and a top header with sheet dropdown on mobile.
 */
 
 body.hb-body { background: var(--paper); }
-.hb-body > header:not(.hb-top) { display: none; } /* the old pill navbar, on pages that still carry one */
+.hb-body > header:not(.hb-top) { display: none; } /* Hide legacy navbar on updated shell pages */
 
 .hb-side, .hb-side *, .hb-top, .hb-top *, .hb-sheet, .hb-sheet * { box-sizing: border-box; }
 .hb-skip { position: absolute; left: -9999px; top: .75rem; z-index: 80; border-radius: .75rem; background: var(--forest); color: #fff; padding: .625rem 1.25rem; font-weight: 600; text-decoration: none; }
@@ -24,13 +17,13 @@ body.hb-body { background: var(--paper); }
 .hb-avatar img { width: 100%; height: 100%; object-fit: cover; }
 [data-msg-badge].hidden, [data-concern-badge].hidden { display: none; }
 
-/* links (sidebar and sheet) */
+/* Navigation links */
 .hb-link { display: flex; min-height: 44px; align-items: center; gap: .75rem; border-radius: .75rem; padding: 0 .875rem; font-size: 1rem; line-height: 1.5rem; font-weight: 500; text-decoration: none; cursor: pointer; transition: background-color .15s; }
 .hb-link .chip { margin-left: auto; }
 .hb-link[aria-current="page"] { font-weight: 600; }
 .hb-nav ul, .hb-sheet ul { margin: 0; padding: 0; list-style: none; display: grid; gap: .25rem; }
 
-/* sidebar (laptops) */
+/* Desktop sidebar */
 .hb-side { display: none; }
 .hb-side .hb-brand { color: #fff; }
 .hb-sub { margin: .25rem 0 0; padding: 0 .25rem; font-size: .875rem; line-height: 1.25rem; color: #C9DCD0; }
@@ -48,13 +41,13 @@ body.hb-body { background: var(--paper); }
 .hb-role { font-size: .875rem; line-height: 1.25rem; color: #C9DCD0; }
 .hb-user .btn { width: 100%; margin-top: .75rem; }
 
-/* top bar (phones) */
+/* Mobile top navigation */
 .hb-top { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: .75rem; border-bottom: 1px solid var(--line); background: var(--paper); padding: .375rem 1rem; padding-top: calc(.375rem + env(safe-area-inset-top, 0px)); }
 .hb-top-right { display: flex; align-items: center; gap: .5rem; }
 .hb-top a:focus-visible, .hb-top button:focus-visible, .hb-sheet a:focus-visible, .hb-sheet button:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--forest); }
 .hb-top .hb-user-link { padding: .125rem; color: var(--ink); }
 
-/* the Menu dropdown (students on phones): Concerns, Profile, Log out */
+/* Mobile navigation dropdown menu */
 .hb-sheet { position: fixed; left: .75rem; right: .75rem; top: calc(3.5rem + env(safe-area-inset-top, 0px)); z-index: 50; border: 1px solid var(--line); border-radius: 1rem; background: #fff; padding: .5rem; box-shadow: 0 8px 24px rgba(20, 33, 26, .16); }
 .hb-sheet[hidden] { display: none; }
 .hb-sheet .hb-link { color: var(--ink); }

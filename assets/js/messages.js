@@ -1,26 +1,6 @@
 /*
-  Student <-> landlord messaging for room inquiries.
-  Shared by: rooms.html, matches.html, floorplan.html (Ask button), messages.html (student inbox),
-             landlord-messages.html (landlord inbox), landlord.html (Message button), and every navbar (unread badge).
-  Load order: auth.js, rooms.js, reservation.js, then this file.
-
-  Stored in localStorage as two lists, shaped like the two tables a database would have.
-
-  "homebase_threads"   one conversation per student + room
-    { id, studentId, studentName, studentEmail, roomId, roomName,
-      lastMessage, lastSenderRole: "student" | "landlord",
-      studentLastReadAt, landlordLastReadAt, createdAt, updatedAt }
-
-  "homebase_messages"
-    { id, threadId, senderId, senderName, senderRole: "student" | "landlord", body, createdAt }
-
-  Rules: a student sees only their own threads. The landlord sees every thread (there is one dormitory).
-         A message is plain text, 1 to 1000 characters. It is always drawn with textContent, never as HTML.
-         Unread = messages from the OTHER side that are newer than your own last-read time.
-
-  SUPABASE LATER: only the `store` object below touches storage. Replace its four functions with table reads and writes,
-  and replace the "storage" event listeners with a realtime subscription. Nothing is connected yet.
-  Note that Supabase calls are async, so the functions that call the store will return Promises at that point.
+  Resident and landlord inquiry messaging service.
+  Manages conversation threads and message delivery between students and landlord.
 */
 (function () {
   'use strict';
@@ -29,7 +9,7 @@
   var MESSAGES_KEY = 'homebase_messages';
   var MAX_LEN = 1000;
 
-  // ---- storage: the ONE place to swap for Supabase ----
+  // Local storage persistence layer
   function readList(key) { try { var v = JSON.parse(localStorage.getItem(key) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
   function writeList(key, list) { try { localStorage.setItem(key, JSON.stringify(list)); return true; } catch (e) { return false; } }
   var store = {
@@ -52,7 +32,7 @@
     return withDay ? day + ', ' + time : day;
   }
 
-  // ---- student profile (landlord side) ----
+  // Student profile modal helpers
   function avatar(prof, name, size) {
     var a = el('span', 'grid shrink-0 place-items-center overflow-hidden rounded-full bg-forest font-display font-semibold text-white ' + size);
     a.setAttribute('aria-hidden', 'true');

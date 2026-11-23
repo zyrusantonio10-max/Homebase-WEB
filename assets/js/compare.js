@@ -1,19 +1,10 @@
 /*
-  Compare rooms: shared by Explore Rooms (rooms.html) and My Matches (matches.html).
-  Needs assets/js/reservation.js (window.HB) loaded first, and the pages' .btn / .btn-outline classes.
-
-  Usage on a page:
-    var cmp = HBCompare.mount({ rooms: ROOMS, user: user, hasActive: hasActive });
-    card.appendChild(cmp.checkbox(room));          // the "Compare" tick box for one room
-    cmp.setPicked(['103', '202']); cmp.open(ids);  // used when a comparison is reopened from Home
-
-  Comparisons are remembered in localStorage "homebase_comparisons" (newest first, max 10):
-    { rooms: ["Room 103", "Room 202"], ids: ["103", "202"], date: ISO }
-  Home lists them and links back to rooms.html?compare=103,202.
+  Room comparison component shared across room discovery and matches pages.
+  Manages room selection, comparison modal dialog, and comparison history persistence.
 */
 (function () {
   var MAX = 3;
-  // each student's comparisons are kept under their own user id (HB_AUTH is loaded first on every page)
+  // Scoped localStorage storage key for current user
   function key() { return window.HB_AUTH ? HB_AUTH.userKey('homebase_comparisons') : 'homebase_comparisons'; }
   var STATUS = { available: 'Available', full: 'Full (every bed is taken)', taken: 'Taken', yours: 'Your request' };
 
@@ -26,7 +17,7 @@
     mount: function (cfg) {
       var rooms = cfg.rooms, user = cfg.user, hasActive = !!cfg.hasActive, picked = [];
 
-      // ---- comparison bar and the comparison window ----
+      // Initialize comparison bar and modal elements
       var bar = document.getElementById('cmp-bar'), dlg = document.getElementById('cmp-dialog');
       if (!bar) {
         bar = el('div', 'fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white/95 backdrop-blur-md px-4 py-2.5 sm:px-6 shadow-lg');
@@ -157,7 +148,7 @@
       dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close(); });
 
       return {
-        // the tick box for one room. opts: { dark: true on a dark card, cls: extra classes for spacing }
+        // Render checkbox input for comparison selection
         checkbox: function (room, opts) {
           opts = opts || {};
           var label = el('label', 'flex min-h-[44px] cursor-pointer items-center gap-3 text-base font-medium ' + (opts.dark ? 'text-white ' : '') + (opts.cls || ''));

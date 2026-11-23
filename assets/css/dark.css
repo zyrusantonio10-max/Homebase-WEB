@@ -1,7 +1,7 @@
-/* ==========================================================================
-   Homebase Premium Dark Mode Stylesheet
-   Designed for luxury obsidian-emerald contrast, soft eye-comfort, and sleek aesthetics.
-   ========================================================================== */
+/*
+  Dark mode color palette and theme overrides.
+  Defines dark theme custom properties on html.dark and adjusts surface contrasts.
+*/
 
 /* Dark Palette CSS Variables */
 html.dark {
@@ -371,7 +371,7 @@ html:not(.dark) .hb-theme-toggle .icon-moon {
 /* Dark mode icon display */
 html.dark .hb-theme-toggle .icon-sun {
   display: block;
-  color: #FBBF24; /* Warm golden sun */
+  color: #FBBF24;
 }
 html.dark .hb-theme-toggle .icon-moon {
   display: none;

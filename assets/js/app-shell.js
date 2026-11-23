@@ -1,24 +1,16 @@
 /*
-  The navigation for every signed-in page, for students AND the landlord. It replaces assets/js/landlord-shell.js.
-
-  Laptops (768px and wider): a dark green sidebar on the left (logo, links, your name, Log out).
-  Phones: a slim top bar with a menu to access all pages and Log out.
-    Students:  Home, Matches, Rooms, Messages, Concerns, Profile and Log out.
-    Landlord:  Dashboard, Rooms, Messages, Concerns, Reviews, Profile and Log out.
-
-  How to use it: put <script src="assets/js/app-shell.js"></script> as the FIRST thing inside <body>.
-  It loads assets/css/shell.css by itself and removes the page's old navbar, if there is one.
-
-  It keeps the ids and attributes the pages' own scripts already use, so those scripts keep working:
-    nav-initial / nav-avatar, nav-name, menu-btn, menu, menu-label, logout, logout-m, [data-logout],
-    [data-msg-badge] (unread count, filled by messages.js), [data-concerns-nav] (students see it only while they live here, shown by messages.js).
+  Application navigation shell for authenticated sessions (student and landlord).
+  Renders responsive navigation:
+    Desktop (>= 768px): fixed left sidebar with branding, navigation links, and user profile.
+    Mobile (< 768px): top navigation bar with toggleable dropdown menu.
+  Maintains legacy DOM element IDs and data attributes for backward compatibility.
 */
 (function () {
   'use strict';
 
   var user = {};
   try { user = JSON.parse(localStorage.getItem('homebase_currentUser') || '{}') || {}; } catch (e) {}
-  if (!user.email) return; // signed out: the page sends the person to the login itself
+  if (!user.email) return; // Skip rendering for unauthenticated sessions
   var isLL = user.role === 'landlord';
 
   var css = document.createElement('link');
@@ -40,7 +32,7 @@
     menu: icon('<path d="M4 7h16M4 12h16M4 17h16"/>')
   };
 
-  // concerns: students see it only when messages.js says so.
+  // Navigation link configuration (concerns visible only to active residents)
   var NAV = isLL ? [
     { href: 'landlord.html', label: 'Dashboard', icon: 'dashboard' },
     { href: 'landlord-rooms.html', label: 'Rooms', icon: 'rooms' },
@@ -57,7 +49,7 @@
     { href: 'profile.html', label: 'Profile', icon: 'profile' }
   ];
   var home = NAV[0].href;
-  // Vercel serves /home as well as /home.html, so compare without the extension
+  // Normalize pathname by stripping file extensions for route matching
   function bare(s) { return String(s).toLowerCase().replace(/\.html$/, ''); }
   var here = bare(location.pathname.split('/').pop() || '');
 
@@ -88,11 +80,11 @@
   }
 
   document.body.classList.add('hb-body');
-  document.documentElement.style.scrollPaddingTop = '5rem'; // #links should not land under the phone top bar
+  document.documentElement.style.scrollPaddingTop = '5rem'; // Offset anchor links below mobile header
 
   var skip = el('a', 'hb-skip', 'Skip to main content'); skip.href = '#main';
 
-  // ---- sidebar (laptops) ----
+  // Desktop sidebar
   var side = el('aside', 'hb-side');
   side.appendChild(brand());
   side.appendChild(el('p', 'hb-sub', isLL ? 'Ariate Dormitory \u00B7 Landlord' : 'Ariate Dormitory \u00B7 Student'));
@@ -120,7 +112,7 @@
   out.addEventListener('click', logout);
   me.appendChild(meRow); me.appendChild(out); side.appendChild(me);
 
-  // ---- top bar (phones) ----
+  // Mobile top navigation bar
   var top = el('header', 'hb-top');
   top.appendChild(brand());
   var right = el('div', 'hb-top-right');
@@ -137,7 +129,7 @@
   right.appendChild(mb);
   top.appendChild(right);
 
-  // ---- mobile menu dropdown (phones) ----
+  // Mobile dropdown menu
   var sheet = el('div', 'hb-sheet'); sheet.id = 'menu'; sheet.hidden = true;
   var sul = el('ul'); sul.id = 'menu-links';
   NAV.forEach(function (item) { sul.appendChild(li(link(item, 'hb-link'), item)); });
@@ -165,7 +157,7 @@
   parts.forEach(function (n) { frag.appendChild(n); });
   document.body.insertBefore(frag, document.body.firstChild);
 
-  // landlord: how many concerns are new (status "received", same rule as HB_CONCERNS.newCount)
+  // Landlord maintenance ticket pending count badge
   function paintConcerns() {
     var n = 0; try { n = JSON.parse(localStorage.getItem('homebase_concerns') || '[]').filter(function (c) { return c.status === 'received'; }).length; } catch (e) {}
     document.querySelectorAll('[data-concern-badge]').forEach(function (b) { b.textContent = n + ' new'; b.classList.toggle('hidden', n === 0); });
@@ -176,7 +168,7 @@
     window.addEventListener('hb-concerns', paintConcerns);
   }
 
-  // the skip link needs somewhere to land, and the old navbar would repeat the ids
+  // Ensure main target exists for accessibility and remove legacy header elements
   document.addEventListener('DOMContentLoaded', function () {
     var old = document.querySelectorAll('body > header:not(.hb-top)');
     for (var i = 0; i < old.length; i++) old[i].parentNode.removeChild(old[i]);

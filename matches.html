@@ -7,22 +7,9 @@
   <meta name="description" content="Tell Homebase your budget and needs. It ranks the available Ariate Dormitory rooms by fit.">
 
   <!--
-    Design Read: room matching screen for dorm students (mostly on phones, some on laptops), calm white and forest language
-    with one lime accent. Dial ENERGY 2 / RHYTHM 2 / MOTION 1.
-
-    Why each choice:
-      one panel, one list   the form is a panel on the left (laptop) or a collapsing summary (phone); results are one ranked list,
-                            so the eye reads top to bottom: best match, then the rest. No chart competes with the rooms.
-      points bar motif      the four parts of the 100 points (budget, amenities, room type, floor) have one color each. The same
-                            four-part bar shows up in the form (how points are shared), on the best match (what each part earned)
-                            and on every room row (how full its score is). It is the one repeated gesture of the page.
-      lime only on "Best match"   the single accent marks the single focal point.
-      no shadows, hairline borders   cards sit flat on white; the best match is bigger, not louder.
-      radius scale          20px panels and rows, 24px best match, 12px tiles, 8px chips, pill buttons only.
-      no inner scroll boxes every control sits inside its box. On laptops the panel scrolls as a whole with the button pinned.
-
-    Score rules are in the script, search "SCORING". Commute and safety are not criteria (your decision).
-    Storage written by this page: homebase_preferences, homebase_topMatch (Home reads it), homebase_savedRooms (Home reads it).
+    Room matching portal: evaluates and ranks available rooms against user preferences.
+    Weights criteria across budget, room amenities, room type, and floor preference.
+    Saves top match and preference state in scoped user localStorage.
   -->
 
   <script>
@@ -281,7 +268,9 @@
   <script src="assets/js/compare.js"></script>
   <script>
     (function () {
-      var K = { user: 'homebase_currentUser', prefs: 'homebase_preferences', top: 'homebase_topMatch', saved: 'homebase_savedRooms' };
+      // Home and Explore Rooms keep these per student (homebase_topMatch_<id>), so this page must use the same keys
+      var uk = function (k) { return (window.HB_AUTH && HB_AUTH.userKey) ? HB_AUTH.userKey(k) : k; };
+      var K = { user: 'homebase_currentUser', prefs: uk('homebase_preferences'), top: uk('homebase_topMatch'), saved: uk('homebase_savedRooms') };
       var $ = function (id) { return document.getElementById(id); };
 
       function read(key) { try { var r = localStorage.getItem(key); return { ok: true, value: r ? JSON.parse(r) : null }; } catch (e) { return { ok: false, value: null }; } }

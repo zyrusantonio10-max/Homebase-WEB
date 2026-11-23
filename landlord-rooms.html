@@ -6,20 +6,10 @@
   <title>Rooms | Homebase</title>
   <meta name="description" content="Add, edit and remove the rooms students can see at Ariate Dormitory.">
 
-  <!--
-    Design Read: the landlord's room list for Ariate Dormitory: "what rooms do I have, and what state are they in?"
-    Same forest + lime language as the other pages. Less text, more picture:
-    - A strip of one segment per room (green available, sage full, grey taken), the free beds, and how many rooms have a request.
-    - Rooms are cards grouped by floor, with the picture and state on top, and one bed icon per bed:
-      green = free, sage = requested, grey = taken outside Homebase. No sentences needed to read the state.
-    - Add and Edit share one dialog. The room type is three tiles with bed icons. The room number is the room's identity: set once, never edited.
-    - A room with an active student request cannot be deleted or switched to taken: it shows "In use" until the request ends.
-    - Delete and Reset ask first. Nothing here is fake: the list is the real room list students see on their pages.
-    - Not built: custom amenities, price history.
-  -->
+  <!-- Landlord room management: add, edit, configure availability, and remove dormitory rooms -->
 
   <script>
-    // Guard: landlords only. Students go to home.html.
+    // Authentication guard: ensure user has landlord role; redirect students to home dashboard
     (function () {
       try {
         var u = JSON.parse(localStorage.getItem('homebase_currentUser') || 'null');
@@ -70,7 +60,7 @@
     </div>
 
     <div id="board" hidden>
-      <!-- at a glance: one segment per room, free beds, rooms with a request -->
+      <!-- Key metrics summary: availability strip, free beds, and requested rooms -->
       <section id="glance" aria-label="At a glance" class="mt-6 grid gap-4 md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)]"></section>
 
       <div id="floor-chips" role="group" aria-label="Show a floor" class="mt-6 flex flex-wrap gap-2"></div>
@@ -91,7 +81,7 @@
     </div>
   </main>
 
-  <!-- ADD / EDIT -->
+  <!-- Room add / edit modal dialog -->
   <dialog id="room-dialog" aria-labelledby="room-title" class="max-h-[90vh] w-[calc(100vw-2rem)] max-w-[480px] overflow-y-auto rounded-2xl border border-line bg-white p-0 text-ink shadow-xl backdrop:bg-ink/50">
     <div class="p-6">
       <h2 id="room-title" class="font-display text-xl font-bold tracking-tight"></h2>
@@ -215,12 +205,12 @@
       var TYPES = ['Single', 'Double', 'Triple', 'Quad'];
       var rooms = HB.getRooms();
       var floorFilter = 'all';
-      var ui = { kind: null, id: null };     // inline question that is open: "delete"
-      var editingId = null;                  // null while adding
-      var photos = [], addedPhotos = [], removedPhotos = [], uploading = 0, savedOk = false;   // photo state of the open form
+      var ui = { kind: null, id: null };     // Active inline prompt state: "delete"
+      var editingId = null;                  // Currently editing room ID (null when creating)
+      var photos = [], addedPhotos = [], removedPhotos = [], uploading = 0, savedOk = false;   // Photo staging and upload state
       var resetAsking = false;
 
-      // ---------- helpers ----------
+      // Utility and persistence helpers
       function sortRooms() {
         rooms.sort(function (a, b) { return (a.floor - b.floor) || String(a.id).localeCompare(String(b.id), undefined, { numeric: true }); });
       }
@@ -233,8 +223,7 @@
         fail(''); rooms = next; sortRooms(); notice(okText); render(); return true;
       }
 
-      // ---------- list ----------
-      // ---------- small visual helpers ----------
+      // Room list UI and visual helpers
       var ICO = {
         bed: '<path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 00-3-3h-7v6"/>',
         lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>'
@@ -249,7 +238,7 @@
       function pill(text) { return el('li', 'rounded-lg border border-line bg-tint px-2.5 py-1 text-sm font-medium', text); }
       var STATE_COLOR = { available: '#1E4D36', full: '#93B4A2', taken: '#C9D3CD' };
 
-      // one bed icon per bed: taken outside (grey), requested (sage), free (green)
+      // Render bed indicators with status coloring: taken (grey), requested (sage), free (green)
       function bedsRow(r, info) {
         var cap = info.capacity, out = Math.min(cap, info.outside || 0), req = Math.min(cap - out, info.requested || 0);
         var wrap = el('li', 'inline-flex items-center gap-0.5');
@@ -261,7 +250,7 @@
         return wrap;
       }
 
-      // ---------- at a glance ----------
+      // At a glance summary metrics
       function renderGlance() {
         var box = $('glance'); box.textContent = '';
         var counts = { available: 0, full: 0, taken: 0 }, freeBeds = 0, withReq = 0;
@@ -298,7 +287,7 @@
         box.appendChild(tile('lock', withReq, 'Rooms with a request'));
       }
 
-      // ---------- one room ----------
+      // Render individual room card
       function row(r) {
         var list = activeList(r.id), res = list[0], info = HB.bedsInfo(r, '__office__'), st = HB.roomState(r, '__office__');
         var statusText = st === 'available' ? (info.capacity > 1 ? info.free + ' of ' + info.capacity + ' free' : 'Available') : (st === 'full' ? 'Full' : 'Taken');
@@ -423,7 +412,7 @@
         });
       }
 
-      // ---------- add / edit ----------
+      // Add and edit room modal handlers
       var dlg = $('room-dialog'), form = $('room-form');
       function typeVal() { var c = form.querySelector('input[name=rtype]:checked'); return c ? c.value : 'Single'; }
       function setType(v) { form.querySelectorAll('input[name=rtype]').forEach(function (r) { r.checked = r.value === v; }); }
@@ -532,7 +521,7 @@
         var label = editingId === null ? 'Room ' + id : 'Room ' + editingId;
         savedOk = true; removedPhotos.forEach(function (u) { HB_PHOTOS.remove(u); });
         dlg.close();
-        if (floorFilter !== 'all' && Number(floorFilter) !== floor) floorFilter = 'all';   // so the room you just saved is not hidden by the filter
+        if (floorFilter !== 'all' && Number(floorFilter) !== floor) floorFilter = 'all';   // Reset floor filter so newly saved room remains visible
         persist(next, (editingId === null ? 'Added ' : 'Saved ') + label + '.');
       });
 

@@ -382,7 +382,7 @@
         return s;
       }
 
-      // ---- user ----
+      // User session management & validation
       var u = read(KEYS.user);
       var user = u.ok ? u.value : null;
       if (!user || !user.email) { window.location.replace('index.html'); return; }
@@ -394,7 +394,7 @@
       $('nav-initial').textContent = initial;
       $('nav-name').textContent = firstName;
 
-      // ---- logout (navbar and mobile menu) ----
+      // Handle user logout across desktop and mobile
       document.querySelectorAll('[data-logout]').forEach(function (b) {
         b.addEventListener('click', function () {
           try { localStorage.removeItem(KEYS.user); } catch (e) {}
@@ -405,7 +405,7 @@
         b.addEventListener('click', function () { window.location.reload(); });
       });
 
-      // ---- mobile menu ----
+      // Mobile menu toggle and keyboard interactions
       var menuBtn = $('menu-btn'), menu = $('menu');
       function setMenu(open) {
         menu.hidden = !open;
@@ -417,10 +417,10 @@
         if (e.key === 'Escape' && !menu.hidden) { setMenu(false); menuBtn.focus(); }
       });
 
-      // ---- landlords have their own page ----
+      // Ensure landlords are routed to the landlord portal
       if (user.role === 'landlord') { window.location.replace('landlord.html'); return; }
 
-      // ---- name and avatar in the navbar (the profile card that used to sit on this page is gone) ----
+      // Display name and avatar in navigation
       var prof = (window.HB_AUTH && HB_AUTH.getProfile) ? HB_AUTH.getProfile(user) : {};
       if (prof && prof.name) {
         fullName = prof.name;
@@ -430,7 +430,7 @@
       $('first-name').textContent = firstName;
       if (window.HB_AUTH && HB_AUTH.renderAvatar) HB_AUTH.renderAvatar($('nav-initial'), user);
 
-      // ---- rooms, for pictures ----
+      // Room catalogue and image helpers
       var ROOMS = (window.HB && HB.getRooms) ? HB.getRooms() : [];
       function roomById(id) { for (var i = 0; i < ROOMS.length; i++) if (String(ROOMS[i].id) === String(id)) return ROOMS[i]; return null; }
       function roomByName(n) { for (var i = 0; i < ROOMS.length; i++) if (ROOMS[i].name === n) return ROOMS[i]; return null; }
@@ -448,8 +448,7 @@
         return frame;
       }
 
-      // ---- a connected row of steps (used for the progress bar and for the request) ----
-      // items: [{ label, state: 'done' | 'now' | 'todo', href }]
+      // Reusable multi-step progress indicator
       function stepper(items, withIcons) {
         var ol = mk('ol', 'grid');
         ol.style.gridTemplateColumns = 'repeat(' + items.length + ', minmax(0, 1fr))';
@@ -478,7 +477,7 @@
         return ol;
       }
 
-      // ---- progress bar at the top ----
+      // Render room discovery progress stepper at top of page
       function myLatest() { return (window.HB && HB.load().ok) ? (HB.forUser(user.id)[0] || null) : null; }
       function renderJourney() {
         var p = read(KEYS.prefs).value, top = read(KEYS.top).value, r = myLatest(), st = r ? r.status : '';
@@ -501,7 +500,7 @@
         box.appendChild(stepper(items, true));
       }
 
-      // ---- best match ----
+      // Render best match recommendation and match score ring
       var FIT_LABEL_SHORT = function (m, pct) { return (typeof m.label === 'string' && m.label) ? m.label : (pct >= 80 ? 'Great fit' : pct >= 60 ? 'Good fit' : 'Okay fit'); };
       function renderTop() {
         var r = read(KEYS.top);
@@ -527,7 +526,7 @@
         requestAnimationFrame(function () { requestAnimationFrame(function () { ring.style.strokeDashoffset = String(circ * (1 - pct / 100)); }); });
       }
 
-      // ---- number tiles ----
+      // Metric summary number tiles
       function renderTiles() {
         var saved = read(KEYS.saved).value, cmp = read(KEYS.cmp).value, p = read(KEYS.prefs).value;
         var nSaved = Array.isArray(saved) ? saved.filter(function (x) { return x && x.name; }).length : 0;
@@ -548,7 +547,7 @@
         }
       }
 
-      // ---- saved rooms: picture cards ----
+      // Saved rooms list & cards
       var STATE_LABEL = { available: 'Available', full: 'Full', taken: 'Taken', yours: 'Your request' };
       function renderSaved() {
         var r = read(KEYS.saved);
@@ -590,7 +589,7 @@
         setState('card-saved', 'list');
       }
 
-      // ---- recent comparisons: overlapping pictures + names ----
+      // Recent room comparisons list
       function renderComparisons() {
         var r = read(KEYS.cmp);
         if (!r.ok || (r.value !== null && !Array.isArray(r.value))) { setState('card-cmp', 'error'); return; }
@@ -622,7 +621,7 @@
         setState('card-cmp', 'list');
       }
 
-      // ---- your room request ----
+      // Active room reservation request details
       var cancelling = false;
       function renderReservation() {
         if (!window.HB) {
@@ -639,7 +638,7 @@
         var box = $('res-view'); box.textContent = '';
         var due = r.paymentDueAt ? fmtDate(r.paymentDueAt) : '';
 
-        // top: picture + name + facts as small chips
+        // Top summary: room image, title, and key details
         var top = mk('div', 'grid items-center gap-5 sm:grid-cols-[180px_minmax(0,1fr)]');
         top.appendChild(pic(room, 'hidden aspect-[8/5] overflow-hidden rounded-2xl bg-track sm:block'));
         var info = mk('div', 'min-w-0');
@@ -658,7 +657,7 @@
         top.appendChild(info);
         box.appendChild(top);
 
-        // progress
+        // Status progress steps
         var steps = {
           pending:   [['Requested', 'done'], ['Office decision', 'now'], ['Payment', 'todo']],
           approved:  [['Requested', 'done'], ['Approved', 'done'], ['Payment', 'now']],
@@ -711,10 +710,10 @@
         setState('reservation', 'view');
       }
 
-      // ---- house rules ----
+      // House rules modal trigger
       $('open-rules').addEventListener('click', function () { if (window.HB) HB.openRules(); });
 
-      // ---- where to start (only for someone who has not done anything yet) ----
+      // Getting started helper for brand new accounts
       function renderStart() {
         var top = read(KEYS.top).value, saved = read(KEYS.saved).value, prefs = read(KEYS.prefs).value;
         var hasRes = !!window.HB && HB.forUser(user.id).length > 0;
@@ -722,7 +721,7 @@
         $('start').hidden = !isNew;
       }
 
-      // ---- your preferences: chips ----
+      // User room preferences summary chips
       var clearing = false;
       var PRIORITY = { budget: 'Budget', amenities: 'Amenities', type: 'Room type', floor: 'Floor' };
       function renderPrefs() {
@@ -774,7 +773,7 @@
         setState('prefs', 'view');
       }
 
-      // ---- waiting for a parent or guardian (students under 18) ----
+      // Guardian approval code display for underage students
       function renderGuardian() {
         var box = $('guardian-box');
         if (!window.HB_AUTH || !HB_AUTH.needsGuardian(user.id)) { box.hidden = true; return; }

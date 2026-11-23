@@ -1,7 +1,7 @@
-/* ==========================================================================
-   Homebase Theme Manager (Light / Dark Mode)
-   Handles theme state persistence, toggle actions, and smart button mounting.
-   ========================================================================== */
+/*
+  Theme manager for light and dark mode.
+  Handles theme state persistence, UI toggles, and system preference changes.
+*/
 
 (function (global) {
   'use strict';
@@ -98,13 +98,11 @@
 
   // Auto-mount toggles when DOM is ready
   function autoMountToggles() {
-    // 1. LANDLORD SIDE:
-    // User requested: "In landlord side i want the button close to the landlords profile"
+    // Landlord sidebar toggle
     var llUser = document.querySelector('.ll-user, .hb-user');
     if (llUser && !llUser.querySelector('[data-theme-toggle]')) {
       var userLink = llUser.querySelector('.ll-user-link, .hb-user-link');
       if (userLink) {
-        // Place right beside the profile link
         var btn = HB_THEME.createButton('ml-auto');
         userLink.style.display = 'flex';
         userLink.style.alignItems = 'center';
@@ -114,19 +112,17 @@
       }
     }
 
-    // Landlord Mobile Top Bar (Right next to profile avatar)
+    // Landlord mobile top bar toggle
     var llTopRight = document.querySelector('.ll-top-right, .hb-top-right');
     if (llTopRight && !llTopRight.querySelector('[data-theme-toggle]')) {
       var mBtn = HB_THEME.createButton();
       llTopRight.insertBefore(mBtn, llTopRight.firstChild);
     }
 
-    // 2. USER / STUDENT SIDE:
-    // Placed conveniently in the navbar right group right beside the user's profile avatar
+    // Student navbar toggle
     var navUserArea = document.querySelector('header nav .flex.items-center.gap-2');
     if (navUserArea && !navUserArea.querySelector('[data-theme-toggle]')) {
       var sBtn = HB_THEME.createButton();
-      // Insert right before profile link
       var profileLink = navUserArea.querySelector('a[href="profile.html"]');
       if (profileLink) {
         navUserArea.insertBefore(sBtn, profileLink);
@@ -135,7 +131,7 @@
       }
     }
 
-    // Mobile Menu Dropdown for students
+    // Student mobile menu dropdown toggle
     var mobileMenu = document.querySelector('#menu, .hb-sheet, .ll-menu');
     if (mobileMenu && !mobileMenu.querySelector('[data-theme-toggle-mobile]')) {
       var row = document.createElement('div');
@@ -146,7 +142,7 @@
       mobileMenu.appendChild(row);
     }
 
-    // Bind any existing static [data-theme-toggle] elements
+    // Bind click events on static theme toggles
     document.querySelectorAll('[data-theme-toggle]').forEach(function (el) {
       if (!el._bound) {
         el._bound = true;
