@@ -7,14 +7,10 @@
   <meta name="description" content="Create a Homebase student account for Ariate Dormitory.">
 
   <!--
-    Design Read: a three-step sign-up for students who want a room at Ariate Dormitory. It asks for enough to be trustworthy
-    (who you are, how to reach you, which school) and no more, one small group at a time.
-    - Step 1 account, step 2 about you (date of birth lives here), step 3 safety and consent.
-    - Step 3 changes with the student's age. 18 or older: an emergency contact. Under 18: a parent or guardian, who must approve
-      the account on the Parent approval page before a room can be requested. (Philippine Data Privacy Act: a minor cannot
-      give valid consent alone.)
-    - Every field says what is wrong in plain words, next to the field, and a summary appears at the top when Next is pressed.
-    - All the rules live in assets/js/signup.js and are checked again before the account is saved.
+    Student & Resident Registration Page (Ariate Dormitory):
+    - 3-step wizard: (1) Account credentials, (2) Personal details, (3) Safety contact & consent.
+    - Minor protection: Students under 18 require parent/guardian approval before requesting a room.
+    - Real-time field validation with rules located in assets/js/signup.js.
   -->
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,7 +21,7 @@
   <link rel="stylesheet" href="assets/css/components.css">
   <style>
     [hidden] { display: none !important; }
-    /* Error lines keep their space even when empty, so a message appearing never moves the field or checkbox under the pointer. */
+    /* Reserve vertical space for error messages to prevent layout shifting */
     .err { min-height: 1.25rem; margin-top: .25rem; }
   </style>
 </head>
@@ -60,7 +56,7 @@
 
       <form id="form" novalidate class="mt-6">
 
-        <!-- STEP 1 -->
+        <!-- Step 1: Account credentials -->
         <section data-step="1" aria-labelledby="t1">
           <h2 id="t1" tabindex="-1" class="font-display text-xl font-semibold tracking-tight outline-none">Your account</h2>
           <div class="mt-4 space-y-4">
@@ -111,7 +107,7 @@
           </div>
         </section>
 
-        <!-- STEP 2 -->
+        <!-- Step 2: Personal information -->
         <section data-step="2" aria-labelledby="t2" hidden>
           <h2 id="t2" tabindex="-1" class="font-display text-xl font-semibold tracking-tight outline-none">About you</h2>
           <div class="mt-4 space-y-4">
@@ -127,7 +123,7 @@
               <p class="err" id="r-mobile-err" hidden></p>
             </div>
 
-            <!-- STUDENT-ONLY FIELDS -->
+            <!-- Student-specific fields -->
             <div id="student-fields" class="space-y-4">
               <div>
                 <label class="label" for="r-school">School or university</label>
@@ -153,7 +149,7 @@
               </div>
             </div>
 
-            <!-- NON-STUDENT FIELDS -->
+            <!-- Non-student resident fields -->
             <div id="non-student-fields" class="space-y-4" hidden>
               <div>
                 <label class="label" for="r-occupation">Occupation or profession</label>
@@ -176,11 +172,11 @@
           </div>
         </section>
 
-        <!-- STEP 3 -->
+        <!-- Step 3: Emergency contact & consent -->
         <section data-step="3" aria-labelledby="t3" hidden>
           <h2 id="t3" tabindex="-1" class="font-display text-xl font-semibold tracking-tight outline-none">Safety and consent</h2>
 
-          <!-- 18 or older -->
+          <!-- Emergency contact for adults (18 and older) -->
           <div id="adult-box" class="mt-4 space-y-4">
             <p class="text-base text-muted">Who should the dormitory call in an emergency?</p>
             <div>
@@ -202,7 +198,7 @@
             </div>
           </div>
 
-          <!-- under 18 -->
+          <!-- Parent or guardian details for minors (under 18) -->
           <div id="minor-box" class="mt-4 space-y-4" hidden>
             <div class="rounded-xl border border-warn-line bg-warn-soft px-4 py-3 text-base text-ink">
               <p class="font-semibold">You are under 18, so a parent or legal guardian must approve your account.</p>
@@ -249,7 +245,7 @@
       </form>
     </div>
 
-    <!-- DONE -->
+    <!-- Registration completion screen -->
     <div id="done" hidden class="rounded-[28px] border border-line bg-white p-6 sm:p-10">
       <h1 id="done-title" tabindex="-1" class="font-display text-2xl font-bold tracking-tight outline-none sm:text-3xl"></h1>
       <p id="done-text" class="mt-2 text-base text-muted"></p>
@@ -274,7 +270,7 @@
     </div>
   </main>
 
-  <!-- PRIVACY -->
+  <!-- Privacy policy details modal -->
   <dialog id="privacy-dialog" aria-labelledby="privacy-title" class="max-h-[90vh] w-[calc(100vw-2rem)] max-w-lg overflow-y-auto rounded-2xl border border-line bg-white p-0 text-ink shadow-xl backdrop:bg-ink/50">
     <div class="p-6">
       <h2 id="privacy-title" class="font-display text-xl font-bold tracking-tight">What Homebase collects and why</h2>
@@ -301,14 +297,14 @@
       var $ = function (id) { return document.getElementById(id); };
       var V = HB_SIGNUP.V;
 
-      // already signed in: no need to sign up again
+      // Redirect logged-in users away from registration to their respective dashboard
       var current = HB_AUTH.getUser && HB_AUTH.getUser();
       if (current && current.email) { window.location.replace(current.role === 'landlord' ? 'landlord.html' : 'home.html'); return; }
 
       var STEPS = ['Account', 'About you', 'Safety'];
       var step = 1, touched = {}, busy = false;
 
-      // ---- progress ----
+      // Render step progress indicator
       function drawProgress() {
         var ol = $('progress'); ol.textContent = '';
         STEPS.forEach(function (name, i) {
@@ -320,12 +316,12 @@
         });
       }
 
-      // ---- fill the drop-downs ----
+      // Populate dropdown selections
       function fill(id, list) { list.forEach(function (t) { var o = document.createElement('option'); o.value = t; o.textContent = t; $(id).appendChild(o); }); }
       fill('r-yearLevel', HB_SIGNUP.YEARS); fill('r-eRel', HB_SIGNUP.EMERGENCY_RELATIONS); fill('r-gRel', HB_SIGNUP.GUARDIAN_RELATIONS);
       $('r-dob').max = new Date().toISOString().slice(0, 10);
 
-      // ---- the rule for each field ----
+      // Validation rules for each input field
       var minor = function () { var a = HB_AUTH.ageFromDob($('r-dob').value); return a !== null && a < 18; };
       var val = function (id) { var el = $('r-' + id); return el ? el.value : ''; };
       var isStudent = function () {
@@ -376,7 +372,8 @@
         gMobile: 'Parent or guardian number', gEmail: 'Parent or guardian email', consent: 'Agreement'
       };
 
-      document.querySelectorAll('.err').forEach(function (p) { p.hidden = false; });   // always in the page, so the space is reserved
+      // Keep error message elements present in layout to avoid visual shifting
+      document.querySelectorAll('.err').forEach(function (p) { p.hidden = false; });
       function showError(key, msg) {
         var input = $('r-' + key), p = $('r-' + key + '-err');
         if (input) {
@@ -386,7 +383,7 @@
       }
       function check(key) { var m = RULES[key] ? RULES[key]() : ''; showError(key, m); return m; }
 
-      // check a field once it has been visited, and keep checking as they fix it
+      // Validate fields on blur and re-validate live as user corrects errors
       Object.keys(RULES).forEach(function (key) {
         var input = $('r-' + key);
         if (!input) return;
@@ -397,7 +394,7 @@
         });
       });
 
-      // ---- account type switch ----
+      // Toggle between student and non-student resident fields
       function updateAccountTypeUI() {
         var student = isStudent();
         $('student-fields').hidden = !student;
@@ -424,7 +421,7 @@
         r.addEventListener('change', updateAccountTypeUI);
       });
 
-      // ---- live password checklist ----
+      // Live password criteria validation checklist
       function drawPasswordRules() {
         var v = val('password'), ul = $('r-password-rules'); ul.textContent = '';
         [['At least 8 characters', v.length >= 8], ['At least one letter and one number', /[A-Za-z]/.test(v) && /[0-9]/.test(v)]].forEach(function (r) {
@@ -439,7 +436,7 @@
         });
       });
 
-      // ---- the age note under the date of birth ----
+      // Real-time age calculation and guardian notice display
       function drawAge() {
         var v = val('dob'), p = $('r-dob-hint'), age = HB_AUTH.ageFromDob(v);
         if (!v || age === null || V.dob(v)) { p.textContent = 'We use this to know if a parent or guardian needs to approve your account. You cannot change it later.'; return; }
@@ -447,7 +444,7 @@
       }
       $('r-dob').addEventListener('input', drawAge); $('r-dob').addEventListener('change', drawAge);
 
-      // ---- moving between steps ----
+      // Wizard step navigation and validation
       function show(n, focusTitle) {
         step = n;
         document.querySelectorAll('[data-step]').forEach(function (s) { s.hidden = Number(s.getAttribute('data-step')) !== n; });
@@ -471,7 +468,7 @@
       }
       $('back').addEventListener('click', function () { show(step - 1, true); });
 
-      // ---- finishing ----
+      // Form submission and account creation handler
       $('form').addEventListener('submit', function (e) {
         e.preventDefault();
         if (busy) return;
@@ -519,7 +516,7 @@
         else $('copy-note').textContent = 'Select the code and copy it.';
       });
 
-      // ---- privacy notice ----
+      // Privacy policy dialog modal listeners
       $('open-privacy').addEventListener('click', function () { $('privacy-dialog').showModal(); });
       $('close-privacy').addEventListener('click', function () { $('privacy-dialog').close(); });
       $('privacy-dialog').addEventListener('click', function (e) { if (e.target === $('privacy-dialog')) $('privacy-dialog').close(); });

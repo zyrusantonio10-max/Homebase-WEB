@@ -7,15 +7,14 @@
   <meta name="description" content="Your Homebase home: best room match, saved rooms and recent comparisons.">
 
   <!--
-    Design Read: signed-in home for anyone choosing a room at Ariate Dormitory. Same forest green + lime language as index.html.
-    Less text, more picture: a progress bar, a score ring on the best match, number tiles, picture cards for saved rooms,
-    chips for preferences, and a connected stepper for the room request. The profile card was removed (the navbar already has it).
-    Numbers are never invented: every one comes from localStorage (see the storage contract in the script).
-    Lime is used only on the score ring and on the button inside the best-match card.
+    Student Dashboard (Ariate Dormitory):
+    - Displays overall room search progress, best room match, and overview metrics.
+    - Tracks active room reservation requests, saved favorites, and preferences.
+    - All data dynamically loaded from user session and LocalStorage / Supabase.
   -->
 
   <script>
-    // Guard: nobody gets in without logging in. Runs before the page draws, so there is no flash of content.
+    // Authentication guard: redirect unauthenticated users to login before page render
     (function () {
       try {
         var u = JSON.parse(localStorage.getItem('homebase_currentUser') || 'null');
@@ -38,7 +37,7 @@
 
 
   <style>
-    /* The dorm motif: all windows dark while there is no match yet. */
+    /* Dormitory illustration: darkened windows when no match is computed */
     .win { fill: #083A25; }
     
     @media (prefers-reduced-motion: reduce) { #ring { transition: none !important; } }
@@ -50,7 +49,7 @@
 
 <body class="min-h-screen bg-white font-body text-ink antialiased">
 
-  <!-- NAVBAR: pill, four links, one of them is this page -->
+  <!-- Navigation header: primary navigation links and profile access -->
   <header class="sticky top-0 z-20 bg-white px-4 pb-2 pt-4 sm:px-6">
     <nav aria-label="Main" class="mx-auto flex max-w-6xl items-center justify-between gap-3 rounded-full border border-line bg-white py-2 pl-4 pr-2">
       <a href="home.html" aria-label="Homebase home" class="inline-flex min-h-[44px] items-center gap-2.5 rounded-full font-display text-xl font-bold tracking-tight text-ink no-underline outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">
@@ -67,7 +66,7 @@
       </ul>
 
       <div class="flex items-center gap-2">
-        <!-- Dark Mode Toggle Button for Students (placed right by Profile) -->
+        <!-- Dark mode toggle button -->
         <button type="button" data-theme-toggle class="hb-theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
           <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
           <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
@@ -84,7 +83,7 @@
       </div>
     </nav>
 
-    <!-- Mobile menu: same four links, plus log out -->
+    <!-- Mobile navigation dropdown menu -->
     <div id="menu" hidden class="mx-auto mt-2 max-w-6xl rounded-[20px] border border-line bg-white p-2 md:hidden">
       <ul id="menu-links" class="grid gap-1">
         <li><a class="nav-link w-full" href="home.html" aria-current="page">Home</a></li>
@@ -102,10 +101,10 @@
 
   <main class="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
 
-    <!-- STUDENT / RESIDENT -->
+    <!-- Student / Resident Dashboard View -->
     <div id="student-view">
 
-      <!-- Greeting -->
+      <!-- User greeting banner -->
       <section aria-labelledby="welcome-title" class="flex flex-wrap items-center justify-between gap-3">
         <h1 id="welcome-title" class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
           Hi, <span id="first-name" class="text-forest"></span>
@@ -116,7 +115,7 @@
         </button>
       </section>
 
-      <!-- PARENT / GUARDIAN APPROVAL: shown to a student under 18 until a parent or guardian approves -->
+      <!-- Parent / Guardian approval status notice (for students under 18) -->
       <section id="guardian-box" hidden aria-labelledby="guardian-title" class="mt-6 rounded-[20px] border border-warn-line bg-warn-soft p-5 sm:p-6">
         <div class="flex flex-wrap items-center justify-between gap-4">
           <div class="min-w-0">
@@ -131,13 +130,13 @@
         </div>
       </section>
 
-      <!-- YOUR PROGRESS: one glance, no reading -->
+      <!-- Onboarding progress stepper -->
       <section aria-labelledby="journey-title" class="mt-6 rounded-[20px] border border-line bg-tint px-4 py-5 sm:px-6">
         <h2 id="journey-title" class="sr-only">Your progress</h2>
         <div id="journey"></div>
       </section>
 
-      <!-- WHERE TO START: only for someone who has not done anything yet -->
+      <!-- Getting started recommendations (for new users) -->
       <section id="start" hidden aria-labelledby="start-title" class="mt-6">
         <h2 id="start-title" class="sr-only">Where to start</h2>
         <ul class="grid gap-4 md:grid-cols-2">
@@ -156,10 +155,10 @@
         </ul>
       </section>
 
-      <!-- ROW 1: best match (focal point) + four number tiles -->
+      <!-- Row 1: Best match recommendation and quick stat metrics -->
       <div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
 
-        <!-- BEST MATCH -->
+        <!-- Best room match card -->
         <section id="card-top" aria-labelledby="top-title" class="relative overflow-hidden rounded-[28px] bg-forest p-6 text-white sm:p-8">
           <h2 id="top-title" class="font-display text-lg font-semibold tracking-tight text-white/85">Your best match</h2>
 
@@ -171,7 +170,7 @@
             <button type="button" data-reload class="btn btn-lime mt-5">Reload</button>
           </div>
 
-          <!-- no match yet: the dorm with every window dark -->
+          <!-- Empty state: no room preferences calculated yet -->
           <div data-state="empty" hidden class="mt-5 grid items-center gap-6 sm:grid-cols-[minmax(0,1fr)_170px]">
             <div class="min-w-0">
               <p class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">No match yet</p>
@@ -193,7 +192,7 @@
             </svg>
           </div>
 
-          <!-- has a match: score ring + the room's picture -->
+          <!-- Active state: matched room details and score ring -->
           <div data-state="match" hidden class="mt-5 grid items-center gap-6 sm:grid-cols-[auto_minmax(0,1fr)] xl:grid-cols-[auto_minmax(0,1fr)_190px]">
             <div class="relative mx-auto h-36 w-36 shrink-0 sm:mx-0" role="img" id="ring-wrap">
               <svg viewBox="0 0 120 120" class="h-full w-full -rotate-90" aria-hidden="true" focusable="false">
@@ -216,7 +215,7 @@
           </div>
         </section>
 
-        <!-- NUMBER TILES -->
+        <!-- Metric summary number tiles -->
         <section aria-label="At a glance" class="grid grid-cols-2 gap-4">
           <a href="#saved" id="tile-saved" class="flex flex-col justify-between rounded-[20px] border border-line bg-white p-4 no-underline outline-none transition-colors hover:border-forest focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">
             <span class="grid h-10 w-10 place-items-center rounded-xl bg-tint text-forest"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg></span>
@@ -237,7 +236,7 @@
         </section>
       </div>
 
-      <!-- YOUR ROOM REQUEST -->
+      <!-- Active room reservation status and details -->
       <section id="reservation" tabindex="-1" aria-labelledby="res-title" class="mt-6 scroll-mt-28 rounded-[20px] border border-line bg-white p-5 outline-none sm:p-6">
         <h2 id="res-title" class="card-title">Your room request</h2>
 
@@ -256,7 +255,7 @@
         <div data-state="view" hidden id="res-view" class="mt-4"></div>
       </section>
 
-      <!-- SAVED ROOMS: pictures, not a list -->
+      <!-- Saved rooms picture gallery -->
       <section id="saved" tabindex="-1" aria-labelledby="saved-title" class="mt-6 scroll-mt-28 outline-none">
         <div id="card-saved" class="rounded-[20px] border border-line bg-white p-5 sm:p-6">
           <h2 id="saved-title" class="card-title">Saved rooms</h2>
@@ -276,7 +275,7 @@
         </div>
       </section>
 
-      <!-- ROW 3: preferences + comparisons -->
+      <!-- Row 3: Preferences and Comparison History -->
       <div class="mt-6 grid gap-6 lg:grid-cols-5">
 
         <section id="prefs" aria-labelledby="prefs-title" class="rounded-[20px] border border-line bg-white p-5 sm:p-6 lg:col-span-3">
@@ -326,14 +325,13 @@
   <script>
     (function () {
       /*
-        STORAGE CONTRACT (other pages write these keys, this page only reads them):
-          homebase_currentUser   { id, name, email, role }
-          homebase_topMatch      { name, score: 0-100, label, price }       written by My Matches
-          homebase_savedRooms    [ { id, name, price, type } ]              written by Explore Rooms
-          homebase_comparisons   [ { rooms: [names], ids: [ids], date } ]   written by Explore Rooms
-          homebase_preferences   { budget, type, floor, amenities, priority } written by My Matches
-          homebase_reservations  see assets/js/reservation.js
-        A missing key shows that card's empty state. Every number on this page comes from these keys.
+        LocalStorage Data Contract (read-only for dashboard display):
+        - homebase_currentUser: active user session
+        - homebase_topMatch: best room match computed by matches.html
+        - homebase_savedRooms: list of rooms bookmarked by the user
+        - homebase_comparisons: recently compared room pairs
+        - homebase_preferences: user room preferences and priorities
+        - homebase_reservations: room requests and reservation statuses
       */
       var KEYS = {
         user: 'homebase_currentUser',
@@ -346,7 +344,7 @@
       var $ = function (id) { return document.getElementById(id); };
       var mk = function (tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
 
-      // ---- storage (guarded: blocked storage or broken JSON becomes an error state, not a crash) ----
+      // LocalStorage access helpers with fallback handling
       function read(key) {
         try { var raw = localStorage.getItem(key); return { ok: true, value: raw ? JSON.parse(raw) : null }; }
         catch (e) { return { ok: false, value: null }; }
@@ -354,7 +352,7 @@
       function write(key, value) {
         try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch (e) { return false; }
       }
-      // Show exactly one state inside a card.
+      // Switch active view state inside a card container
       function setState(cardId, state) {
         var nodes = $(cardId).querySelectorAll('[data-state]');
         for (var i = 0; i < nodes.length; i++) nodes[i].hidden = nodes[i].getAttribute('data-state') !== state;
