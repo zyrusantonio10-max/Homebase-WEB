@@ -7,12 +7,20 @@
   <meta name="description" content="Tell Homebase your budget and needs. It ranks the available Ariate Dormitory rooms by fit.">
 
   <!--
-    Design Read: room matching screen, same forest + lime language as home.html and rooms.html. Built to be looked at, not read:
-    - Form (left): a budget slider with one dot per available room, room type as tiles with bed icons, amenities as icon tiles,
-      and a bar that shows how the 100 points are shared for "Matters most".
-    - Results (right): a "fit against price" chart (one dot per room, your budget as a dashed line; select a dot to jump to the room),
-      then the best match as a big picture with a score ring and a radar of the four score parts,
-      then every other room as a picture card with its score on the picture. Short check / cross chips say why.
+    Design Read: room matching screen for dorm students (mostly on phones, some on laptops), calm white and forest language
+    with one lime accent. Dial ENERGY 2 / RHYTHM 2 / MOTION 1.
+
+    Why each choice:
+      one panel, one list   the form is a panel on the left (laptop) or a collapsing summary (phone); results are one ranked list,
+                            so the eye reads top to bottom: best match, then the rest. No chart competes with the rooms.
+      points bar motif      the four parts of the 100 points (budget, amenities, room type, floor) have one color each. The same
+                            four-part bar shows up in the form (how points are shared), on the best match (what each part earned)
+                            and on every room row (how full its score is). It is the one repeated gesture of the page.
+      lime only on "Best match"   the single accent marks the single focal point.
+      no shadows, hairline borders   cards sit flat on white; the best match is bigger, not louder.
+      radius scale          20px panels and rows, 24px best match, 12px tiles, 8px chips, pill buttons only.
+      no inner scroll boxes every control sits inside its box. On laptops the panel scrolls as a whole with the button pinned.
+
     Score rules are in the script, search "SCORING". Commute and safety are not criteria (your decision).
     Storage written by this page: homebase_preferences, homebase_topMatch (Home reads it), homebase_savedRooms (Home reads it).
   -->
@@ -27,7 +35,6 @@
       } catch (e) { window.location.replace('index.html'); }
     })();
   </script>
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
@@ -42,7 +49,41 @@
 
   <style>
     [hidden] { display: none !important; }
-    @media (prefers-reduced-motion: reduce) { [data-ring] { transition: none !important; } }
+
+    /* the four parts of the 100 points, one color each (light, then dark) */
+    :root { --p1: #0B4A2F; --p2: #2A7550; --p3: #3F8662; --p4: #4F8F6D; }
+    html.dark { --p1: #38D989; --p2: #2FB874; --p3: #27A066; --p4: #2A8F5F; }
+    .part-1 { background: var(--p1); } .part-2 { background: var(--p2); } .part-3 { background: var(--p3); } .part-4 { background: var(--p4); }
+    .trk { background: var(--track); }
+    .pbar { display: flex; gap: 2px; }
+    .pbar > i { display: block; min-width: 0; height: 100%; overflow: hidden; border-radius: 2px; background: var(--track); }
+    .pbar > i > b { display: block; height: 100%; transition: width .7s ease-out; }
+    .badge-lime { background: #C6F24E; color: #14211A; }
+
+    /* phones: once there are results, the form folds into a one-line summary with an Edit button */
+    #panel-summary { display: none; }
+    @media (max-width: 1023.98px) {
+      #panel[data-collapsed="true"] #panel-body { display: none; }
+      #panel[data-collapsed="true"] #panel-summary { display: flex; }
+    }
+
+    /* details arrows: one chevron, drawn by us */
+    summary { list-style: none; }
+    summary::-webkit-details-marker { display: none; }
+    details[open] > summary .chev { transform: rotate(180deg); }
+
+    /* budget slider: a thick track that fills up to the thumb */
+    #budget-range { -webkit-appearance: none; appearance: none; display: block; width: 100%; height: 28px; margin: 0; background: transparent; cursor: pointer; }
+    #budget-range::-webkit-slider-runnable-track { height: 6px; border-radius: 9999px; background: linear-gradient(to right, var(--forest) var(--pct, 0%), var(--track) var(--pct, 0%)); }
+    #budget-range::-moz-range-track { height: 6px; border-radius: 9999px; background: var(--track); }
+    #budget-range::-moz-range-progress { height: 6px; border-radius: 9999px; background: var(--forest); }
+    #budget-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 24px; height: 24px; margin-top: -9px; border-radius: 9999px; border: 3px solid var(--card-bg, #fff); background: var(--forest); box-shadow: 0 0 0 1px var(--forest); }
+    #budget-range::-moz-range-thumb { box-sizing: border-box; width: 24px; height: 24px; border-radius: 9999px; border: 3px solid var(--card-bg, #fff); background: var(--forest); box-shadow: 0 0 0 1px var(--forest); }
+    #budget-range:focus-visible { outline: none; }
+    #budget-range:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 1px var(--forest), 0 0 0 4px var(--card-bg, #fff), 0 0 0 6px var(--forest); }
+    #budget-range:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 1px var(--forest), 0 0 0 4px var(--card-bg, #fff), 0 0 0 6px var(--forest); }
+
+    @media (prefers-reduced-motion: reduce) { .pbar > i > b { transition: none; } }
   </style>
 </head>
 
@@ -86,88 +127,107 @@
       <div class="mt-2 border-t border-line pt-2"><button type="button" data-logout class="btn btn-logout w-full">Log out</button></div>
     </div>
   </header>
-
   <main class="mx-auto max-w-6xl px-4 pb-28 pt-6 sm:px-6 sm:pt-8">
-    <h1 class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">My Matches</h1>
+    <div class="max-w-2xl">
+      <h1 class="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">My Matches</h1>
+      <p class="mt-2 text-base text-muted">Tell us what you need. Every room with a free bed gets a fit score out of 100.</p>
+    </div>
 
-    <div class="mt-6 grid items-start gap-6 lg:grid-cols-[340px_minmax(0,1fr)]">
+    <p id="status" role="status" aria-live="polite" class="sr-only"></p>
 
-      <!-- FORM -->
-      <aside class="rounded-[20px] border border-line bg-tint p-5 sm:p-6 lg:sticky lg:top-28">
-        <h2 class="card-title">What you need</h2>
-        <form id="form" novalidate class="mt-4 space-y-5">
+    <div class="mt-6 grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[22rem_minmax(0,1fr)] lg:gap-8">
 
-          <!-- budget: type it or slide it; the dots are the available rooms -->
-          <div>
-            <label class="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted" for="budget">Budget a month</label>
-            <div class="relative">
-              <span class="absolute left-3.5 top-1/2 -translate-y-1/2 font-semibold text-muted" aria-hidden="true">&#8369;</span>
-              <input class="field h-12 pl-9 font-display text-lg font-bold" id="budget" name="budget" type="number" inputmode="numeric" min="1" step="1" placeholder="5000" aria-describedby="budget-err" required>
-            </div>
-            <p id="budget-err" class="mt-1 hidden text-xs font-medium text-danger"></p>
-            <div id="budget-widget" class="mt-3">
-              <div id="price-dots" class="relative mx-2 h-3" aria-hidden="true"></div>
-              <input id="budget-range" type="range" class="w-full accent-[#0B4A2F]" aria-label="Budget slider">
-              <div class="flex justify-between text-xs text-muted"><span id="range-min"></span><span id="range-max"></span></div>
-            </div>
+      <!-- PANEL: the form on laptops, a one-line summary on phones once results are showing -->
+      <aside id="panel" data-collapsed="false" aria-label="What you need" class="rounded-[20px] border border-line bg-tint lg:sticky lg:top-24 lg:flex lg:max-h-[calc(100vh-7rem)] lg:flex-col">
+
+        <div id="panel-summary" class="items-center justify-between gap-3 p-4">
+          <div class="min-w-0">
+            <p id="sum-budget" class="font-display text-lg font-bold leading-tight"></p>
+            <p id="sum-detail" class="truncate text-sm text-muted"></p>
           </div>
+          <button type="button" id="panel-edit" aria-expanded="false" aria-controls="panel-body" class="btn btn-outline shrink-0">Edit</button>
+        </div>
 
-          <fieldset>
-            <legend class="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">Room type</legend>
-            <div class="grid grid-cols-4 gap-1.5">
-              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Any" checked><span class="choice !min-h-[64px] flex-col gap-1 !px-1 !py-1.5 text-[11px] sm:text-xs"><span class="flex"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg></span>Any</span></label>
-              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Single"><span class="choice !min-h-[64px] flex-col gap-1 !px-1 !py-1.5 text-[11px] sm:text-xs"><span class="flex"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 00-3-3h-7v6"/></svg></span>Single</span></label>
-              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Double"><span class="choice !min-h-[64px] flex-col gap-1 !px-1 !py-1.5 text-[11px] sm:text-xs"><span class="flex"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 00-3-3h-7v6"/></svg><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 00-3-3h-7v6"/></svg></span>Double</span></label>
-              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Quad"><span class="choice !min-h-[64px] flex-col gap-1 !px-1 !py-1.5 text-[11px] sm:text-xs"><span class="flex"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 00-3-3h-7v6"/></svg><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 00-3-3h-7v6"/></svg><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 00-3-3h-7v6"/></svg><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 00-3-3h-7v6"/></svg></span>Quad</span></label>
+        <div id="panel-body" class="flex min-h-0 flex-1 flex-col">
+          <form id="form" novalidate class="flex min-h-0 flex-1 flex-col">
+            <div class="min-h-0 flex-1 space-y-6 p-5 sm:p-6 lg:overflow-y-auto">
+              <h2 class="card-title">What you need</h2>
+
+              <!-- budget: type it or slide it; each dot is a room with a free bed -->
+              <div>
+                <label class="text-sm font-semibold" for="budget">Monthly budget</label>
+                <div class="relative mt-2">
+                  <span class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 font-display text-xl font-bold text-muted" aria-hidden="true">&#8369;</span>
+                  <input class="field h-14 !pl-10 font-display text-2xl font-bold" id="budget" name="budget" type="number" inputmode="numeric" min="1" step="1" placeholder="5000" aria-describedby="budget-err budget-hint" required>
+                </div>
+                <p id="budget-err" class="mt-1 hidden text-sm font-medium text-danger"></p>
+                <div id="budget-widget" class="mt-4">
+                  <div id="price-dots" class="relative mx-3" aria-hidden="true"></div>
+                  <input id="budget-range" type="range" aria-label="Budget slider">
+                  <div class="flex justify-between text-xs text-muted"><span id="range-min"></span><span id="range-max"></span></div>
+                  <p id="budget-hint" class="mt-2 text-xs text-muted">Each dot is a room with a free bed. Solid dots fit your budget.</p>
+                </div>
+              </div>
+
+              <fieldset>
+                <legend class="mb-2 text-sm font-semibold">Room type</legend>
+                <div id="type-list" class="grid grid-cols-2 gap-2"></div>
+              </fieldset>
+
+              <fieldset>
+                <legend class="mb-2 text-sm font-semibold">Floor</legend>
+                <div id="floor-list" class="grid grid-cols-4 gap-2"></div>
+              </fieldset>
+
+              <fieldset>
+                <div class="mb-2 flex items-baseline justify-between gap-2">
+                  <legend class="text-sm font-semibold">Amenities</legend>
+                  <span id="amenity-badge" class="text-sm text-muted">None selected</span>
+                </div>
+                <div id="amenity-list" class="grid grid-cols-2 gap-2"></div>
+                <details id="building-box" class="mt-3 rounded-xl border border-line bg-white" hidden>
+                  <summary class="flex min-h-[44px] cursor-pointer items-center justify-between gap-2 rounded-xl px-3.5 text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-forest">
+                    <span>Building perks</span>
+                    <span class="flex items-center gap-2">
+                      <span id="building-badge" class="font-normal text-muted"></span>
+                      <svg class="chev h-4 w-4 shrink-0 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                    </span>
+                  </summary>
+                  <div id="building-list" class="grid grid-cols-2 gap-2 p-2 pt-0"></div>
+                </details>
+              </fieldset>
+
+              <fieldset>
+                <legend class="mb-2 text-sm font-semibold">Matters most</legend>
+                <div id="priority-list" class="flex flex-wrap gap-2"></div>
+                <!-- how the 100 points are shared -->
+                <div id="weights-bar" class="pbar mt-4 h-2.5 overflow-hidden rounded-full" role="img"></div>
+                <ul id="weights-legend" class="mt-2 grid grid-cols-2 gap-x-3 gap-y-1"></ul>
+              </fieldset>
+
+              <details class="border-t border-line pt-4">
+                <summary class="flex min-h-[44px] cursor-pointer items-center justify-between gap-2 rounded text-sm font-semibold text-forest outline-none focus-visible:ring-2 focus-visible:ring-forest">
+                  How the score works
+                  <svg class="chev h-4 w-4 shrink-0 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                </summary>
+                <ul class="mt-2 space-y-2 text-sm text-muted">
+                  <li><b class="text-ink">100 points</b> across budget, amenities, room type and floor. The part you pick as most important counts the most.</li>
+                  <li><b class="text-ink">Budget.</b> Full points at 90% of your limit or less. Close to your limit earns about 60%. Over it earns none.</li>
+                  <li><b class="text-ink">Labels.</b> Great fit is 85+ with nothing missing. Good is 65+, Okay 45 to 64, Weak below 45.</li>
+                  <li>Rooms with no free bed are never listed.</li>
+                </ul>
+              </details>
             </div>
-          </fieldset>
 
-          <fieldset>
-            <legend class="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">Floor</legend>
-            <div id="floor-list" class="grid grid-cols-4 gap-1.5"></div>
-          </fieldset>
-
-          <fieldset>
-            <div class="mb-1.5 flex items-center justify-between">
-              <legend class="text-xs font-semibold uppercase tracking-wider text-muted">Amenities</legend>
-              <span id="amenity-badge" class="text-xs font-semibold text-muted">0 selected</span>
+            <div class="rounded-b-[20px] border-t border-line bg-tint p-4 sm:px-6">
+              <button class="btn w-full" type="submit">Find my matches</button>
             </div>
-            <div class="max-h-48 overflow-y-auto rounded-xl border border-line bg-white p-2">
-              <div id="amenity-list" class="grid grid-cols-3 gap-1.5"></div>
-            </div>
-          </fieldset>
-
-          <fieldset>
-            <legend class="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">Matters most</legend>
-            <div class="grid grid-cols-3 gap-1.5">
-              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="priority" value="balanced" checked><span class="choice text-[11px] sm:text-xs min-h-[32px] !px-1 py-1 text-center justify-center">Balanced</span></label>
-              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="priority" value="budget"><span class="choice text-[11px] sm:text-xs min-h-[32px] !px-1 py-1 text-center justify-center">Budget</span></label>
-              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="priority" value="amenities"><span class="choice text-[11px] sm:text-xs min-h-[32px] !px-1 py-1 text-center justify-center">Amenities</span></label>
-              <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="priority" value="type"><span class="choice text-[11px] sm:text-xs min-h-[32px] !px-1 py-1 text-center justify-center">Room type</span></label>
-              <label class="relative block cursor-pointer col-span-2"><input class="peer sr-only" type="radio" name="priority" value="floor"><span class="choice text-[11px] sm:text-xs min-h-[32px] !px-1 py-1 text-center justify-center">Preferred floor</span></label>
-            </div>
-            <!-- how the 100 points are shared -->
-            <div id="weights-bar" class="mt-3 flex gap-0.5 overflow-hidden rounded-full" role="img"></div>
-            <ul id="weights-legend" class="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5"></ul>
-          </fieldset>
-
-          <button class="btn w-full" type="submit">Find my matches</button>
-        </form>
-
-        <details class="mt-5 border-t border-line pt-3">
-          <summary class="inline-flex min-h-[44px] cursor-pointer items-center rounded font-semibold text-forest outline-none focus-visible:ring-2 focus-visible:ring-forest">How the score works</summary>
-          <ul class="mt-2 space-y-2 text-sm text-muted">
-            <li><b class="text-ink">100 points</b> across budget, amenities, room type and floor. Your top pick counts the most.</li>
-            <li><b class="text-ink">Budget.</b> Full points at 90% of your limit or less. Close to your limit earns about 60%. Over it earns none.</li>
-            <li><b class="text-ink">Labels.</b> Great fit is 85+ with nothing missing. Good is 65+, Okay 45 to 64, Weak below 45.</li>
-            <li>Rooms with no free bed are never listed.</li>
-          </ul>
-        </details>
+          </form>
+        </div>
       </aside>
 
       <!-- RESULTS -->
-      <section aria-labelledby="results-title" aria-live="polite" id="results">
-        <h2 id="results-title" class="sr-only">Your ranked rooms</h2>
+      <section id="results" aria-label="Your ranked rooms" class="min-w-0 scroll-mt-28">
         <p id="page-error" role="alert" class="mb-3 hidden text-base font-semibold text-danger"></p>
         <p id="active-note" hidden class="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-line bg-tint px-4 py-3 text-base"><span class="font-semibold">You already have a room request.</span> <a class="font-semibold text-forest underline underline-offset-4" href="home.html#reservation">View it</a></p>
 
@@ -175,32 +235,36 @@
 
         <div data-state="error" hidden role="alert" class="rounded-[20px] border border-line p-6">
           <p class="font-display text-xl font-bold tracking-tight">We could not load the rooms</p>
+          <p class="mt-1 text-base text-muted">Check your connection, then reload the page.</p>
           <button type="button" data-reload class="btn btn-outline mt-4">Reload</button>
         </div>
 
         <div data-state="empty" hidden class="rounded-[20px] border border-dashed border-edge p-6 sm:p-8">
-          <p class="font-display text-2xl font-bold tracking-tight text-muted">No matches yet</p>
-          <ol class="mt-6 grid grid-cols-3" aria-label="How it works">
-            <li class="relative flex flex-col items-center text-center"><span class="relative z-10 grid h-12 w-12 place-items-center rounded-full border-2 border-forest bg-white font-display text-lg font-bold text-forest">1</span><span class="mt-2 text-sm font-semibold">Set a budget</span></li>
-            <li class="relative flex flex-col items-center text-center"><span class="absolute right-1/2 top-6 h-0.5 w-full bg-line" aria-hidden="true"></span><span class="relative z-10 grid h-12 w-12 place-items-center rounded-full border-2 border-line bg-white font-display text-lg font-bold text-muted">2</span><span class="mt-2 text-sm text-muted">Pick your needs</span></li>
-            <li class="relative flex flex-col items-center text-center"><span class="absolute right-1/2 top-6 h-0.5 w-full bg-line" aria-hidden="true"></span><span class="relative z-10 grid h-12 w-12 place-items-center rounded-full border-2 border-line bg-white font-display text-lg font-bold text-muted">3</span><span class="mt-2 text-sm text-muted">See your matches</span></li>
-          </ol>
+          <h2 class="font-display text-2xl font-bold tracking-tight">Your matches show up here</h2>
+          <p id="empty-detail" class="mt-2 max-w-lg text-base text-muted"></p>
         </div>
 
         <div data-state="none" hidden class="rounded-[20px] border border-line bg-white p-6 sm:p-8">
-          <p class="font-display text-2xl font-bold tracking-tight">Nothing fits that budget</p>
-          <p id="none-detail" class="mt-2 max-w-md text-base text-muted"></p>
+          <h2 class="font-display text-2xl font-bold tracking-tight">Nothing fits that budget</h2>
+          <p id="none-detail" class="mt-2 max-w-lg text-base text-muted"></p>
+          <button type="button" id="none-try" hidden class="btn mt-4"></button>
         </div>
 
         <div data-state="list" hidden>
-          <div id="summary" class="flex flex-wrap items-center gap-2"></div>
-          <div id="chart" hidden></div>
-          <div id="top" class="mt-4"></div>
-          <ul id="rest" class="mt-4 grid gap-4 sm:grid-cols-2"></ul>
-          <section id="over-box" hidden class="mt-8">
-            <h2 class="font-display text-xl font-bold tracking-tight">A little over budget</h2>
+          <div class="flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
+            <div class="min-w-0">
+              <h2 class="font-display text-2xl font-bold tracking-tight">Your matches</h2>
+              <p id="summary" class="mt-1 text-base text-muted"></p>
+            </div>
+            <p id="priority-note" hidden class="chip chip-ok"></p>
+          </div>
+          <div id="top" class="mt-5"></div>
+          <h3 id="rest-title" hidden class="mt-8 font-display text-xl font-bold tracking-tight">More rooms that fit</h3>
+          <ul id="rest" class="mt-4 grid gap-4"></ul>
+          <section id="over-box" hidden class="mt-10">
+            <h3 class="font-display text-xl font-bold tracking-tight">A little over budget</h3>
             <p id="over-note" class="mt-1 text-base text-muted"></p>
-            <ul id="over" class="mt-4 grid gap-4 sm:grid-cols-2"></ul>
+            <ul id="over" class="mt-4 grid gap-4"></ul>
           </section>
         </div>
 
@@ -228,6 +292,7 @@
       function setState(s) {
         document.querySelectorAll('#results [data-state]').forEach(function (n) { n.hidden = n.getAttribute('data-state') !== s; });
       }
+      var calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
       // ---- navbar ----
       var user = (read(K.user).value) || {};
@@ -250,17 +315,24 @@
       // ---- data ----
       var ROOMS = window.HB ? HB.getRooms() : null, AMENITIES = window.HOMEBASE_AMENITIES;
       if (!Array.isArray(ROOMS) || !Array.isArray(AMENITIES) || !window.HB) { setState('error'); return; }
+      var form = $('form');
 
-      // Helper to update selected count badge
-      function updateAmenityBadge() {
-        var count = form.querySelectorAll('input[name=amenity]:checked').length;
-        var badge = $('amenity-badge');
-        if (badge) {
-          badge.textContent = count + (count === 1 ? ' selected' : ' selected');
-          badge.classList.toggle('text-forest', count > 0);
-          badge.classList.toggle('text-muted', count === 0);
-        }
+      // ---- small line icons ----
+      var ICO = {
+        bed: '<path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 00-3-3h-7v6"/>',
+        heart: '<path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/>',
+        check: '<path d="M5 12l5 5 9-10"/>',
+        x: '<path d="M6 6l12 12M18 6L6 18"/>'
+      };
+      function svgIcon(path, cls, filled) {
+        var sv = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        sv.setAttribute('viewBox', '0 0 24 24'); sv.setAttribute('class', cls || 'h-5 w-5');
+        sv.setAttribute('fill', filled ? 'currentColor' : 'none'); sv.setAttribute('stroke', 'currentColor'); sv.setAttribute('stroke-width', '2');
+        sv.setAttribute('stroke-linecap', 'round'); sv.setAttribute('stroke-linejoin', 'round'); sv.setAttribute('aria-hidden', 'true');
+        sv.innerHTML = path;
+        return sv;
       }
+      function icon(name, cls, filled) { return svgIcon(ICO[name] || '', cls, filled); }
 
       // one small picture per amenity (matched by words in its name, so amenities the office adds still get an icon)
       var AM_ICONS = [
@@ -271,7 +343,7 @@
         [/wardrobe|closet|locker/i, '<rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M12 3v18M9.500 12h.01M14.500 12h.01"/>'],
         [/heater|shower|hot/i, '<path d="M12 3s5 4.5 5 9a5 5 0 01-10 0c0-2 1-3 2-4 .5 2 1.5 2.500 2.500 2.500C11 8 12 3 12 3z"/>'],
         [/bath|toilet|restroom/i, '<path d="M3 12h18v3a5 5 0 01-5 5H8a5 5 0 01-5-5zM6 12V6a2 2 0 014 0"/>'],
-        [/outlet|power|plug|socket/i, '<path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 01-12 0zM12 17v4"/>'],
+        [/outlet|power|plug|socket|generator|backup/i, '<path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 01-12 0zM12 17v4"/>'],
         [/refriger|fridge/i, '<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M6 10h12M9 5v3M9 13v3"/>'],
         [/kitchen|cook|stove/i, '<path d="M6 3v7a2 2 0 002 2v9M10 3v7M8 3v7M16 21V3c-3 1-4 4-4 8h4"/>'],
         [/balcony|window|view/i, '<rect x="4" y="3" width="16" height="18" rx="1"/><path d="M12 3v18M4 12h16"/>'],
@@ -279,53 +351,91 @@
         [/gate|curfew|entrance|lock/i, '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>'],
         [/fire|smoke|extinguisher/i, '<path d="M12 3s5 4.5 5 9a5 5 0 01-10 0c0-2 1-3 2-4 .5 2 1.5 2.500 2.500 2.500C11 8 12 3 12 3z"/>'],
         [/water|drinking|purified/i, '<path d="M12 3s6 6.5 6 11a6 6 0 01-12 0c0-4.5 6-11 6-11z"/>'],
-        [/laundry|washing/i, '<rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="14" r="4"/><path d="M8 7h.01M11 7h.01"/>']
+        [/laundry|washing/i, '<rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="14" r="4"/><path d="M8 7h.01M11 7h.01"/>'],
+        [/\btv\b|television/i, '<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/>'],
+        [/parking|garage/i, '<path d="M3 15v-3l2-5h14l2 5v3M3 15h18M3 15v3h3v-3M18 15v3h3v-3M7 12h.01M17 12h.01"/>'],
+        [/package|parcel/i, '<path d="M4 8h16v12H4zM4 8l2-4h12l2 4M10 12h4"/>'],
+        [/rooftop|garden/i, '<path d="M5 19c0-8 5-13 14-14 0 9-5 14-14 14zM5 19l7-7"/>']
       ];
       function amenIcon(name) {
         var path = '<path d="M5 12l5 5 9-10"/>';
         for (var i = 0; i < AM_ICONS.length; i++) if (AM_ICONS[i][0].test(name)) { path = AM_ICONS[i][1]; break; }
-        var sv = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        sv.setAttribute('viewBox', '0 0 24 24'); sv.setAttribute('class', 'h-6 w-6 shrink-0'); sv.setAttribute('fill', 'none'); sv.setAttribute('stroke', 'currentColor');
-        sv.setAttribute('stroke-width', '2'); sv.setAttribute('stroke-linecap', 'round'); sv.setAttribute('stroke-linejoin', 'round'); sv.setAttribute('aria-hidden', 'true'); sv.innerHTML = path;
-        return sv;
+        return svgIcon(path, 'h-5 w-5 shrink-0');
+      }
+
+      // shorter names for tiles (the full name stays as the value and the tooltip)
+      var SHORT = [
+        [/^cctv/i, 'CCTV cameras'], [/security guard/i, 'Security guard 24/7'], [/gated|curfew/i, 'Gate and curfew'], [/fire/i, 'Fire safety'],
+        [/biometric|rfid/i, 'Biometric access'], [/purified|drinking/i, 'Water station'], [/common kitchen|pantry/i, 'Common kitchen'],
+        [/laundry/i, 'Shared laundry'], [/rooftop|garden/i, 'Rooftop garden'], [/bicycle|motorcycle/i, 'Bike and motor parking'],
+        [/building.?wide/i, 'Building Wi-Fi'], [/parcel|package/i, 'Parcel receiving'], [/housekeeping/i, 'Housekeeping'], [/balcony|window/i, 'Window view']
+      ];
+      function shortName(name) {
+        for (var i = 0; i < SHORT.length; i++) if (SHORT[i][0].test(name)) return SHORT[i][1];
+        return String(name).replace(/\s*\(.*\)\s*$/, '');
+      }
+
+      // ---- form: room type, floor, amenities, matters most ----
+      var BEDS = { Single: 1, Double: 2, Triple: 3, Quad: 4 };
+      function bedRow(n) {
+        var row = el('span', 'flex shrink-0 items-center gap-0.5'); row.setAttribute('aria-hidden', 'true');
+        for (var i = 0; i < n; i++) row.appendChild(icon('bed', 'h-4 w-4'));
+        return row;
+      }
+      function radioTile(name, value, checked, wrapCls, tileCls, content) {
+        var label = el('label', 'relative block cursor-pointer ' + (wrapCls || ''));
+        var input = el('input', 'peer sr-only'); input.type = 'radio'; input.name = name; input.value = value; input.checked = !!checked;
+        var tile = el('span', 'choice ' + tileCls);
+        content.forEach(function (c) { tile.appendChild(c); });
+        label.appendChild(input); label.appendChild(tile);
+        return label;
+      }
+      $('type-list').appendChild(radioTile('type', 'Any', true, 'col-span-2', '', [el('span', null, 'Any room type')]));
+      Object.keys(BEDS).forEach(function (t) {
+        var sr = el('span', 'sr-only', ', ' + BEDS[t] + (BEDS[t] === 1 ? ' bed' : ' beds'));
+        $('type-list').appendChild(radioTile('type', t, false, '', '!justify-between !px-3.5', [el('span', null, t), sr, bedRow(BEDS[t])]));
+      });
+
+      var floorList = [];
+      ROOMS.forEach(function (r) { if (floorList.indexOf(r.floor) === -1) floorList.push(r.floor); });
+      floorList.sort(function (a, b) { return a - b; });
+      $('floor-list').appendChild(radioTile('floor', 'Any', true, '', '', [el('span', null, 'Any')]));
+      floorList.forEach(function (f) {
+        $('floor-list').appendChild(radioTile('floor', String(f), false, '', '', [el('span', 'sr-only', 'Floor '), el('span', null, String(f))]));
+      });
+
+      var PRIORITIES = [['balanced', 'Balanced'], ['budget', 'Budget'], ['amenities', 'Amenities'], ['type', 'Room type'], ['floor', 'Floor']];
+      PRIORITIES.forEach(function (p, i) {
+        $('priority-list').appendChild(radioTile('priority', p[0], i === 0, '', '!px-3.5', [el('span', null, p[1])]));
+      });
+
+      function updateAmenityBadge() {
+        var room = form.querySelectorAll('#amenity-list input[name=amenity]:checked').length;
+        var bld = form.querySelectorAll('#building-list input[name=amenity]:checked').length;
+        var total = room + bld, badge = $('amenity-badge');
+        badge.textContent = total ? total + ' selected' : 'None selected';
+        badge.classList.toggle('text-forest', total > 0);
+        badge.classList.toggle('font-semibold', total > 0);
+        badge.classList.toggle('text-muted', total === 0);
+        $('building-badge').textContent = bld ? bld + ' selected' : '';
       }
       function createAmenityPill(name, id) {
         var label = el('label', 'relative block cursor-pointer'); label.title = name;
         var input = el('input', 'peer sr-only'); input.type = 'checkbox'; input.name = 'amenity'; input.value = name; input.id = id;
-        var span = el('span', 'flex min-h-[68px] flex-col items-center justify-center gap-1 rounded-xl border border-line/70 bg-white px-1 py-1.5 text-center text-[11px] font-medium leading-tight text-ink transition-colors hover:border-edge peer-checked:border-forest peer-checked:bg-forest peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-forest peer-focus-visible:ring-offset-1');
-        span.appendChild(amenIcon(name)); span.appendChild(el('span', 'line-clamp-2 break-words', name.replace(/\s*\(.*\)\s*$/, '')));
-        label.appendChild(input); label.appendChild(span);
+        var tile = el('span', 'choice !justify-start !gap-2.5 !px-3 !py-2 !text-left !text-[13px] !leading-tight');
+        tile.appendChild(amenIcon(name)); tile.appendChild(el('span', 'min-w-0 break-words', shortName(name)));
+        label.appendChild(input); label.appendChild(tile);
         input.addEventListener('change', updateAmenityBadge);
         return label;
       }
+      AMENITIES.forEach(function (a, i) { $('amenity-list').appendChild(createAmenityPill(a, 'am-' + i)); });
 
-      // Room amenities
-      var roomHead = el('p', 'col-span-3 text-[11px] font-semibold uppercase tracking-wider text-muted -mb-0.5', 'Inside the room');
-      $('amenity-list').appendChild(roomHead);
-      AMENITIES.forEach(function (a, i) {
-        $('amenity-list').appendChild(createAmenityPill(a, 'am-' + i));
-      });
-
-      // Building-level amenities (parking, CCTV, water station, etc.)
+      // building-level amenities (parking, CCTV, water station, etc.) live in their own fold
       var bCatalogue = (window.HB_BUILDING && HB_BUILDING.catalogue) ? HB_BUILDING.catalogue() : [];
       if (bCatalogue.length) {
-        var bHead = el('p', 'col-span-3 text-[11px] font-semibold uppercase tracking-wider text-muted mt-2 -mb-0.5', 'Building');
-        $('amenity-list').appendChild(bHead);
-        bCatalogue.forEach(function (ba, i) {
-          $('amenity-list').appendChild(createAmenityPill(ba, 'bam-' + i));
-        });
+        $('building-box').hidden = false;
+        bCatalogue.forEach(function (ba, i) { $('building-list').appendChild(createAmenityPill(ba, 'bam-' + i)); });
       }
-
-      // ---- floor choices ----
-      var floorList = [];
-      ROOMS.forEach(function (r) { if (floorList.indexOf(r.floor) === -1) floorList.push(r.floor); });
-      floorList.sort(function (a, b) { return a - b; });
-      [['Any', 'Any']].concat(floorList.map(function (f) { return [String(f), 'Floor ' + f]; })).forEach(function (o, i) {
-        var label = el('label', 'relative block cursor-pointer');
-        var input = el('input', 'peer sr-only'); input.type = 'radio'; input.name = 'floor'; input.value = o[0]; input.checked = i === 0;
-        label.appendChild(input); label.appendChild(el('span', 'choice text-[11px] sm:text-xs min-h-[34px] !px-1 text-center justify-center', o[1]));
-        $('floor-list').appendChild(label);
-      });
 
       // ---- SCORING (change the numbers here if your teacher or manager wants different weights) ----
       // How much each part counts out of 100. Balanced is the default. The part a student picks as most important
@@ -372,7 +482,11 @@
         var p = current, out = [];
         if (s.over) out.push({ ok: false, text: peso(s.overBy) + ' over budget' });
         else out.push({ ok: true, text: s.room.price <= p.budget * 0.9 ? 'Within budget' : 'Near your limit' });
-        if (p.amenities.length) out.push(s.missing.length ? { ok: false, text: 'Missing ' + s.missing.join(', ') } : { ok: true, text: 'All your amenities' });
+        if (p.amenities.length) {
+          if (!s.missing.length) out.push({ ok: true, text: 'All your amenities' });
+          else if (s.missing.length <= 2) out.push({ ok: false, text: 'Missing ' + s.missing.map(shortName).join(', ') });
+          else out.push({ ok: false, text: 'Missing ' + s.missing.length + ' of ' + p.amenities.length + ' amenities' });
+        }
         if (p.type !== 'Any') out.push(s.room.type === p.type ? { ok: true, text: p.type + ' room' } : { ok: false, text: s.room.type + ', not ' + p.type });
         if (p.floor !== 'Any') out.push(s.room.floor === p.floor ? { ok: true, text: 'Floor ' + p.floor } : { ok: false, text: 'Floor ' + s.room.floor + ', not ' + p.floor });
         return out;
@@ -392,34 +506,20 @@
         return { list: list, over: over, far: far, taken: taken };
       }
 
+      function availableRooms() { return ROOMS.filter(function (r) { return HB.roomState(r, user.id) === 'available'; }); }
+
       // ---- requesting rooms (one active request per student) ----
       var hasActive = !!HB.activeFor(user.id);
       $('active-note').hidden = !hasActive;
       $('sample-note').hidden = !HB.usingSampleRooms();
       function requestButton(room, extra) {
-        var b = el('button', 'btn ' + extra, 'Request'); b.type = 'button';
+        var b = el('button', 'btn ' + extra, 'Request room'); b.type = 'button';
         b.setAttribute('aria-label', 'Request ' + room.name);
         b.addEventListener('click', function () { HB.openRequest(room, user); });
         return b;
       }
 
       var cmp = HBCompare.mount({ rooms: ROOMS, user: user, hasActive: hasActive });
-
-      // ---- small line icons ----
-      var ICO = {
-        bed: '<path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 00-3-3h-7v6"/>',
-        heart: '<path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/>',
-        check: '<path d="M5 12l5 5 9-10"/>',
-        x: '<path d="M6 6l12 12M18 6L6 18"/>'
-      };
-      function icon(name, cls, filled) {
-        var sv = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        sv.setAttribute('viewBox', '0 0 24 24'); sv.setAttribute('class', cls || 'h-5 w-5');
-        sv.setAttribute('fill', filled ? 'currentColor' : 'none'); sv.setAttribute('stroke', 'currentColor'); sv.setAttribute('stroke-width', '2');
-        sv.setAttribute('stroke-linecap', 'round'); sv.setAttribute('stroke-linejoin', 'round'); sv.setAttribute('aria-hidden', 'true');
-        sv.innerHTML = ICO[name] || '';
-        return sv;
-      }
 
       // ---- saving rooms (Home reads this list) ----
       function savedIds() { var r = read(K.saved).value; return Array.isArray(r) ? r.map(function (x) { return x.id; }) : []; }
@@ -447,151 +547,180 @@
 
       // ---- rendering ----
       var FIT_TONE = { 'Great fit': 'ok', 'Good fit': 'ok', 'Okay fit': 'warn', 'Weak fit': 'muted' };
+      var PARTS = [['Budget', 'budget'], ['Amenities', 'amenities'], ['Room type', 'type'], ['Floor', 'floor']];
 
-      // the four parts of a score as a small radar: the bigger the shape, the better the fit
-      function radar(s, w, dark) {
-        var axes = [['Budget', 'budget'], ['Amenities', 'amenities'], ['Type', 'type'], ['Floor', 'floor']];
-        var cx = 100, cy = 70, R = 46, dir = [[0, -1], [1, 0], [0, 1], [-1, 0]];
-        function pt(i, f) { return (cx + dir[i][0] * R * f).toFixed(1) + ',' + (cy + dir[i][1] * R * f).toFixed(1); }
-        function poly(f) { return [0, 1, 2, 3].map(function (i) { return pt(i, f); }).join(' '); }
-        var data = axes.map(function (a, i) { var f = s.w[a[1]] ? Math.max(0, Math.min(1, s.pts[a[1]] / s.w[a[1]])) : 0; return pt(i, f); }).join(' ');
-        var label = axes.map(function (a) { return a[0] + ' ' + s.pts[a[1]] + ' of ' + s.w[a[1]]; }).join(', ');
-        var txt = dark ? 'rgba(255,255,255,.85)' : 'currentColor';
-        var wrap = el('div', (dark ? '' : 'text-muted ') + 'shrink-0');
-        wrap.style.width = w + 'px';
-        wrap.setAttribute('role', 'img'); wrap.setAttribute('aria-label', label);
-        wrap.innerHTML = '<svg viewBox="0 0 200 140" class="block h-auto w-full" aria-hidden="true" focusable="false">' +
-          '<g fill="none" stroke="' + (dark ? 'rgba(255,255,255,.28)' : 'currentColor') + '" stroke-opacity="' + (dark ? '1' : '.35') + '" stroke-width="1">' +
-          '<polygon points="' + poly(1) + '"/><polygon points="' + poly(0.5) + '"/>' +
-          '<path d="M' + cx + ' ' + (cy - R) + 'V' + (cy + R) + 'M' + (cx - R) + ' ' + cy + 'H' + (cx + R) + '"/></g>' +
-          '<g style="color:' + (dark ? '#C6F24E' : 'var(--forest, #1E4D36)') + '"><polygon points="' + data + '" fill="currentColor" fill-opacity=".3" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/></g>' +
-          '<g font-size="10" font-family="inherit" fill="' + txt + '">' +
-          '<text x="' + cx + '" y="12" text-anchor="middle">Budget</text>' +
-          '<text x="' + (cx + R + 8) + '" y="' + (cy + 3) + '">Amenities</text>' +
-          '<text x="' + cx + '" y="136" text-anchor="middle">Type</text>' +
-          '<text x="' + (cx - R - 8) + '" y="' + (cy + 3) + '" text-anchor="end">Floor</text></g></svg>';
-        return wrap;
+      // the four parts of a score as one bar: each segment is as wide as its points, and fills as far as the room earned
+      function partsBar(s, heightCls) {
+        var bar = el('div', 'pbar overflow-hidden rounded-full ' + heightCls);
+        bar.setAttribute('role', 'img');
+        bar.setAttribute('aria-label', PARTS.map(function (p) { return p[0] + ' ' + s.pts[p[1]] + ' of ' + s.w[p[1]]; }).join(', '));
+        PARTS.forEach(function (p, i) {
+          var seg = el('i'); seg.style.flex = s.w[p[1]] + ' 1 0%';
+          var fill = el('b', 'part-' + (i + 1)); fill.style.width = '0%';
+          seg.appendChild(fill); bar.appendChild(seg);
+          var pct = s.w[p[1]] ? Math.max(0, Math.min(100, 100 * s.pts[p[1]] / s.w[p[1]])) : 0;
+          if (calm) fill.style.width = pct + '%';
+          else requestAnimationFrame(function () { requestAnimationFrame(function () { fill.style.width = pct + '%'; }); });
+        });
+        return bar;
       }
 
-      // short reasons as chips (a check is a good point, a cross is a gap)
-      function whyRow(s, dark) {
-        var ul = el('ul', 'flex flex-wrap gap-1.5');
-        whyChips(s).forEach(function (c) {
-          var li = el('li', 'inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-sm ' +
-            (dark ? (c.ok ? 'border-white/40 text-white' : 'border-white bg-white text-ink') : (c.ok ? 'border-line bg-tint' : 'border-warn-line bg-warn-soft text-ink')));
-          li.appendChild(icon(c.ok ? 'check' : 'x', 'h-4 w-4 ' + (c.ok ? (dark ? 'text-lime' : 'text-forest') : 'text-danger')));
-          li.appendChild(document.createTextNode(c.text));
+      // what each part earned, one row per part, same colors as the form
+      function breakdown(s) {
+        var ul = el('ul', 'space-y-2.5');
+        PARTS.forEach(function (p, i) {
+          var li = el('li', 'grid grid-cols-[5rem_minmax(0,1fr)_auto] items-center gap-3 text-sm');
+          li.appendChild(el('span', 'text-muted', p[0]));
+          var track = el('span', 'trk block h-2 overflow-hidden rounded-full');
+          var fill = el('span', 'part-' + (i + 1) + ' block h-full rounded-full');
+          var pct = s.w[p[1]] ? Math.max(0, Math.min(100, 100 * s.pts[p[1]] / s.w[p[1]])) : 0;
+          fill.style.width = pct + '%'; track.appendChild(fill); li.appendChild(track);
+          li.appendChild(el('span', 'font-semibold tabular-nums', s.pts[p[1]] + ' of ' + s.w[p[1]]));
           ul.appendChild(li);
         });
         return ul;
       }
 
-      // floor, type, price and one bed icon per bed (green = free)
-      function factsRow(r, dark) {
-        var ul = el('ul', 'flex flex-wrap items-center gap-2');
-        var cls = 'rounded-lg border px-2.5 py-1 text-sm font-medium ' + (dark ? 'border-white/30 text-white' : 'border-line bg-tint');
-        ul.appendChild(el('li', cls, 'Floor ' + r.floor));
-        ul.appendChild(el('li', cls, r.type));
-        var i = HB.bedsInfo(r, user.id), beds = el('li', 'inline-flex items-center gap-0.5');
-        for (var n = 0; n < i.capacity; n++) beds.appendChild(icon('bed', 'h-5 w-5 ' + (n < i.free ? (dark ? 'text-lime' : 'text-forest') : (dark ? 'text-white/30' : 'text-edge'))));
-        beds.appendChild(el('span', 'sr-only', i.capacity > 1 ? i.free + ' of ' + i.capacity + ' beds free' : '1 bed, free'));
-        ul.appendChild(beds);
+      // short reasons as chips (a check is a good point, a cross is a gap)
+      function whyRow(s) {
+        var ul = el('ul', 'flex flex-wrap gap-2');
+        whyChips(s).forEach(function (c) {
+          var li = el('li', 'chip ' + (c.ok ? 'chip-ok' : 'chip-warn') + ' max-w-full !gap-1.5 !py-1 !font-medium');
+          li.appendChild(icon(c.ok ? 'check' : 'x', 'h-4 w-4 shrink-0'));
+          li.appendChild(el('span', 'min-w-0', c.text));
+          ul.appendChild(li);
+        });
         return ul;
       }
-      function priceText(r) { return HB.capacity(r) > 1 ? peso(r.price) + ' per person' : peso(r.price) + ' a month'; }
 
-      // a score as a ring; the number sits in the middle
-      function ring(pct, px, dark) {
-        var wrap = el('div', 'relative shrink-0');
-        wrap.style.width = wrap.style.height = px + 'px';
-        wrap.setAttribute('role', 'img'); wrap.setAttribute('aria-label', pct + ' percent fit');
-        var big = px > 80;
-        wrap.innerHTML = '<svg viewBox="0 0 120 120" class="h-full w-full -rotate-90" aria-hidden="true" focusable="false">' +
-          '<circle cx="60" cy="60" r="52" fill="none" stroke="' + (dark ? 'rgba(255,255,255,.18)' : 'rgba(20,33,26,.12)') + '" stroke-width="' + (big ? 10 : 13) + '"/>' +
-          '<circle data-ring cx="60" cy="60" r="52" fill="none" stroke="' + (dark ? '#C6F24E' : '#1E4D36') + '" stroke-width="' + (big ? 10 : 13) + '" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="326.7" style="transition: stroke-dashoffset 800ms ease-out"/></svg>' +
-          '<div class="absolute inset-0 grid place-content-center text-center"><span class="font-display ' + (big ? 'text-3xl' : 'text-base') + ' font-bold leading-none">' + pct + (big ? '%' : '<span class="text-xs">%</span>') + '</span></div>';
-        var c = wrap.querySelector('[data-ring]');
-        requestAnimationFrame(function () { requestAnimationFrame(function () { c.style.strokeDashoffset = String(326.7 * (1 - pct / 100)); }); });
-        return wrap;
+      // floor, type and one bed icon per bed (green = free)
+      function factsLine(r) {
+        var i = HB.bedsInfo(r, user.id);
+        var p = el('p', 'flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm text-muted');
+        p.appendChild(el('span', null, 'Floor ' + r.floor + ', ' + r.type));
+        var beds = el('span', 'inline-flex items-center gap-0.5');
+        for (var n = 0; n < i.capacity; n++) beds.appendChild(icon('bed', 'h-4 w-4 ' + (n < i.free ? 'text-forest' : 'text-edge')));
+        p.appendChild(beds);
+        if (i.capacity > 1) p.appendChild(el('span', null, i.free + ' of ' + i.capacity + ' beds free'));
+        else p.appendChild(el('span', 'sr-only', '1 bed, free'));
+        return p;
       }
 
-      // ---- the best match: a big picture, the score, the shape of the score ----
+      function priceBlock(r, big) {
+        var box = el('div', 'shrink-0 text-right');
+        box.appendChild(el('p', 'font-display font-bold leading-tight ' + (big ? 'text-3xl' : 'text-xl'), peso(r.price)));
+        box.appendChild(el('p', 'text-xs text-muted', HB.capacity(r) > 1 ? 'per person a month' : 'a month'));
+        return box;
+      }
+
+      function actionsRow(s, cls, withCompare) {
+        var row = el('div', 'flex flex-wrap items-center gap-2 ' + cls);
+        if (!hasActive) row.appendChild(requestButton(s.room, '!px-5'));
+        row.appendChild(saveButton(s.room, ''));
+        if (window.HB_MSG) row.appendChild(HB_MSG.askButton(s.room, user, '!px-4'));
+        if (withCompare) row.appendChild(cmp.checkbox(s.room, { cls: 'sm:ml-auto' }));
+        return row;
+      }
+
+      // ---- the best match: bigger, not louder ----
       function renderTop(s) {
         var box = $('top'); box.textContent = '';
         var pct = Math.max(0, Math.min(100, Math.round(s.total)));
-        var card = el('article', 'overflow-hidden rounded-[28px] bg-forest text-white'); card.id = 'match-' + s.room.id; card.className += ' scroll-mt-28';
+        var card = el('article', 'scroll-mt-28 overflow-hidden rounded-[24px] border border-line bg-white'); card.id = 'match-' + s.room.id;
 
-        var hero = el('div', 'relative aspect-[16/8] bg-forest-deep sm:aspect-[16/6]');
-        var im = el('img', 'h-full w-full object-cover'); im.src = HB.roomImage(s.room); im.alt = ''; im.width = 640; im.height = 400; hero.appendChild(im);
-        var fade = el('div', 'absolute inset-0'); fade.style.background = 'linear-gradient(to top, var(--forest, #0B4A2F) 4%, rgba(11,74,47,0) 70%)'; hero.appendChild(fade);
-        var cap = el('div', 'absolute inset-x-0 bottom-0 flex flex-wrap items-end justify-between gap-3 p-5 sm:p-6');
-        var capL = el('div', 'min-w-0');
-        capL.appendChild(el('p', 'text-sm font-semibold uppercase tracking-wider text-lime', 'Best match, ' + fitLabel(s)));
-        capL.appendChild(el('p', 'font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl', s.room.name));
-        cap.appendChild(capL);
-        var pr = el('div', 'text-right'); pr.appendChild(el('p', 'font-display text-2xl font-bold leading-tight', peso(s.room.price))); pr.appendChild(el('p', 'text-sm text-white/85', HB.capacity(s.room) > 1 ? 'per person / month' : 'per month'));
-        cap.appendChild(pr); hero.appendChild(cap); card.appendChild(hero);
+        var hero = el('div', 'relative aspect-[16/9] bg-track sm:aspect-[21/9]');
+        var im = el('img', 'h-full w-full object-cover'); im.src = HB.roomImage(s.room); im.alt = ''; im.width = 960; im.height = 420; hero.appendChild(im);
+        hero.appendChild(el('span', 'badge-lime absolute left-4 top-4 rounded-lg px-3 py-1.5 text-sm font-semibold', 'Best match'));
+        card.appendChild(hero);
 
         var body = el('div', 'p-5 sm:p-7');
-        var grid = el('div', 'grid items-center gap-5 sm:grid-cols-[auto_auto_minmax(0,1fr)]');
-        var rg = ring(pct, 128, true); rg.className += ' mx-auto sm:mx-0'; grid.appendChild(rg);
-        var rd = radar(s, 210, true); rd.className += ' mx-auto sm:mx-0'; grid.appendChild(rd);
-        var info = el('div', 'min-w-0');
-        info.appendChild(factsRow(s.room, true));
-        var chips = el('ul', 'mt-3 flex flex-wrap gap-1.5');
-        s.room.amenities.forEach(function (a) {
-          var on = s.matched.indexOf(a) !== -1;
-          chips.appendChild(el('li', 'rounded-lg border px-2.5 py-1 text-sm ' + (on ? 'border-lime bg-lime font-semibold text-ink' : 'border-white/40 text-white'), a));
-        });
-        s.matched.filter(function (a) { return s.room.amenities.indexOf(a) === -1; }).forEach(function (a) {
-          chips.appendChild(el('li', 'rounded-lg border border-lime bg-lime px-2.5 py-1 text-sm font-semibold text-ink', a + ' (building)'));
-        });
-        info.appendChild(chips);
-        var w = el('div', 'mt-3'); w.appendChild(whyRow(s, true)); info.appendChild(w);
-        grid.appendChild(info); body.appendChild(grid);
+        var head = el('div', 'flex items-start justify-between gap-4');
+        var hl = el('div', 'min-w-0');
+        hl.appendChild(el('h3', 'font-display text-3xl font-bold leading-tight tracking-tight', s.room.name));
+        var f = factsLine(s.room); f.className += ' mt-1.5'; hl.appendChild(f);
+        head.appendChild(hl); head.appendChild(priceBlock(s.room, true));
+        body.appendChild(head);
 
-        var actions = el('div', 'mt-6 flex flex-wrap items-center gap-2');
-        if (!hasActive) actions.appendChild(requestButton(s.room, 'btn-lime'));
-        actions.appendChild(saveButton(s.room, 'on-dark'));
-        if (window.HB_MSG) actions.appendChild(HB_MSG.askButton(s.room, user, 'on-dark'));
-        body.appendChild(actions);
-        body.appendChild(cmp.checkbox(s.room, { dark: true, cls: 'mt-2' }));
+        var grid = el('div', 'mt-6 grid gap-6 md:grid-cols-[minmax(0,1fr)_16rem]');
+        var left = el('div', 'min-w-0');
+        var why = whyRow(s); left.appendChild(why);
+
+        var feat = el('div', 'mt-4');
+        if (s.room.amenities.length || s.matched.some(function (a) { return s.room.amenities.indexOf(a) === -1; })) {
+          var ul = el('ul', 'flex flex-wrap gap-2');
+          s.room.amenities.forEach(function (a) {
+            var on = s.matched.indexOf(a) !== -1;
+            ul.appendChild(el('li', 'chip ' + (on ? 'chip-ok' : 'chip-muted') + ' !py-1 !font-medium', shortName(a)));
+          });
+          s.matched.filter(function (a) { return s.room.amenities.indexOf(a) === -1; }).forEach(function (a) {
+            ul.appendChild(el('li', 'chip chip-ok !py-1 !font-medium', shortName(a) + ' (building)'));
+          });
+          feat.appendChild(el('p', 'mb-2 text-sm font-semibold', 'What comes with it'));
+          feat.appendChild(ul);
+        } else {
+          feat.appendChild(el('p', 'text-sm text-muted', 'No in-room amenities listed.'));
+        }
+        left.appendChild(feat);
+        grid.appendChild(left);
+
+        var sc = el('div', 'order-first rounded-xl bg-tint p-4 md:order-last');
+        var big = el('div', 'flex items-end justify-between gap-3');
+        var num = el('p', 'font-display font-bold leading-none');
+        num.appendChild(el('span', 'text-5xl', String(pct))); num.appendChild(el('span', 'text-2xl', '%'));
+        big.appendChild(num); big.appendChild(HB.chip(fitLabel(s), FIT_TONE[fitLabel(s)] || 'muted'));
+        sc.appendChild(big);
+        sc.appendChild(el('p', 'mb-3 mt-1 text-sm text-muted', 'fit score'));
+        sc.appendChild(breakdown(s));
+        grid.appendChild(sc);
+
+        body.appendChild(grid);
+        body.appendChild(actionsRow(s, 'mt-6 border-t border-line pt-5', true));
         card.appendChild(body); box.appendChild(card);
       }
 
-      // ---- every other room: a picture card with the score on the picture ----
+      // ---- every other room: one row, picture on the left ----
       function cardFor(s, number) {
-        var li = el('li', 'flex scroll-mt-28 flex-col overflow-hidden rounded-[20px] border border-line bg-white'); li.id = 'match-' + s.room.id;
-        var frame = el('div', 'relative aspect-[8/5] bg-track');
-        var im = el('img', 'h-full w-full object-cover'); im.src = HB.roomImage(s.room); im.alt = ''; im.width = 640; im.height = 400; im.loading = 'lazy'; frame.appendChild(im);
-        var tag = el('span', 'absolute left-3 top-3'); tag.appendChild(HB.chip(fitLabel(s), FIT_TONE[fitLabel(s)] || 'muted')); frame.appendChild(tag);
-        var badge = el('span', 'absolute right-3 top-3 rounded-full bg-white p-1 text-ink'); badge.appendChild(ring(Math.round(s.total), 52, false)); frame.appendChild(badge);
-        if (number) { var rk = el('span', 'absolute bottom-3 left-3 grid h-8 w-8 place-items-center rounded-full bg-forest font-display text-sm font-bold text-white', String(number)); rk.setAttribute('aria-hidden', 'true'); frame.appendChild(rk); }
+        var li = el('li', 'flex scroll-mt-28 flex-col overflow-hidden rounded-[20px] border border-line bg-white sm:flex-row'); li.id = 'match-' + s.room.id;
+        var frame = el('div', 'relative aspect-[16/9] shrink-0 bg-track sm:aspect-auto sm:w-56 lg:w-60');
+        var im = el('img', 'h-full w-full object-cover sm:absolute sm:inset-0'); im.src = HB.roomImage(s.room); im.alt = ''; im.width = 640; im.height = 400; im.loading = 'lazy'; frame.appendChild(im);
+        if (number) {
+          var rk = el('span', 'absolute bottom-3 left-3 grid h-8 min-w-[2rem] place-items-center rounded-lg bg-white px-2 font-display text-sm font-bold text-ink', String(number));
+          rk.setAttribute('aria-hidden', 'true'); frame.appendChild(rk);
+        }
+        var pick = el('div', 'absolute right-3 top-3 rounded-xl bg-white px-3');
+        pick.appendChild(cmp.checkbox(s.room, { cls: '!gap-2 !text-sm' })); frame.appendChild(pick);
         li.appendChild(frame);
 
-        var body = el('div', 'flex flex-1 flex-col p-4 sm:p-5');
+        var body = el('div', 'flex min-w-0 flex-1 flex-col p-4 sm:p-5');
         var head = el('div', 'flex items-start justify-between gap-3');
-        head.appendChild(el('p', 'font-display text-lg font-semibold tracking-tight', (number ? 'No. ' + number + ', ' : '') + s.room.name));
-        head.appendChild(el('p', 'text-right font-display text-lg font-bold leading-tight', peso(s.room.price)));
+        var hl = el('div', 'min-w-0');
+        var h = el('h4', 'font-display text-lg font-semibold leading-snug tracking-tight');
+        if (number) h.appendChild(el('span', 'sr-only', 'Number ' + number + ', '));
+        h.appendChild(document.createTextNode(s.room.name));
+        hl.appendChild(h);
+        var f = factsLine(s.room); f.className += ' mt-1'; hl.appendChild(f);
+        head.appendChild(hl); head.appendChild(priceBlock(s.room, false));
         body.appendChild(head);
-        var f = factsRow(s.room, false); f.className += ' mt-2'; body.appendChild(f);
 
-        var mid = el('div', 'mt-3 grid items-center gap-3 sm:grid-cols-[minmax(0,1fr)_auto]');
-        mid.appendChild(whyRow(s, false));
-        var rd = radar(s, 132, false); rd.className += ' hidden sm:block'; mid.appendChild(rd);
-        body.appendChild(mid);
+        var pct = Math.max(0, Math.min(100, Math.round(s.total)));
+        var line = el('div', 'mt-4 flex items-center gap-3');
+        line.appendChild(el('span', 'font-display text-xl font-bold tabular-nums', pct + '%'));
+        var pb = partsBar(s, 'h-2 min-w-0 flex-1'); line.appendChild(pb);
+        line.appendChild(HB.chip(fitLabel(s), FIT_TONE[fitLabel(s)] || 'muted'));
+        body.appendChild(line);
 
-        var btns = el('div', 'mt-auto flex flex-wrap items-center gap-2 pt-4');
-        if (!hasActive) btns.appendChild(requestButton(s.room, ''));
-        btns.appendChild(saveButton(s.room, ''));
-        if (window.HB_MSG) btns.appendChild(HB_MSG.askButton(s.room, user, ''));
-        body.appendChild(btns);
-        body.appendChild(cmp.checkbox(s.room, { cls: 'mt-1' }));
+        var w = el('div', 'mt-3'); w.appendChild(whyRow(s)); body.appendChild(w);
+
+        var ams = s.room.amenities.map(shortName);
+        body.appendChild(el('p', 'mt-3 line-clamp-2 text-sm text-muted', ams.length ? ams.join(', ') : 'No in-room amenities listed.'));
+
+        body.appendChild(actionsRow(s, 'mt-auto pt-4', false));
         li.appendChild(body);
         return li;
       }
       function renderRest(rest) {
         var ul = $('rest'); ul.textContent = '';
+        $('rest-title').hidden = rest.length === 0;
         rest.forEach(function (s, i) { ul.appendChild(cardFor(s, i + 2)); });
       }
       function renderOver(list) {
@@ -602,80 +731,44 @@
         list.forEach(function (s) { ul.appendChild(cardFor(s, null)); });
       }
 
-      // ---- fit against price: one dot per room, your budget as a line ----
-      function renderChart(items, prefs) {
-        var box = $('chart'); box.textContent = '';
-        if (items.length < 2) { box.hidden = true; return; }
-        box.hidden = false;
-        var W = 640, H = 230, L = 40, Rm = 18, T = 26, B = 36;
-        var prices = items.map(function (s) { return Number(s.room.price) || 0; }).concat([prefs.budget]);
-        var lo = Math.min.apply(null, prices), hi = Math.max.apply(null, prices);
-        var pad = Math.max(200, (hi - lo) * 0.08); lo = Math.max(0, lo - pad); hi = hi + pad;
-        function X(p) { return L + (p - lo) / (hi - lo) * (W - L - Rm); }
-        function Y(score) { return T + (1 - score / 100) * (H - T - B); }
-        var NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg');
-        svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('class', 'block h-auto w-full text-muted'); svg.setAttribute('role', 'group');
-        svg.setAttribute('aria-label', 'Fit against price. Each dot is a room. Select a dot to jump to that room.');
-        function add(tag, attrs, text, parent) { var n = document.createElementNS(NS, tag); for (var k in attrs) n.setAttribute(k, attrs[k]); if (text != null) n.textContent = text; (parent || svg).appendChild(n); return n; }
-        [0, 50, 100].forEach(function (v) {
-          add('line', { x1: L, x2: W - Rm, y1: Y(v), y2: Y(v), stroke: 'currentColor', 'stroke-opacity': '.2' });
-          add('text', { x: L - 8, y: Y(v) + 4, 'text-anchor': 'end', 'font-size': '11', fill: 'currentColor' }, v + '%');
-        });
-        // the budget line
-        var bx = X(prefs.budget);
-        add('rect', { x: bx, y: T, width: Math.max(0, W - Rm - bx), height: H - T - B, fill: 'currentColor', 'fill-opacity': '.07' });
-        add('line', { x1: bx, x2: bx, y1: T - 6, y2: H - B, stroke: '#1E4D36', 'stroke-width': '2', 'stroke-dasharray': '5 4' });
-        add('text', { x: bx, y: T - 10, 'text-anchor': bx > W - 90 ? 'end' : 'middle', 'font-size': '11', 'font-weight': '600', fill: 'currentColor' }, 'Your budget ' + peso(prefs.budget));
-        [lo + pad, hi - pad].forEach(function (p, i) { add('text', { x: X(p), y: H - 12, 'text-anchor': i ? 'end' : 'start', 'font-size': '11', fill: 'currentColor' }, peso(Math.round(p / 100) * 100)); });
-        // the dots (a link each)
-        var seen = {};
-        items.forEach(function (s, idx) {
-          var x = X(Number(s.room.price) || 0), y = Y(Math.round(s.total)), key = Math.round(x) + ':' + Math.round(y);
-          seen[key] = (seen[key] || 0) + 1; x += (seen[key] - 1) * 14;
-          var over = !!s.over, best = idx === 0 && !over;
-          var a = add('a', { href: '#match-' + s.room.id, 'aria-label': s.room.name + ', ' + Math.round(s.total) + ' percent fit, ' + peso(s.room.price) + (over ? ', over budget' : '') });
-          a.addEventListener('click', function (e) { var t = document.getElementById('match-' + s.room.id); if (t) { e.preventDefault(); t.scrollIntoView({ block: 'center' }); } });
-          add('circle', { cx: x, cy: y, r: '16', fill: 'transparent' }, null, a);
-          if (best) add('circle', { cx: x, cy: y, r: '12', fill: 'none', stroke: '#1E4D36', 'stroke-width': '2' }, null, a);
-          add('circle', { cx: x, cy: y, r: best ? '7' : '6', fill: over ? 'none' : '#1E4D36', stroke: over ? '#93B4A2' : '#1E4D36', 'stroke-width': over ? '3' : '2' }, null, a);
-          add('text', { x: x, y: y - 14 - (best ? 4 : 0), 'text-anchor': 'middle', 'font-size': '10', 'font-weight': '600', fill: 'currentColor' }, String(s.room.name).replace(/^Room\s*/i, ''), a);
-        });
-        var card = el('section', 'mt-4 rounded-[20px] border border-line bg-white p-4 sm:p-5');
-        var head = el('div', 'flex flex-wrap items-center justify-between gap-2');
-        head.appendChild(el('h2', 'text-xs font-semibold uppercase tracking-wider text-muted', 'Fit against price'));
-        var lg = el('ul', 'flex items-center gap-4 text-xs text-muted');
-        [['In budget', '#1E4D36', true], ['Over budget', '#93B4A2', false]].forEach(function (p) {
-          var li = el('li', 'inline-flex items-center gap-1.5'), d = el('i', 'inline-block h-3 w-3 rounded-full'); d.setAttribute('aria-hidden', 'true');
-          d.style.border = '2px solid ' + p[1]; if (p[2]) d.style.background = p[1];
-          li.appendChild(d); li.appendChild(document.createTextNode(p[0])); lg.appendChild(li);
-        });
-        head.appendChild(lg); card.appendChild(head); card.appendChild(svg); box.appendChild(card);
+      // ---- the panel on phones: a one-line summary with Edit ----
+      var panel = $('panel'), editBtn = $('panel-edit');
+      function setCollapsed(c) { panel.setAttribute('data-collapsed', String(c)); editBtn.setAttribute('aria-expanded', String(!c)); }
+      function updateSummary(prefs) {
+        $('sum-budget').textContent = peso(prefs.budget) + ' a month';
+        var bits = [prefs.type === 'Any' ? 'Any room type' : prefs.type + ' room', prefs.floor === 'Any' ? 'any floor' : 'floor ' + prefs.floor];
+        bits.push(prefs.amenities.length ? prefs.amenities.length + (prefs.amenities.length === 1 ? ' amenity' : ' amenities') : 'no amenities picked');
+        $('sum-detail').textContent = bits.join(', ');
       }
-
-      // numbers instead of a sentence
-      function statChip(n, label, tone) {
-        var c = el('span', 'inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm ' + (tone === 'ok' ? 'border-forest bg-white' : tone === 'warn' ? 'border-warn-line bg-warn-soft' : 'border-line bg-tint'));
-        c.appendChild(el('b', 'font-display text-base', String(n))); c.appendChild(document.createTextNode(label));
-        return c;
-      }
+      editBtn.addEventListener('click', function () { setCollapsed(false); $('budget').focus(); });
 
       function run(prefs) {
         current = prefs;
         var res = rank(prefs);
+        updateSummary(prefs);
         if (!res.list.length && !res.over.length) {
           drop(K.top);
-          $('none-detail').textContent = 'No available room is within 20% of ' + peso(prefs.budget) + '.' +
-            (res.far ? ' ' + res.far + (res.far === 1 ? ' room costs' : ' rooms cost') + ' even more.' : '') + ' Try a higher budget.';
+          var avail = availableRooms(), cheapest = null;
+          avail.forEach(function (r) { if (cheapest === null || r.price < cheapest) cheapest = r.price; });
+          $('none-detail').textContent = !avail.length ? 'Every room is full or taken right now. Check again later.' :
+            'No available room is within 20% of ' + peso(prefs.budget) + '.' + (res.far ? ' ' + res.far + (res.far === 1 ? ' room costs' : ' rooms cost') + ' even more.' : '') + ' The cheapest room with a free bed is ' + peso(cheapest) + ' a month.';
+          var tryBtn = $('none-try');
+          tryBtn.hidden = !avail.length;
+          if (avail.length) { tryBtn.textContent = 'Try ' + peso(cheapest); tryBtn.setAttribute('data-budget', String(cheapest)); }
+          $('status').textContent = 'Nothing fits that budget.';
+          setCollapsed(false);
           setState('none'); return;
         }
         var shownOver = res.over.slice(0, 5);
         current.moreOver = res.over.length > 5 ? res.over.length : 0;
-        var sum = $('summary'); sum.textContent = '';
-        sum.appendChild(statChip(res.list.length, ' fit your budget', 'ok'));
-        if (res.over.length) sum.appendChild(statChip(res.over.length, ' a little over', 'warn'));
-        sum.appendChild(statChip(res.taken, ' full or taken', 'muted'));
-        if (PRIORITY_LABEL[prefs.priority] && prefs.priority !== 'balanced') sum.appendChild(el('span', 'rounded-full border border-forest px-3.5 py-1.5 text-sm font-semibold text-forest', PRIORITY_LABEL[prefs.priority] + ' first'));
-        renderChart(res.list.concat(shownOver), prefs);
+
+        var n = res.list.length, text = n ? n + (n === 1 ? ' room fits' : ' rooms fit') + ' your budget.' : 'No room fits your budget.';
+        if (res.over.length) text += ' ' + res.over.length + (res.over.length === 1 ? ' more is' : ' more are') + ' a little over.';
+        if (res.taken) text += ' ' + res.taken + (res.taken === 1 ? ' room is' : ' rooms are') + ' full or taken.';
+        $('summary').textContent = text; $('status').textContent = text;
+        var pn = $('priority-note');
+        if (PRIORITY_LABEL[prefs.priority] && prefs.priority !== 'balanced') { pn.textContent = PRIORITY_LABEL[prefs.priority] + ' first'; pn.hidden = false; } else { pn.hidden = true; }
+
         if (res.list.length) {
           var best = res.list[0];
           renderTop(best); renderRest(res.list.slice(1));
@@ -690,12 +783,13 @@
           $('top').textContent = ''; $('top').appendChild(card); renderRest([]);
         }
         renderOver(shownOver);
+        setCollapsed(true);
         setState('list');
       }
 
-      // ---- budget: slider + dots for the available rooms ----
+      // ---- budget: slider + one dot per room with a free bed, stacked so none cover each other ----
       function initBudget() {
-        var avail = ROOMS.filter(function (r) { return HB.roomState(r, user.id) === 'available'; });
+        var avail = availableRooms();
         var wid = $('budget-widget');
         if (!avail.length) { wid.hidden = true; return; }
         var prices = avail.map(function (r) { return Number(r.price) || 0; });
@@ -704,12 +798,26 @@
         var range = $('budget-range'), dots = $('price-dots'), input = $('budget');
         range.min = smin; range.max = smax; range.step = 100;
         $('range-min').textContent = peso(smin); $('range-max').textContent = peso(smax);
-        var els = prices.map(function (p) {
-          var d = el('span', 'absolute top-0 h-2.5 w-2.5 -translate-x-1/2 rounded-full'); d.style.left = (100 * (p - smin) / (smax - smin)) + '%'; dots.appendChild(d); return { d: d, p: p };
+
+        var BINS = 28, bins = {};
+        prices.forEach(function (p) { var b = Math.round(BINS * (p - smin) / (smax - smin)); (bins[b] = bins[b] || []).push(p); });
+        var tallest = 1; Object.keys(bins).forEach(function (k) { tallest = Math.max(tallest, bins[k].length); });
+        dots.style.height = (tallest * 10) + 'px';
+        var els = [];
+        Object.keys(bins).forEach(function (k) {
+          var col = el('span', 'absolute bottom-0 flex -translate-x-1/2 flex-col-reverse gap-0.5'); col.style.left = (100 * k / BINS) + '%';
+          bins[k].sort(function (a, b) { return a - b; }).forEach(function (p) { var d = el('span', 'block h-2 w-2 rounded-full'); col.appendChild(d); els.push({ d: d, p: p }); });
+          dots.appendChild(col);
         });
         function paint() {
-          var b = Number(input.value);
-          els.forEach(function (o) { o.d.className = 'absolute top-0 h-2.5 w-2.5 -translate-x-1/2 rounded-full ' + (isFinite(b) && b > 0 && o.p <= b ? 'bg-forest' : 'bg-edge'); });
+          var b = Number(input.value), has = isFinite(b) && b > 0;
+          els.forEach(function (o) {
+            var on = has && o.p <= b;
+            o.d.style.background = on ? 'var(--forest)' : 'transparent';
+            o.d.style.boxShadow = on ? 'none' : 'inset 0 0 0 1.5px var(--muted)';
+          });
+          var v = Number(range.value);
+          range.style.setProperty('--pct', (100 * (v - smin) / (smax - smin)) + '%');
         }
         range.addEventListener('input', function () { input.value = range.value; paint(); });
         input.addEventListener('input', function () { var b = Number(input.value); if (isFinite(b) && b > 0) range.value = Math.max(smin, Math.min(smax, b)); paint(); });
@@ -718,22 +826,21 @@
       }
 
       // ---- how the 100 points are shared (follows "Matters most") ----
-      var W_PARTS = [['Budget', 'budget', '#0B4A2F'], ['Amenities', 'amenities', '#3A7D5C'], ['Type', 'type', '#93B4A2'], ['Floor', 'floor', '#C9D9CF']];
       function updateWeights() {
         var w = weightsFor(form.elements.priority.value), bar = $('weights-bar'), leg = $('weights-legend');
         bar.textContent = ''; leg.textContent = '';
-        bar.setAttribute('aria-label', 'Points: ' + W_PARTS.map(function (p) { return p[0] + ' ' + w[p[1]]; }).join(', '));
-        W_PARTS.forEach(function (p) {
-          var seg = el('span', 'h-2.5'); seg.style.width = w[p[1]] + '%'; seg.style.background = p[2]; seg.style.transition = 'width 300ms'; bar.appendChild(seg);
-          var li = el('li', 'inline-flex items-center gap-1 text-[11px] text-muted');
-          var dot = el('i', 'inline-block h-2 w-2 rounded-full'); dot.style.background = p[2]; li.appendChild(dot);
+        bar.setAttribute('aria-label', 'Points: ' + PARTS.map(function (p) { return p[0] + ' ' + w[p[1]]; }).join(', '));
+        PARTS.forEach(function (p, i) {
+          var seg = el('i'); seg.style.flex = w[p[1]] + ' 1 0%'; seg.style.transition = 'flex-grow 300ms';
+          seg.appendChild(el('b', 'part-' + (i + 1))); seg.firstChild.style.width = '100%'; bar.appendChild(seg);
+          var li = el('li', 'inline-flex items-center gap-1.5 text-xs text-muted');
+          var dot = el('i', 'part-' + (i + 1) + ' inline-block h-2 w-2 rounded-full'); li.appendChild(dot);
           li.appendChild(document.createTextNode(p[0] + ' ' + w[p[1]]));
           leg.appendChild(li);
         });
       }
 
       // ---- form ----
-      var form = $('form');
       function readForm() {
         var checked = []; form.querySelectorAll('input[name=amenity]:checked').forEach(function (c) { checked.push(c.value); });
         var fl = form.elements.floor.value;
@@ -753,18 +860,31 @@
         run(prefs);
         if (window.innerWidth < 1024) {
           var resEl = $('results');
-          if (resEl) resEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          if (resEl) resEl.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'start' });
         }
+      });
+      $('none-try').addEventListener('click', function () {
+        var b = $('none-try').getAttribute('data-budget'); if (!b) return;
+        $('budget').value = b; $('budget').dispatchEvent(new Event('input'));
+        form.dispatchEvent(new Event('submit', { cancelable: true }));
       });
 
       // ---- restore last preferences ----
       var p = read(K.prefs).value;
+      var availNow = availableRooms();
+      if (availNow.length) {
+        var lo0 = Math.min.apply(null, availNow.map(function (r) { return r.price; })), hi0 = Math.max.apply(null, availNow.map(function (r) { return r.price; }));
+        $('empty-detail').textContent = availNow.length + (availNow.length === 1 ? ' room has' : ' rooms have') + ' a free bed right now, from ' + peso(lo0) + ' to ' + peso(hi0) + ' a month. Enter a monthly budget and tap Find my matches to see them ranked by fit.';
+      } else {
+        $('empty-detail').textContent = 'Every room is full or taken right now. Check again later, or ask the office.';
+      }
       if (p && typeof p.budget === 'number' && p.budget > 0 && Array.isArray(p.amenities)) {
         $('budget').value = p.budget;
         var radio = form.querySelector('input[name=type][value="' + p.type + '"]'); if (radio) radio.checked = true;
         var floorVal = typeof p.floor === 'number' ? p.floor : 'Any';
         var fr = form.querySelector('input[name=floor][value="' + floorVal + '"]'); if (fr) fr.checked = true; else floorVal = 'Any';
         form.querySelectorAll('input[name=amenity]').forEach(function (c) { c.checked = p.amenities.indexOf(c.value) !== -1; });
+        if (form.querySelector('#building-list input:checked')) $('building-box').open = true;
         updateAmenityBadge();
         var prioVal = p.priority || 'balanced';
         var pr = form.querySelector('input[name=priority][value="' + prioVal + '"]'); if (pr) pr.checked = true; else prioVal = 'balanced';
