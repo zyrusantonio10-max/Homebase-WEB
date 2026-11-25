@@ -245,6 +245,11 @@
   }
 
   window.HB_SYNC = { saved: saved, pull: pullAll, flush: function () { return queue; }, run: run };
-  function boot() { run(); startLive(); }
+  function boot() { run(); startLive(); loadUserData(); }
+  // saved rooms, match preferences and comparisons live in userdata.js
+  function loadUserData() {
+    if (window.HB_USERDATA || !me()) return;
+    var s = document.createElement('script'); s.src = 'assets/js/userdata.js'; document.head.appendChild(s);
+  }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();

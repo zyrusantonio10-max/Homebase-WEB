@@ -159,28 +159,20 @@
     // ---- the room list ----
     // Retrieve active room catalog from local storage or fallback to default seed
     getRooms: function () {
-      var OLD_IDS = ['101', '102', '103', '104', '105', '201', '202', '203', '204', '301', '302', '303'];
       try {
         var raw = localStorage.getItem(ROOMS_KEY);
-        if (raw) {
-          var v = JSON.parse(raw);
-          if (Array.isArray(v) && v.length && !v.some(function (r) { return r && OLD_IDS.indexOf(String(r.id)) !== -1; })) return v;
-        }
+        if (raw) { var v = JSON.parse(raw); if (Array.isArray(v)) return v; }
       } catch (e) {}
-      var fresh = JSON.parse(JSON.stringify(window.HOMEBASE_ROOMS || []));
-      try { localStorage.setItem(ROOMS_KEY, JSON.stringify(fresh)); } catch (e) {}
-      return fresh;
+      // nothing from the database yet (first page load): show the starter list in rooms.js until sync() replaces it
+      return JSON.parse(JSON.stringify(window.HOMEBASE_ROOMS || []));
     },
     // Synchronize rooms, reservations, and bed occupancy counts from database
     sync: function (opts) {
       var d = db(), u = me(); opts = opts || {};
       if (!d || !u) return Promise.resolve(false);
-      var OLD_IDS = ['101', '102', '103', '104', '105', '201', '202', '203', '204', '301', '302', '303'];
       return Promise.all([d.from('rooms').select('*'), d.from('reservations').select('*'), d.rpc('room_occupancy')]).then(function (res) {
         for (var i = 0; i < res.length; i++) if (res[i].error) throw res[i].error;
-        var fetched = res[0].data.map(rowToRoom);
-        var isOld = fetched.some(function (r) { return r && OLD_IDS.indexOf(String(r.id)) !== -1; });
-        var rooms = (!isOld && fetched.length) ? fetched : HB.getRooms();
+        var rooms = res[0].data.map(rowToRoom);
         var list = res[1].data.map(rowToRes), occ = {};
         (res[2].data || []).forEach(function (o) { occ[o.room_id] = o.taken; });
         var snap = JSON.stringify([rooms, list, occ]), prev = null;
