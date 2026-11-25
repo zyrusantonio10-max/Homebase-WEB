@@ -11,9 +11,9 @@ body.hb-body { background: var(--paper); }
 .hb-skip:focus { left: .75rem; outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--forest); }
 
 .hb-ico { width: 1.375rem; height: 1.375rem; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.hb-brand { display: inline-flex; min-height: 44px; align-items: center; gap: .625rem; border-radius: .75rem; font-family: Sora, system-ui, sans-serif; font-size: 1.25rem; font-weight: 700; letter-spacing: -.025em; color: var(--ink); text-decoration: none; cursor: pointer; }
+.hb-brand { display: inline-flex; min-height: 44px; align-items: center; gap: .625rem; border-radius: .75rem; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 1.25rem; font-weight: 700; letter-spacing: -.025em; color: var(--ink); text-decoration: none; cursor: pointer; }
 .hb-brand svg { width: 2.25rem; height: 2.25rem; flex-shrink: 0; }
-.hb-avatar { display: grid; width: 2.25rem; height: 2.25rem; flex-shrink: 0; place-items: center; overflow: hidden; border-radius: 9999px; background: var(--forest); color: #fff; font-family: Sora, system-ui, sans-serif; font-size: .875rem; font-weight: 600; }
+.hb-avatar { display: grid; width: 2.25rem; height: 2.25rem; flex-shrink: 0; place-items: center; overflow: hidden; border-radius: 9999px; background: var(--forest); color: #fff; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: .875rem; font-weight: 600; }
 .hb-avatar img { width: 100%; height: 100%; object-fit: cover; }
 [data-msg-badge].hidden, [data-concern-badge].hidden { display: none; }
 
