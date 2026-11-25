@@ -27,6 +27,7 @@
 - **Reviews**: after a stay, students rate overall, commute, safety and cleanliness. The office can reply publicly and can hide a comment (never the ratings) with a visible reason.
 - **Profile (`profile.html`)**: photo, contact, emergency contact, living habits, password change, and account deletion.
 - **Dark mode**: a moon or sun button on every page switches theme. The choice is remembered in the browser.
+- **Live updates**: when the office or another device changes something (a reply, a request status, a concern), open pages refresh by themselves. Realtime is turned on for 8 tables.
 
 **For the dorm office (landlord)**
 - **Dashboard (`landlord.html`)**: requests to answer, beds free, and approve / decline / mark as paid / end stay. The office sets how many days a student has to pay. The Building amenities (CCTV, water station, curfew, ...) are chosen here.
@@ -50,7 +51,7 @@
   - Rooms with no free bed are never listed. Rooms up to 20% over your budget get their own section ("A little over budget").
 - **Results:** the best match is shown big, with what each part earned. The other rooms follow as one ranked list, each with its fit score, short reasons (within budget, missing Wi-Fi, ...), and the buttons Request room, Save, Ask about this room and Compare.
 - **On a phone:** once there are results, the form folds into a one-line summary with an **Edit** button.
-- **What it saves:** your last preferences, your best match and your saved rooms, per student in the browser (`homebase_preferences_<id>`, `homebase_topMatch_<id>`, `homebase_savedRooms_<id>`). Home reads them.
+- **What it saves:** your last preferences, your best match, your saved rooms and your comparisons. They are saved to the database (`student_data` table), so they follow you to any device. The browser keeps a copy (`homebase_preferences_<id>` and so on) and `userdata.js` syncs it. Home reads them.
 - The scoring numbers are in `matches.html`, in the script, under `SCORING`.
 
 ---
@@ -68,9 +69,10 @@ Homebase-WEB/
 │   │   ├── supabase.js       # Connects to Supabase (project URL + public key)
 │   │   ├── auth.js           # Login, sessions, profiles, per-user storage keys, safe avatar helpers
 │   │   ├── signup.js         # Sign-up rules for every field, and creating the account
-│   │   ├── dbsync.js         # Copies reviews, messages, concerns and building perks to and from the database
+│   │   ├── dbsync.js         # Copies reviews, messages, concerns and building perks to and from the database, and refreshes pages live
+│   │   ├── userdata.js       # Saves each student's preferences, best match, saved rooms and comparisons to the database
 │   │   ├── reservation.js    # Beds, room list, requests, house rules (also synced with the database)
-│   │   ├── rooms.js          # Starting (sample) rooms and in-room amenity choices
+│   │   ├── rooms.js          # The 14 real rooms (starting list) and in-room amenity choices
 │   │   ├── building.js       # Building-wide perks (CCTV, water station, curfew, ...)
 │   │   ├── compare.js        # Side-by-side room comparison
 │   │   ├── reviews.js        # Student reviews, office replies and hidden comments
@@ -88,6 +90,7 @@ Homebase-WEB/
 ├── guardian.html             # Parent or guardian approval for students under 18
 ├── home.html  matches.html  rooms.html  messages.html  concerns.html  profile.html   # Student pages
 ├── landlord.html  landlord-rooms.html  landlord-messages.html  landlord-concerns.html  landlord-reviews.html   # Office pages
+├── supabase/                 # All the SQL for the database, numbered in the order to run it (see supabase/README.md)
 ├── vercel.json               # Clean URLs
 └── README.md
 ```
@@ -100,7 +103,7 @@ Homebase-WEB/
 - **Styling:** [Tailwind CSS](https://tailwindcss.com/) (CDN) configured in `tw-config.js`, plus `components.css`, `dark.css` and `shell.css`
 - **Typography:** Public Sans & Sora via Google Fonts
 - **Logic:** Vanilla JavaScript. Pages read and write `localStorage`, and sync with the database
-- **Database, login and photos:** [Supabase](https://supabase.com/) (Auth, Postgres, Storage), loaded with `supabase-js` v2 from a CDN
+- **Database, login and photos:** [Supabase](https://supabase.com/) (Auth, Postgres, Storage, Realtime), loaded with `supabase-js` v2 from a CDN
 - **Hosting:** [Vercel](https://vercel.com/)
 
 ---
@@ -108,15 +111,25 @@ Homebase-WEB/
 ## 🗄️ Supabase
 
 - **Login and sign-up** use Supabase Auth (email and password). A database trigger (`handle_new_user`) creates the student's profile from the sign-up details.
-- **Tables the code uses:** `profiles`, `rooms`, `reservations`, `building_perks`, `threads`, `messages`, `concerns`, `concern_updates`, `reviews`.
-- **Database functions the code calls:** `approve_guardian`, `new_guardian_code`, `delete_my_account`, `room_occupancy`.
-- **Storage:** a bucket named `room-photos` holds the room photos. Photos are shrunk in the browser (1200 px, JPEG), and only their links are saved on the room.
-- **How it syncs:** the pages keep reading and writing `localStorage`. On every page load `dbsync.js` (and `reservation.js` for rooms and requests) copies the database into `localStorage`, and when something is saved it sends only what changed.
-- **Setup notes:**
-  - In Supabase, Authentication settings, switch **Confirm email** off, or sign-up stops at step 3.
-  - The office (landlord) account is not created on the sign-up page. The project owner creates it in Supabase and sets its profile role to landlord.
-  - `assets/js/supabase.js` holds the project URL and the **public (publishable) key**, which is meant to be in the browser. **Never put the `service_role` / secret key in this repo or in any page.**
-  - The public key is only safe if **Row Level Security** is on for every table, with policies so that students see only their own data. The SQL for the tables, policies, trigger and functions lives in the Supabase dashboard and is **not in this repo yet**. Keep a copy (for example a `supabase/schema.sql`).
+- **Tables the code uses:** `profiles`, `rooms`, `reservations`, `building_perks`, `threads`, `messages`, `concerns`, `concern_updates`, `reviews`, `student_data`.
+- **Database functions the code calls:** `approve_guardian`, `new_guardian_code`, `delete_my_account`, `room_occupancy`. Triggers also enforce bed capacity (`check_room_capacity`) and review rules (`guard_review`).
+- **Rules the database enforces** (not just the browser): one active request per student, a room cannot take more students than it has beds (Single 1, Double 2, Triple 3, Quad 4), under-18 students need guardian approval, the office can only reply to or hide a review, and messages cannot be edited.
+- **Storage:** a public bucket named `room-photos` holds the room photos. Only the office can upload, replace or delete. Photos are shrunk in the browser (1200 px, JPEG, max 5 per room), and only their links are saved on the room (`rooms.images`).
+- **Realtime:** the 8 shared tables are in the `supabase_realtime` publication, so open pages update live.
+- **How it syncs:** the pages keep reading and writing `localStorage`. On every page load `dbsync.js` (and `reservation.js` for rooms and requests) copies the database into `localStorage`, and when something is saved it sends only what changed. If a save fails, the page tells the user and reloads what is really saved.
+
+### Setting up a new Supabase project
+
+1. Create a project, then run the files in `supabase/` in order. See [supabase/README.md](supabase/README.md).
+2. Authentication settings: switch **Confirm email** off, or sign-up stops at step 3.
+3. Put the project URL and the **publishable (anon) key** in `assets/js/supabase.js`.
+4. Create the office account: sign up normally, then set its profile role to `landlord` (the SQL is in `supabase/README.md`). It is not created on the sign-up page.
+
+### Keys: what is safe
+
+- The project URL and the **publishable key** are meant to be in the browser, so they can be committed.
+- **Never put the `service_role` / secret key or the database password in this repo or in any page.** Run `git status` before every commit.
+- The publishable key is only safe because **Row Level Security** is on for every table, with policies so students see only their own data.
 
 ---
 
@@ -124,7 +137,8 @@ Homebase-WEB/
 
 - **Only students and other residents can sign up**, on `register.html`. There is one dormitory, so the office account is created by the project owner. Ask the project owner for its login.
 - **Accounts, rooms, requests, messages, concerns, reviews, profiles and building perks live in the Supabase database.** `localStorage` is used as a cache of them, so anyone with access to a browser can read what that browser has loaded.
-- **Saved rooms, preferences, best match and comparisons stay in the browser** (per student: `homebase_savedRooms_<id>` and so on). They are not shared across devices yet.
+- **Saved rooms, preferences, best match and comparisons are saved in the `student_data` table**, and each student can only read and change their own rows. The browser keeps a cached copy.
+- **Still only in the browser:** the theme choice, and photos in profiles and concerns (they are stored as data in the row, not in Storage yet).
 - **Text typed by users is never inserted as HTML.** Use `HB_AUTH.safeImg` and `textContent` when showing user text. Do not use `innerHTML` with user text.
 - **Deleting an account** runs `delete_my_account` in the database, which also removes that student's requests and reviews.
 - Student profiles (photo, course, bio, living habits) of ADULT students are visible to other students on Explore Rooms. There is no opt-in yet. Add one before real use. Profiles of students under 18 are never shown.
@@ -164,7 +178,10 @@ The pages need an internet connection, because Tailwind, the fonts and Supabase 
 - [x] Database, login and room photos with Supabase
 - [x] New My Matches page (ranked list, score breakdown, phone summary)
 - [ ] Use `app-shell.js` on every signed-in page
-- [ ] Add the Supabase SQL (tables, policies, functions) to the repo
+- [x] Supabase SQL (tables, policies, functions) is in the repo, in `supabase/`
+- [x] Live updates (Realtime)
+- [x] Saved rooms, preferences and comparisons shared across devices
 - [ ] Email the parent approval code to the parent
-- [ ] Share saved rooms, preferences and comparisons across devices
+- [ ] Password reset by email
+- [ ] Move profile and concern photos to Storage
 - [ ] A note on compared rooms by the student: why each room fits them
