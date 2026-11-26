@@ -145,14 +145,12 @@
                 <label class="text-sm font-semibold" for="budget">Monthly budget</label>
                 <div class="relative mt-2">
                   <span class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 font-display text-xl font-bold text-muted" aria-hidden="true">&#8369;</span>
-                  <input class="field h-14 !pl-10 font-display text-2xl font-bold" id="budget" name="budget" type="number" inputmode="numeric" min="1" step="1" placeholder="5000" aria-describedby="budget-err budget-hint" required>
+                  <input class="field h-14 !pl-10 font-display text-2xl font-bold" id="budget" name="budget" type="number" inputmode="numeric" min="1" step="1" placeholder="5000" aria-describedby="budget-err" required>
                 </div>
                 <p id="budget-err" class="mt-1 hidden text-sm font-medium text-danger"></p>
                 <div id="budget-widget" class="mt-4">
-                  <div id="price-dots" class="relative mx-3" aria-hidden="true"></div>
                   <input id="budget-range" type="range" aria-label="Budget slider">
                   <div class="flex justify-between text-xs text-muted"><span id="range-min"></span><span id="range-max"></span></div>
-                  <p id="budget-hint" class="mt-2 text-xs text-muted">Each dot is a room with a free bed. Solid dots fit your budget.</p>
                 </div>
               </div>
 
@@ -776,7 +774,7 @@
         setState('list');
       }
 
-      // ---- budget: slider + one dot per room with a free bed, stacked so none cover each other ----
+      // ---- budget: slider ----
       function initBudget() {
         var avail = availableRooms();
         var wid = $('budget-widget');
@@ -784,27 +782,11 @@
         var prices = avail.map(function (r) { return Number(r.price) || 0; });
         var lo = Math.min.apply(null, prices), hi = Math.max.apply(null, prices);
         var smin = Math.max(0, Math.floor(lo / 500) * 500 - 500), smax = Math.ceil(hi * 1.2 / 500) * 500;
-        var range = $('budget-range'), dots = $('price-dots'), input = $('budget');
+        var range = $('budget-range'), input = $('budget');
         range.min = smin; range.max = smax; range.step = 100;
         $('range-min').textContent = peso(smin); $('range-max').textContent = peso(smax);
 
-        var BINS = 28, bins = {};
-        prices.forEach(function (p) { var b = Math.round(BINS * (p - smin) / (smax - smin)); (bins[b] = bins[b] || []).push(p); });
-        var tallest = 1; Object.keys(bins).forEach(function (k) { tallest = Math.max(tallest, bins[k].length); });
-        dots.style.height = (tallest * 10) + 'px';
-        var els = [];
-        Object.keys(bins).forEach(function (k) {
-          var col = el('span', 'absolute bottom-0 flex -translate-x-1/2 flex-col-reverse gap-0.5'); col.style.left = (100 * k / BINS) + '%';
-          bins[k].sort(function (a, b) { return a - b; }).forEach(function (p) { var d = el('span', 'block h-2 w-2 rounded-full'); col.appendChild(d); els.push({ d: d, p: p }); });
-          dots.appendChild(col);
-        });
         function paint() {
-          var b = Number(input.value), has = isFinite(b) && b > 0;
-          els.forEach(function (o) {
-            var on = has && o.p <= b;
-            o.d.style.background = on ? 'var(--forest)' : 'transparent';
-            o.d.style.boxShadow = on ? 'none' : 'inset 0 0 0 1.5px var(--muted)';
-          });
           var v = Number(range.value);
           range.style.setProperty('--pct', (100 * (v - smin) / (smax - smin)) + '%');
         }
