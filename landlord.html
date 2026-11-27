@@ -845,6 +845,18 @@
         tick.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" class="h-4 w-4"><path d="M4.5 10.5l3 3 8-8"/></svg>';
         label.appendChild(cb); label.appendChild(tick); label.appendChild(span);
 
+        var del = el('button', 'ml-1 grid h-7 w-7 shrink-0 place-items-center rounded-full text-muted transition-colors hover:bg-danger-soft hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger');
+        del.type = 'button';
+        del.title = 'Remove amenity';
+        del.setAttribute('aria-label', 'Remove ' + name);
+        del.innerHTML = '<svg viewBox="0 0 20 20" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 5l10 10M15 5L5 15"/></svg>';
+        del.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          label.remove();
+        });
+        label.appendChild(del);
+
         // Update selection styling on checkbox toggle
         cb.addEventListener('change', function () {
           label.classList.toggle('border-forest', cb.checked);
@@ -925,7 +937,15 @@
 
       $('building-save').addEventListener('click', function () {
         var picks = [];
-        grid.querySelectorAll('input[name=b-amenity]:checked').forEach(function (c) { picks.push(c.value); });
+        var visible = [];
+        grid.querySelectorAll('input[name=b-amenity]').forEach(function (c) {
+          visible.push(c.value);
+          if (c.checked) picks.push(c.value);
+        });
+        var hidden = (window.HOMEBASE_BUILDING_AMENITIES || []).filter(function (a) {
+          return visible.indexOf(a) === -1;
+        });
+        if (HB_BUILDING.setHidden) HB_BUILDING.setHidden(hidden);
         if (HB_BUILDING.set(picks)) {
           $('building-status').textContent = 'Saved \u2714';
           setTimeout(function () {
