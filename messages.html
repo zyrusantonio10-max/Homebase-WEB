@@ -99,7 +99,7 @@
       if (window.HB_AUTH && HB_AUTH.renderAvatar) HB_AUTH.renderAvatar($('nav-initial'), user);
       else $('nav-initial').textContent = fullName.charAt(0).toUpperCase();
       $('nav-name').textContent = fullName.split(/\s+/)[0];
-      document.querySelectorAll('[data-logout]').forEach(function (b) { b.addEventListener('click', function () { try { localStorage.removeItem('homebase_currentUser'); } catch (e) {} window.location.href = 'index.html'; }); });
+      document.querySelectorAll('[data-logout]').forEach(function (b) { b.addEventListener('click', function () { if (window.HB_AUTH && HB_AUTH.logout) { HB_AUTH.logout(); return; } try { localStorage.removeItem('homebase_currentUser'); } catch (e) {} window.location.href = 'index.html'; }); });
       document.querySelectorAll('[data-reload]').forEach(function (b) { b.addEventListener('click', function () { window.location.reload(); }); });
       var menuBtn = $('menu-btn'), menu = $('menu');
       function setMenu(o) { menu.hidden = !o; menuBtn.setAttribute('aria-expanded', String(o)); $('menu-label').textContent = o ? 'Close' : 'Menu'; }

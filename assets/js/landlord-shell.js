@@ -40,7 +40,7 @@
     else a.textContent = String(user.name || user.email || 'M').charAt(0).toUpperCase();
     return a;
   }
-  function logout() { try { localStorage.removeItem('homebase_currentUser'); } catch (e) {} window.location.href = 'index.html'; }
+  function logout() { if (window.HB_AUTH && HB_AUTH.logout) { HB_AUTH.logout(); return; } try { localStorage.removeItem('homebase_currentUser'); } catch (e) {} window.location.href = 'index.html'; }
   function brand() {
     var a = el('a', 'll-brand'); a.href = 'landlord.html'; a.setAttribute('aria-label', 'Homebase dashboard');
     a.innerHTML = LOGO; a.appendChild(el('span', null, 'Homebase')); return a;

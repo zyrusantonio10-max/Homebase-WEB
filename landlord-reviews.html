@@ -95,10 +95,11 @@
       } else {
         $('nav-avatar').textContent = (user.name || user.email || 'M').charAt(0).toUpperCase();
       }
-      $('logout').addEventListener('click', function () { try { localStorage.removeItem('homebase_currentUser'); } catch (e) {} window.location.href = 'index.html'; });
+      function doLogout() { if (window.HB_AUTH && HB_AUTH.logout) { HB_AUTH.logout(); return; } try { localStorage.removeItem('homebase_currentUser'); } catch (e) {} window.location.href = 'index.html'; }
+      $('logout').addEventListener('click', doLogout);
       var logoutM = $('logout-m');
       if (logoutM) {
-        logoutM.addEventListener('click', function () { try { localStorage.removeItem('homebase_currentUser'); } catch (e) {} window.location.href = 'index.html'; });
+        logoutM.addEventListener('click', doLogout);
       }
       var menuBtn = $('menu-btn'), menu = $('menu');
       if (menuBtn && menu) {

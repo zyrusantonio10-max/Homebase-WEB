@@ -564,12 +564,18 @@
         $('bio-counter').textContent = (prof.bio ? prof.bio.length : 0) + ' / 300';
 
         // Select lifestyle option radio buttons
+        var LIFE_ALIAS = {
+          sleep: { early: 'Early Bird (Sleeps before 11 PM)', night: 'Night Owl (Up past midnight)', flexible: 'Flexible / Varies by schedule' },
+          study: { quiet: 'Pin-drop silence', library: 'Pin-drop silence', music: 'Background music / headphones', group: 'Collaborative study' },
+          clean: { 'very-neat': 'Very neat & organized daily', moderate: 'Moderate / weekly cleanup', relaxed: 'Casual / Relaxed' }
+        };
         function selectRadio(name, val) {
           if (!val) return;
-          var match = document.querySelector('input[name="' + name + '"][value="' + val + '"]');
+          var mapped = (LIFE_ALIAS[name] && LIFE_ALIAS[name][val]) || val;
+          var match = document.querySelector('input[name="' + name + '"][value="' + mapped + '"]');
           if (match) { match.checked = true; return; }
           var all = document.querySelectorAll('input[name="' + name + '"]');
-          var lower = String(val).toLowerCase();
+          var lower = String(mapped).toLowerCase();
           for (var i = 0; i < all.length; i++) {
             if (lower.indexOf(all[i].value.toLowerCase()) !== -1 || all[i].value.toLowerCase().indexOf(lower) !== -1) {
               all[i].checked = true;
@@ -780,8 +786,8 @@
           valid = false;
         }
 
-        if (!newPass || newPass.length < 6) {
-          $('f-new-pass-err').textContent = 'New password must be at least 6 characters long.';
+        if (!newPass || newPass.length < 8 || !/[A-Za-z]/.test(newPass) || !/[0-9]/.test(newPass)) {
+          $('f-new-pass-err').textContent = 'Use at least 8 characters, including at least one letter and one number.';
           $('f-new-pass-err').hidden = false;
           valid = false;
         }

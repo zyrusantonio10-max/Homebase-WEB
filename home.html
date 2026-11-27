@@ -397,6 +397,7 @@
       // Handle user logout across desktop and mobile
       document.querySelectorAll('[data-logout]').forEach(function (b) {
         b.addEventListener('click', function () {
+          if (window.HB_AUTH && HB_AUTH.logout) { HB_AUTH.logout(); return; }
           try { localStorage.removeItem(KEYS.user); } catch (e) {}
           window.location.href = 'index.html';
         });

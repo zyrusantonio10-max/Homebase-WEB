@@ -98,11 +98,12 @@
   function db() { return global.HB_DB || null; }
   function loadProfile(uid) { return db().from('profiles').select('*').eq('id', uid).single(); }
   function rowToRecord(p) {
-    var userType = p.user_type || (!p.school && !p.student_id ? 'non_student' : 'student');
+    var userType = p.user_type || (p.year_level === 'Working Professional' || (!p.school && !p.student_id) ? 'non_student' : 'student');
     return { id: p.id, name: p.name, email: p.email, role: p.role, dob: p.dob || '', mobile: p.mobile || '', school: p.school || '',
       studentId: p.student_id || '', course: p.course || '', yearLevel: p.year_level || '', province: p.province || '',
       guardian: p.guardian || {}, guardianStatus: p.guardian_status, guardianCode: p.guardian_code || '',
-      userType: userType, occupation: p.occupation || (userType === 'non_student' ? p.course : ''), workplace: p.workplace || '' };
+      userType: userType, occupation: p.occupation || (userType === 'non_student' ? p.course : ''),
+      workplace: p.workplace || (userType === 'non_student' ? (p.school || '') : '') };
   }
   function cacheProfile(p) {
     var rec = rowToRecord(p);

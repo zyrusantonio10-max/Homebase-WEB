@@ -56,7 +56,7 @@
   function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
   function badge(attr) { var b = el('span', 'chip chip-warn hidden'); b.setAttribute(attr, ''); return b; }
   function current(a, item) { if (here === bare(item.href)) a.setAttribute('aria-current', 'page'); }
-  function logout() { try { localStorage.removeItem('homebase_currentUser'); } catch (e) {} window.location.href = 'index.html'; }
+  function logout() { if (window.HB_AUTH && HB_AUTH.logout) { HB_AUTH.logout(); return; } try { localStorage.removeItem('homebase_currentUser'); } catch (e) {} window.location.href = 'index.html'; }
   function avatar(id) {
     var a = el('span', 'hb-avatar'); if (id) a.id = id; a.setAttribute('aria-hidden', 'true');
     if (window.HB_AUTH && HB_AUTH.renderAvatar) HB_AUTH.renderAvatar(a, user);

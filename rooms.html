@@ -120,6 +120,7 @@
           <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Any" checked><span class="choice">Any</span></label>
           <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Single"><span class="choice">Single</span></label>
           <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Double"><span class="choice">Double</span></label>
+          <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Triple"><span class="choice">Triple</span></label>
           <label class="relative block cursor-pointer"><input class="peer sr-only" type="radio" name="type" value="Quad"><span class="choice">Quad</span></label>
         </div>
       </fieldset>
@@ -190,7 +191,7 @@
         $('nav-initial').textContent = fullName.charAt(0).toUpperCase();
       }
       $('nav-name').textContent = fullName.split(/\s+/)[0];
-      document.querySelectorAll('[data-logout]').forEach(function (b) { b.addEventListener('click', function () { drop(K.user); window.location.href = 'index.html'; }); });
+      document.querySelectorAll('[data-logout]').forEach(function (b) { b.addEventListener('click', function () { if (window.HB_AUTH && HB_AUTH.logout) { HB_AUTH.logout(); return; } drop(K.user); window.location.href = 'index.html'; }); });
       document.querySelectorAll('[data-reload]').forEach(function (b) { b.addEventListener('click', function () { window.location.reload(); }); });
       var menuBtn = $('menu-btn'), menu = $('menu');
       function setMenu(o) { menu.hidden = !o; menuBtn.setAttribute('aria-expanded', String(o)); $('menu-label').textContent = o ? 'Close' : 'Menu'; }
@@ -583,9 +584,9 @@
           return true;
         });
         list.sort(function (a, b) {
-          if (sort === 'low') return a.price - b.price || a.id.localeCompare(b.id);
-          if (sort === 'high') return b.price - a.price || a.id.localeCompare(b.id);
-          return a.id.localeCompare(b.id);
+          if (sort === 'low') return a.price - b.price || String(a.id).localeCompare(String(b.id), undefined, { numeric: true });
+          if (sort === 'high') return b.price - a.price || String(a.id).localeCompare(String(b.id), undefined, { numeric: true });
+          return String(a.id).localeCompare(String(b.id), undefined, { numeric: true });
         });
         if (!list.length) { $('count').textContent = '0 of ' + ROOMS.length + ' rooms'; setState('empty'); return; }
         var saved = savedIds(), grid = $('grid'); grid.textContent = '';
