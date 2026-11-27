@@ -67,9 +67,14 @@ function _saveBA(list, noSync) {
 
 /* Public API */
 window.HB_BUILDING = {
-  /** The full catalogue of possible building amenities. */
+  /** The full catalogue of possible building amenities (includes any saved custom perks). */
   catalogue: function () {
-    return (window.HOMEBASE_BUILDING_AMENITIES || []).slice();
+    var base = (window.HOMEBASE_BUILDING_AMENITIES || []).slice();
+    var selected = _loadBA();
+    selected.forEach(function (s) {
+      if (base.indexOf(s) === -1) base.push(s);
+    });
+    return base;
   },
 
   /** Currently selected (enabled) building amenities. */

@@ -149,6 +149,18 @@
 
         <div id="building-list" class="mt-5 grid max-h-[50vh] gap-2 overflow-y-auto pr-1 sm:grid-cols-2"></div>
 
+        <!-- Add custom amenity input (only saved to DB if selected + saved) -->
+        <div class="mt-4 flex items-center gap-2">
+          <label for="custom-amenity-input" class="sr-only">Add a custom amenity</label>
+          <input type="text" id="custom-amenity-input" placeholder="Add a custom amenity..." maxlength="60"
+            class="h-11 flex-1 rounded-xl border border-line bg-white px-4 text-base outline-none focus-visible:border-forest focus-visible:ring-2 focus-visible:ring-forest/30">
+          <button type="button" id="custom-amenity-add" class="btn !px-4 gap-1.5 text-sm shrink-0">
+            <svg viewBox="0 0 20 20" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg>
+            Add
+          </button>
+        </div>
+        <p id="custom-amenity-error" class="mt-1.5 text-sm font-medium text-danger" role="alert" hidden></p>
+
         <div class="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
           <span id="building-status" class="text-sm font-medium text-forest" role="status"></span>
           <div class="flex items-center gap-2">
@@ -816,15 +828,18 @@
       function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
 
       if (!window.HB_BUILDING) return;
-      var catalogue = HB_BUILDING.catalogue();
-      var selected = HB_BUILDING.get();
       var grid = $('building-list');
+      var dlg = $('building-dialog');
+      var addInput = $('custom-amenity-input');
+      var addBtn = $('custom-amenity-add');
+      var addError = $('custom-amenity-error');
+      var nextId = 0;
 
-      catalogue.forEach(function (name, i) {
+      function appendAmenityOption(name, isChecked) {
         var label = el('label', 'relative flex cursor-pointer items-center gap-3 rounded-xl border border-line bg-white px-4 py-3 transition-colors hover:border-edge');
         var cb = document.createElement('input');
-        cb.type = 'checkbox'; cb.className = 'peer sr-only'; cb.name = 'b-amenity'; cb.value = name; cb.id = 'ba-' + i;
-        cb.checked = selected.indexOf(name) !== -1;
+        cb.type = 'checkbox'; cb.className = 'peer sr-only'; cb.name = 'b-amenity'; cb.value = name; cb.id = 'ba-' + (nextId++);
+        cb.checked = !!isChecked;
         var span = el('span', 'flex-1 text-base font-medium text-ink peer-checked:text-forest select-none', name);
         var tick = el('span', 'grid h-6 w-6 shrink-0 place-items-center rounded-md border border-line transition-colors peer-checked:border-forest peer-checked:bg-forest');
         tick.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" class="h-4 w-4"><path d="M4.5 10.5l3 3 8-8"/></svg>';
@@ -838,13 +853,61 @@
         if (cb.checked) { label.classList.add('border-forest', 'bg-tint'); }
 
         grid.appendChild(label);
-      });
+      }
 
-      var dlg = $('building-dialog');
+      function renderGrid() {
+        var catalogue = HB_BUILDING.catalogue();
+        var selected = HB_BUILDING.get();
+        grid.textContent = '';
+        nextId = 0;
+        catalogue.forEach(function (name) {
+          appendAmenityOption(name, selected.indexOf(name) !== -1);
+        });
+      }
+
+      function addCustomAmenity() {
+        var val = addInput.value.trim();
+        addError.hidden = true;
+        if (!val) {
+          addError.textContent = 'Enter an amenity name.';
+          addError.hidden = false;
+          addInput.focus();
+          return;
+        }
+        var exists = false;
+        grid.querySelectorAll('input[name=b-amenity]').forEach(function (c) {
+          if (c.value.toLowerCase() === val.toLowerCase()) exists = true;
+        });
+        if (exists) {
+          addError.textContent = '"' + val + '" is already in the list.';
+          addError.hidden = false;
+          addInput.focus();
+          return;
+        }
+        addInput.value = '';
+        appendAmenityOption(val, false);
+        grid.scrollTop = grid.scrollHeight;
+      }
+
+      renderGrid();
+
+      if (addBtn && addInput) {
+        addBtn.addEventListener('click', addCustomAmenity);
+        addInput.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') { e.preventDefault(); addCustomAmenity(); }
+        });
+      }
+
       var openBtn = $('open-building-modal');
       if (openBtn && dlg) {
         openBtn.addEventListener('click', function () {
-          $('building-status').textContent = '';
+          var statusEl = $('building-status');
+          statusEl.textContent = '';
+          statusEl.classList.remove('text-danger');
+          statusEl.classList.add('text-forest');
+          if (addError) addError.hidden = true;
+          if (addInput) addInput.value = '';
+          renderGrid();
           dlg.showModal();
         });
       }
