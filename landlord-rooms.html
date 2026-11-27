@@ -75,7 +75,7 @@
       <div id="list" class="mt-4 space-y-8"></div>
 
       <div class="mt-10 border-t border-line pt-6">
-        <p class="text-sm text-muted">Starting over? This replaces your rooms with the 12 sample rooms. Requests are kept.</p>
+        <p class="text-sm text-muted">Starting over? This replaces your rooms with the 14 sample rooms. Requests are kept.</p>
         <div id="reset-row" class="mt-2 flex flex-wrap items-center gap-2"></div>
       </div>
     </div>
@@ -90,7 +90,7 @@
 
         <div>
           <label class="label" for="f-id">Room number</label>
-          <input class="field" id="f-id" type="text" maxlength="8" autocomplete="off" aria-describedby="f-id-hint f-id-err" required>
+          <input class="field" id="f-id" type="text" maxlength="8" autocomplete="off" aria-describedby="f-id-hint f-id-err" readonly required>
           <p id="f-id-hint" class="mt-1.5 text-sm text-muted"></p>
           <p id="f-id-err" class="err" hidden></p>
         </div>
@@ -430,11 +430,20 @@
       }
       function clearErrors() { ['f-id', 'f-floor', 'f-price', 'f-beds'].forEach(function (id) { fieldErr(id, ''); }); $('form-error').hidden = true; }
 
+      function nextRoomId() {
+        var max = 0;
+        rooms.forEach(function (r) {
+          var n = parseInt(String(r.id).trim(), 10);
+          if (isFinite(n) && n > max) max = n;
+        });
+        return String(max + 1);
+      }
+
       function openForm(room) {
         editingId = room ? room.id : null; clearErrors();
         $('room-title').textContent = room ? 'Edit ' + room.name : 'Add a room';
-        $('f-id').value = room ? room.id : ''; $('f-id').readOnly = !!room;
-        $('f-id-hint').textContent = room ? 'Cannot be changed.' : 'Up to 8 letters, numbers or dashes, like 205.';
+        $('f-id').value = room ? room.id : nextRoomId(); $('f-id').readOnly = true;
+        $('f-id-hint').textContent = room ? 'Cannot be changed.' : 'Assigned automatically.';
         $('f-floor').value = room ? room.floor : ''; setType(room ? room.type : 'Single'); $('f-price').value = room ? room.price : '';
         $('f-beds').value = room ? (room.bedsTaken || 0) : 0; syncBeds();
         form.querySelectorAll('input[name=amenity]').forEach(function (c) { c.checked = !!room && room.amenities.indexOf(c.value) !== -1; });
@@ -445,7 +454,7 @@
         photos = room ? (room.images && room.images.length ? room.images.slice() : (room.image ? [room.image] : [])) : [];
         addedPhotos = []; removedPhotos = []; uploading = 0; savedOk = false; $('photo-status').textContent = ''; $('photo-err').hidden = true;
         drawPhotos();
-        dlg.showModal(); (room ? $('f-floor') : $('f-id')).focus();
+        dlg.showModal(); $('f-floor').focus();
       }
       function drawPhotos() {
         var ul = $('photo-list'); ul.textContent = '';
@@ -484,10 +493,7 @@
 
       form.addEventListener('submit', function (e) {
         e.preventDefault(); clearErrors();
-        var id = $('f-id').value.trim(), floor = Number($('f-floor').value), price = Number($('f-price').value);
-        if (!id) fieldErr('f-id', 'Enter the room number.');
-        else if (!/^[A-Za-z0-9-]{1,8}$/.test(id)) fieldErr('f-id', 'Use only letters, numbers or dashes, up to 8 characters.');
-        else if (editingId === null && rooms.some(function (r) { return String(r.id).toLowerCase() === id.toLowerCase(); })) fieldErr('f-id', 'A room with this number already exists.');
+        var id = editingId === null ? nextRoomId() : editingId, floor = Number($('f-floor').value), price = Number($('f-price').value);
         if (!isFinite(floor) || floor < 1 || floor > 20 || Math.floor(floor) !== floor) fieldErr('f-floor', 'Enter a floor from 1 to 20.');
         if (!isFinite(price) || price < 1 || price > 1000000 || Math.floor(price) !== price) fieldErr('f-price', 'Enter the monthly price as a whole number, like 4500.');
         var typeSel = TYPES.indexOf(typeVal()) !== -1 ? typeVal() : 'Single';
@@ -501,7 +507,7 @@
         } else if (beds + activeCount > cap) {
           fieldErr('f-beds', 'Not enough beds: ' + activeCount + ' active request' + (activeCount === 1 ? '' : 's') + ' already hold beds in this room. Use ' + Math.max(0, cap - activeCount) + ' or fewer.');
         }
-        var bad = ['f-id', 'f-floor', 'f-price', 'f-beds'].filter(function (x) { return $(x).getAttribute('aria-invalid') === 'true'; })[0];
+        var bad = ['f-floor', 'f-price', 'f-beds'].filter(function (x) { return $(x).getAttribute('aria-invalid') === 'true'; })[0];
         if (bad) { $(bad).focus(); return; }
 
         if (uploading) { $('form-error').textContent = 'Wait for the photos to finish uploading.'; $('form-error').hidden = false; return; }
@@ -518,14 +524,99 @@
             return Object.assign({}, r, { floor: floor, type: type, price: price, amenities: amenities, available: keepAvail, bedsTaken: beds, images: photos.slice(), image: photos[0] || '' });
           });
         }
-        var label = editingId === null ? 'Room ' + id : 'Room ' + editingId;
+        var label = 'Room ' + id;
         savedOk = true; removedPhotos.forEach(function (u) { HB_PHOTOS.remove(u); });
         dlg.close();
         if (floorFilter !== 'all' && Number(floorFilter) !== floor) floorFilter = 'all';   // Reset floor filter so newly saved room remains visible
         persist(next, (editingId === null ? 'Added ' : 'Saved ') + label + '.');
       });
 
-      sortRooms(); render();
+      function hasNonCanonicalOrDuplicate(list) {
+        var seen = {};
+        for (var i = 0; i < list.length; i++) {
+          var id = String(list[i].id || '').trim();
+          if (!/^[1-9]\d*$/.test(id) || seen[id] || list[i].name !== 'Room ' + id) return true;
+          seen[id] = true;
+        }
+        return false;
+      }
+
+      function needsInitialRenumber(list) {
+        if (!list || !list.length) return false;
+        if (hasNonCanonicalOrDuplicate(list)) return true;
+        try { if (localStorage.getItem('homebase_rooms_renumbered_v1')) return false; } catch (e) {}
+        for (var i = 0; i < list.length; i++) {
+          if (Number(list[i].id) > list.length) return true;
+        }
+        return false;
+      }
+
+      function toDbRow(r) {
+        return {
+          id: String(r.id), name: r.name, floor: Number(r.floor), type: r.type, price: Number(r.price),
+          amenities: r.amenities || [], available: !!r.available, beds_taken: Number(r.bedsTaken) || 0,
+          capacity: r.capacity ? Number(r.capacity) : null, image: r.image || null, images: r.images || []
+        };
+      }
+
+      function ensureSequentialRooms() {
+        var syncP = (window.HB && HB.sync) ? HB.sync({ noReload: true }) : Promise.resolve(false);
+        syncP.then(function () {
+          var current = HB.getRooms();
+          if (!needsInitialRenumber(current)) {
+            rooms = current; sortRooms(); render();
+            return;
+          }
+          var sorted = current.slice().sort(function (a, b) {
+            return (a.floor - b.floor) || String(a.id).localeCompare(String(b.id), undefined, { numeric: true });
+          });
+          var changes = [], nextRooms = [], newIds = {};
+          sorted.forEach(function (r, idx) {
+            var newId = String(idx + 1), newName = 'Room ' + newId;
+            newIds[newId] = true;
+            if (String(r.id) !== newId || r.name !== newName) {
+              changes.push({ oldId: String(r.id), newId: newId, newName: newName });
+            }
+            nextRooms.push(Object.assign({}, r, { id: newId, name: newName }));
+          });
+          var oldIds = current.map(function (r) { return String(r.id); }).filter(function (id) { return !newIds[id]; });
+          var d = window.HB_DB;
+          if (!d) {
+            persist(nextRooms, 'Rooms renumbered 1 to ' + nextRooms.length + '.');
+            return;
+          }
+          d.from('rooms').upsert(nextRooms.map(toDbRow)).then(function (upRes) {
+            if (upRes.error) throw upRes.error;
+            var chain = Promise.resolve();
+            changes.slice().reverse().forEach(function (c) {
+              if (c.oldId === c.newId) return;
+              chain = chain.then(function () {
+                return Promise.all(['reservations', 'concerns', 'threads', 'reviews'].map(function (tbl) {
+                  return d.from(tbl).update({ room_id: c.newId, room_name: c.newName }).eq('room_id', c.oldId).then(function () {}, function () {});
+                }));
+              });
+            });
+            return chain;
+          }).then(function () {
+            if (!oldIds.length) return { error: null };
+            return d.from('rooms').delete().in('id', oldIds);
+          }).then(function (delRes) {
+            if (delRes && delRes.error) throw delRes.error;
+            try {
+              localStorage.setItem('homebase_rooms', JSON.stringify(nextRooms));
+              localStorage.removeItem('homebase_sync_snapshot');
+              localStorage.setItem('homebase_rooms_renumbered_v1', '1');
+            } catch (e) {}
+            rooms = nextRooms; sortRooms(); render();
+            notice('Rooms renumbered 1 to ' + nextRooms.length + '.');
+            if (HB.sync) HB.sync({ noReload: true, force: true });
+          }).catch(function (err) {
+            try { console.warn('Room renumbering failed:', err); } catch (e) {}
+          });
+        });
+      }
+
+      sortRooms(); render(); ensureSequentialRooms();
     })();
   </script>
 </body>
