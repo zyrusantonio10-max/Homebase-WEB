@@ -240,6 +240,7 @@
         document.getElementById('hb-inq-cancel').addEventListener('click', function () { dlg.close(); });
       }
       var form = document.getElementById('hb-inq-form'), msg = document.getElementById('hb-inq-msg'), err = document.getElementById('hb-inq-error');
+      var submitBtn = form.querySelector('button[type="submit"]');
       var existing = M.findThread(user.id, room.id);
       document.getElementById('hb-inq-title').textContent = 'Ask about ' + room.name;
       document.getElementById('hb-inq-sub').textContent = 'Floor ' + room.floor + ', ' + room.type + (existing ? ' \u00B7 joins your chat' : '');
@@ -251,12 +252,20 @@
         quick.appendChild(b);
       });
       msg.value = ''; msg.removeAttribute('aria-invalid'); err.classList.add('hidden');
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Send message'; }
       form.onsubmit = function (e) {
         e.preventDefault(); err.classList.add('hidden'); msg.removeAttribute('aria-invalid');
+        var body = String(msg.value == null ? '' : msg.value).trim();
+        if (!body) { msg.setAttribute('aria-invalid', 'true'); err.textContent = 'Type a message first.'; err.classList.remove('hidden'); msg.focus(); return; }
+        if (body.length > MAX_LEN) { msg.setAttribute('aria-invalid', 'true'); err.textContent = 'Messages can be up to ' + MAX_LEN + ' characters.'; err.classList.remove('hidden'); msg.focus(); return; }
         var thread = M.ensureThread({ studentId: user.id, studentName: user.name, studentEmail: user.email, roomId: room.id, roomName: room.name });
-        var res = M.send(thread.id, user, msg.value);
+        var res = M.send(thread.id, user, body);
         if (!res.ok) { msg.setAttribute('aria-invalid', 'true'); err.textContent = res.error; err.classList.remove('hidden'); msg.focus(); return; }
-        window.location.href = 'messages.html?thread=' + encodeURIComponent(thread.id);
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Sending...'; }
+        var flush = (window.HB_SYNC && HB_SYNC.flush) ? HB_SYNC.flush() : Promise.resolve();
+        Promise.resolve(flush).then(function () {
+          window.location.href = 'messages.html?thread=' + encodeURIComponent(thread.id);
+        });
       };
       if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
       msg.focus();
