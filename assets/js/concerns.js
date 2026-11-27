@@ -558,6 +558,12 @@
       root.appendChild(ul);
     }
     render(); liveRefresh(root, render);
+    if (window.HB_AUTH && HB_AUTH.fetchProfiles) {
+      var ids = store.all().map(function (c) { return c.userId; }).filter(Boolean);
+      HB_AUTH.fetchProfiles(ids).then(function (rows) {
+        if (rows && rows.length && !root.querySelector('textarea:focus, input:focus')) render();
+      });
+    }
   };
 
   window.HB_CONCERNS = C;

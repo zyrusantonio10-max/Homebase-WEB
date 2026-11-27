@@ -211,7 +211,10 @@
       paintConcernsNav();
       paint();
       M.refreshBadge = paint; // call after this tab changes read state (the storage event only fires in OTHER tabs)
-      window.addEventListener('storage', function (e) { if (!e.key || e.key === THREADS_KEY || e.key === MESSAGES_KEY) paint(); });
+      window.addEventListener('storage', function (e) {
+        if (!e.key || e.key === THREADS_KEY || e.key === MESSAGES_KEY) paint();
+        if (!e.key || e.key === 'homebase_reservations' || e.key === 'homebase_concerns') paintConcernsNav();
+      });
       return paint;
     },
 
@@ -578,6 +581,13 @@
       });
 
       renderConvo();
+      if (isLandlord && window.HB_AUTH && HB_AUTH.fetchProfiles) {
+        var ids = M.threadsFor(user).map(function (t) { return t.studentId; }).filter(Boolean);
+        if (state.draft && state.draft.studentId) ids.push(state.draft.studentId);
+        HB_AUTH.fetchProfiles(ids).then(function (rows) {
+          if (rows && rows.length) renderConvo();
+        });
+      }
     }
   };
 
