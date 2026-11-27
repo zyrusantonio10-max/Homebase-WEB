@@ -105,6 +105,16 @@
       userType: userType, occupation: p.occupation || (userType === 'non_student' ? p.course : ''),
       workplace: p.workplace || (userType === 'non_student' ? (p.school || '') : '') };
   }
+  function buildProfileObj(p, rec) {
+    var e = p.emergency || {}, h = p.habits || {}, prof = {
+      name: rec.name, email: rec.email, phone: rec.mobile, course: rec.course, yearLevel: rec.yearLevel,
+      bio: p.bio || '', emergencyName: e.name || '', emergencyRel: e.relationship || '', emergencyPhone: e.mobile || '',
+      userType: rec.userType, occupation: rec.occupation, workplace: rec.workplace
+    };
+    if (p.photo) prof.photo = p.photo;
+    for (var k in h) prof[k] = h[k];
+    return prof;
+  }
   function cacheProfile(p) {
     var rec = rowToRecord(p);
     var users = readStorage(USERS_KEY, []).filter(function (u) { return String(u.id) !== String(rec.id); });
@@ -119,14 +129,8 @@
     }
     if (!writeStorage(CURRENT_KEY, sess)) return null;
     var existing = readStorage('homebase_profile_' + rec.id, null) || {};
-    var e = p.emergency || {}, h = p.habits || {}, prof = {
-      name: rec.name, email: rec.email, phone: rec.mobile, course: rec.course, yearLevel: rec.yearLevel,
-      bio: p.bio || '', emergencyName: e.name || '', emergencyRel: e.relationship || '', emergencyPhone: e.mobile || '',
-      userType: rec.userType, occupation: rec.occupation, workplace: rec.workplace
-    };
-    if (p.photo) prof.photo = p.photo;
-    else if (existing.photo) prof.photo = existing.photo;
-    for (var k in h) prof[k] = h[k];
+    var prof = buildProfileObj(p, rec);
+    if (!prof.photo && existing.photo) prof.photo = existing.photo;
     writeStorage('homebase_profile_' + rec.id, prof);
     return sess;
   }
@@ -147,6 +151,23 @@
   var HB_AUTH = {
     loadProfile: loadProfile,
     cacheProfile: cacheProfile,
+    fetchProfiles: function (ids) {
+      if (!db() || !Array.isArray(ids) || !ids.length) return Promise.resolve([]);
+      var uniq = [];
+      ids.forEach(function (id) {
+        var s = String(id || '').trim();
+        if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s) && uniq.indexOf(s) === -1) uniq.push(s);
+      });
+      if (!uniq.length) return Promise.resolve([]);
+      return db().from('profiles').select('*').in('id', uniq).then(function (r) {
+        if (r.error || !Array.isArray(r.data)) return [];
+        r.data.forEach(function (p) {
+          var rec = rowToRecord(p);
+          writeStorage('homebase_profile_' + rec.id, buildProfileObj(p, rec));
+        });
+        return r.data;
+      }, function () { return []; });
+    },
     USERS_KEY: USERS_KEY,
     CURRENT_KEY: CURRENT_KEY,
     hashPassword: hashPassword,

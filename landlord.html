@@ -813,6 +813,15 @@
       }
 
       render();
+
+      function syncStudentProfiles() {
+        if (!window.HB_AUTH || !HB_AUTH.fetchProfiles) return;
+        var ids = all().map(function (r) { return r.userId; }).filter(Boolean);
+        HB_AUTH.fetchProfiles(ids).then(function (rows) {
+          if (rows && rows.length) render();
+        });
+      }
+      syncStudentProfiles();
     })();
   </script>
 
