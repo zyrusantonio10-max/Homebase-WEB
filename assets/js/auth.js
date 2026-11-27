@@ -112,18 +112,22 @@
     writeStorage(USERS_KEY, users);
     var sess = { id: rec.id, name: rec.name, email: rec.email, role: rec.role, userType: rec.userType };
     var prev = readStorage(CURRENT_KEY, null);
-    if (prev && String(prev.id) === String(rec.id) && prev.photo) sess.photo = prev.photo;
-    if (!writeStorage(CURRENT_KEY, sess)) return null;
-    if (!readStorage('homebase_profile_' + rec.id, null)) {
-      var e = p.emergency || {}, h = p.habits || {}, prof = {
-        name: rec.name, email: rec.email, phone: rec.mobile, course: rec.course, yearLevel: rec.yearLevel,
-        bio: p.bio || '', emergencyName: e.name || '', emergencyRel: e.relationship || '', emergencyPhone: e.mobile || '',
-        userType: rec.userType, occupation: rec.occupation, workplace: rec.workplace
-      };
-      if (p.photo) prof.photo = p.photo;
-      for (var k in h) prof[k] = h[k];
-      writeStorage('homebase_profile_' + rec.id, prof);
+    if (p.photo) {
+      sess.photo = p.photo;
+    } else if (prev && String(prev.id) === String(rec.id) && prev.photo) {
+      sess.photo = prev.photo;
     }
+    if (!writeStorage(CURRENT_KEY, sess)) return null;
+    var existing = readStorage('homebase_profile_' + rec.id, null) || {};
+    var e = p.emergency || {}, h = p.habits || {}, prof = {
+      name: rec.name, email: rec.email, phone: rec.mobile, course: rec.course, yearLevel: rec.yearLevel,
+      bio: p.bio || '', emergencyName: e.name || '', emergencyRel: e.relationship || '', emergencyPhone: e.mobile || '',
+      userType: rec.userType, occupation: rec.occupation, workplace: rec.workplace
+    };
+    if (p.photo) prof.photo = p.photo;
+    else if (existing.photo) prof.photo = existing.photo;
+    for (var k in h) prof[k] = h[k];
+    writeStorage('homebase_profile_' + rec.id, prof);
     return sess;
   }
   var PROF_TOP = ['name', 'email', 'phone', 'course', 'yearLevel', 'bio', 'photo', 'emergencyName', 'emergencyRel', 'emergencyPhone', 'role'];

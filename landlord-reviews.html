@@ -101,12 +101,6 @@
       if (logoutM) {
         logoutM.addEventListener('click', doLogout);
       }
-      var menuBtn = $('menu-btn'), menu = $('menu');
-      if (menuBtn && menu) {
-        function setMenu(o) { menu.hidden = !o; menuBtn.setAttribute('aria-expanded', String(o)); $('menu-label').textContent = o ? 'Close' : 'Menu'; }
-        menuBtn.addEventListener('click', function () { setMenu(menu.hidden); });
-        document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !menu.hidden) { setMenu(false); menuBtn.focus(); } });
-      }
       $('reload').addEventListener('click', function () { window.location.reload(); });
 
       $('loading').hidden = true;

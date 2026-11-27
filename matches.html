@@ -291,7 +291,10 @@
       }
       $('nav-name').textContent = fullName.split(/\s+/)[0];
       document.querySelectorAll('[data-logout]').forEach(function (b) {
-        b.addEventListener('click', function () { drop(K.user); window.location.href = 'index.html'; });
+        b.addEventListener('click', function () {
+          if (window.HB_AUTH && HB_AUTH.logout) { HB_AUTH.logout(); return; }
+          drop(K.user); window.location.href = 'index.html';
+        });
       });
       document.querySelectorAll('[data-reload]').forEach(function (b) { b.addEventListener('click', function () { window.location.reload(); }); });
       var menuBtn = $('menu-btn'), menu = $('menu');

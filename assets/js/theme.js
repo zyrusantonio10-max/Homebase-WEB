@@ -74,6 +74,7 @@
       btn.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
       btn.setAttribute('title', isDark ? 'Switch to light mode' : 'Switch to dark mode');
       btn.innerHTML = MOON_SVG + SUN_SVG;
+      btn._bound = true;
       btn.addEventListener('click', function (e) {
         e.preventDefault();
         HB_THEME.toggle();
