@@ -9,7 +9,7 @@
   var USERS_KEY = 'homebase_users', CURRENT_KEY = 'homebase_currentUser';
   var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
   var COMMON_PASSWORDS = ['password', 'password1', 'password12', 'password123', '12345678', '123456789', '1234567890', 'qwerty123', 'qwertyuiop', 'iloveyou1', 'admin123', 'letmein123', 'welcome123'];
-  var YEARS = ['1st Year', '2nd Year', '3rd Year', '4th Year', '5th Year+', 'Postgraduate / Masteral', 'Reviewee / Board Exam'];
+  var YEARS = ['Junior High School', 'Senior High School', '1st Year', '2nd Year', '3rd Year', '4th Year', '5th Year+', 'Postgraduate / Masteral', 'Reviewee / Board Exam'];
   var GUARDIAN_RELATIONS = ['Mother', 'Father', 'Legal guardian', 'Other relative with legal authority'];
   var EMERGENCY_RELATIONS = ['Mother', 'Father', 'Guardian', 'Sibling', 'Relative', 'Friend', 'Other'];
 
