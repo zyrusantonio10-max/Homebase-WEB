@@ -233,7 +233,13 @@
 
     // Resolve room thumbnail or SVG illustration fallback
     hasPhoto: function (room) { return !!(room && (room.image || (room.images && room.images.length))); },
-    roomImage: function (room) { return room.image || ('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(roomArt(room))); },
+    roomImage: function (room) {
+      var src = room && room.image;
+      if (!src) return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(roomArt(room));
+      if (/^(https?:|data:)/i.test(src)) return src;
+      var root = /\/pages\/[^/]+\//.test(location.pathname) ? '../../' : '';
+      return root + src.replace(/^(\.\.\/)+/, '').replace(/^\/+/, '');
+    },
 
     isActive: isActive,
 
