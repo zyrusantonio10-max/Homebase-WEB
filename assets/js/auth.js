@@ -91,7 +91,7 @@
   }
 
   function homeFor(role) {
-    return role === 'landlord' ? 'landlord.html' : 'home.html';
+    return role === 'landlord' ? '/pages/landlord/landlord.html' : '/pages/student/home.html';
   }
 
   // Supabase authentication integration and profile caching
@@ -197,7 +197,7 @@
     // Session guard: Call in <head> or at top of script to protect private pages
     requireAuth: function (requiredRole, redirectUrl) {
       var u = HB_AUTH.getUser();
-      var fallback = redirectUrl || 'index.html';
+      var fallback = redirectUrl || '/index.html';
       if (!u) {
         global.location.replace(fallback);
         return null;
@@ -276,7 +276,7 @@
     // Log out and clear session
     logout: function (redirectUrl) {
       clearStorage(CURRENT_KEY);
-      var done = function () { if (redirectUrl !== false) global.location.href = redirectUrl || 'index.html'; };
+      var done = function () { if (redirectUrl !== false) global.location.href = redirectUrl || '/index.html'; };
       if (db()) Promise.resolve(db().auth.signOut()).then(done, done); else done();
     },
 
@@ -500,7 +500,7 @@
       var sess = r && r.data && r.data.session;
       if (!sess) {
         clearStorage(CURRENT_KEY);
-        if (!/(^|\/)(index\.html)?$/.test(global.location.pathname)) global.location.replace('index.html');
+        if (!/(^|\/)(index\.html)?$/.test(global.location.pathname)) global.location.replace('/index.html');
         return;
       }
       var before = HB_AUTH.getRecord(cached.id);

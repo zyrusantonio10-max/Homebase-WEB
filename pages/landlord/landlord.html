@@ -13,9 +13,9 @@
     (function () {
       try {
         var u = JSON.parse(localStorage.getItem('homebase_currentUser') || 'null');
-        if (!u || !u.email) window.location.replace('index.html');
-        else if (u.role !== 'landlord') window.location.replace('home.html');
-      } catch (e) { window.location.replace('index.html'); }
+        if (!u || !u.email) window.location.replace('/index.html');
+        else if (u.role !== 'landlord') window.location.replace('/pages/student/home.html');
+      } catch (e) { window.location.replace('/index.html'); }
     })();
   </script>
 
@@ -24,12 +24,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="assets/js/supabase.js"></script>
-  <script src="assets/js/auth.js"></script>
-  <script src="assets/js/dbsync.js"></script>
+  <script src="/assets/js/supabase.js"></script>
+  <script src="/assets/js/auth.js"></script>
+  <script src="/assets/js/dbsync.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="assets/js/tw-config.js"></script>
-  <link rel="stylesheet" href="assets/css/components.css">
+  <script src="/assets/js/tw-config.js"></script>
+  <link rel="stylesheet" href="/assets/css/components.css">
 
   <style type="text/tailwindcss">
     @layer components {
@@ -45,7 +45,7 @@
 </head>
 
 <body class="min-h-screen bg-white font-body text-ink antialiased">
-  <script src="assets/js/landlord-shell.js"></script>
+  <script src="/assets/js/landlord-shell.js"></script>
 
 
   <main class="mx-auto max-w-5xl px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
@@ -172,12 +172,12 @@
     </dialog>
   </main>
 
-  <script src="assets/js/rooms.js"></script>
-  <script src="assets/js/reservation.js"></script>
-  <script src="assets/js/messages.js"></script>
-  <script src="assets/js/concerns.js"></script>
+  <script src="/assets/js/rooms.js"></script>
+  <script src="/assets/js/reservation.js"></script>
+  <script src="/assets/js/messages.js"></script>
+  <script src="/assets/js/concerns.js"></script>
   <script>if (window.HB_MSG) HB_MSG.bindBadge();</script>
-  <script src="assets/js/building.js"></script>
+  <script src="/assets/js/building.js"></script>
   <script>
     (function () {
       var $ = function (id) { return document.getElementById(id); };
@@ -261,7 +261,7 @@
       if (window.HB_AUTH && HB_AUTH.renderAvatar && $('nav-avatar')) {
         HB_AUTH.renderAvatar($('nav-avatar'), user);
       }
-      function doLogout() { if (window.HB_AUTH && HB_AUTH.logout) { HB_AUTH.logout(); return; } try { localStorage.removeItem('homebase_currentUser'); } catch (e) {} window.location.href = 'index.html'; }
+      function doLogout() { if (window.HB_AUTH && HB_AUTH.logout) { HB_AUTH.logout(); return; } try { localStorage.removeItem('homebase_currentUser'); } catch (e) {} window.location.href = '/index.html'; }
       $('logout').addEventListener('click', doLogout);
       var logoutM = $('logout-m');
       if (logoutM) {

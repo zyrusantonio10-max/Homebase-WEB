@@ -9,9 +9,9 @@
   <!-- User profile page: manage personal information, profile photo, lifestyle preferences, and account security -->
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="assets/js/supabase.js"></script>
-  <script src="assets/js/auth.js"></script>
-  <script src="assets/js/dbsync.js"></script>
+  <script src="/assets/js/supabase.js"></script>
+  <script src="/assets/js/auth.js"></script>
+  <script src="/assets/js/dbsync.js"></script>
   <script>HB_AUTH.requireAuth();</script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,11 +19,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
 
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="assets/js/tw-config.js"></script>
-  <script src="assets/js/rooms.js"></script>
-  <script src="assets/js/reservation.js"></script>
-  <script src="assets/js/messages.js"></script>
-  <link rel="stylesheet" href="assets/css/components.css">
+  <script src="/assets/js/tw-config.js"></script>
+  <script src="/assets/js/rooms.js"></script>
+  <script src="/assets/js/reservation.js"></script>
+  <script src="/assets/js/messages.js"></script>
+  <link rel="stylesheet" href="/assets/css/components.css">
 
   <style type="text/tailwindcss">
     @layer components {
@@ -76,13 +76,13 @@
 </head>
 
 <body class="min-h-screen bg-white font-body text-ink antialiased">
-  <script src="assets/js/landlord-shell.js"></script>
+  <script src="/assets/js/landlord-shell.js"></script>
 
   <!-- NAVBAR -->
   <header class="sticky top-0 z-20 bg-white px-4 pb-2 pt-4 sm:px-6">
     <nav aria-label="Main" class="mx-auto flex max-w-6xl items-center justify-between gap-3 rounded-full border border-line bg-white py-2 pl-4 pr-2">
       <a id="logo-link" href="home.html" aria-label="Homebase home" class="inline-flex min-h-[44px] items-center gap-2.5 rounded-full font-display text-xl font-bold tracking-tight text-ink no-underline outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">
-        <img src="assets/images/logo.png" alt="Homebase" class="h-9 w-9 rounded-full object-contain shrink-0">
+        <img src="/assets/images/logo.png" alt="Homebase" class="h-9 w-9 rounded-full object-contain shrink-0">
         <span>Homebase</span>
       </a>
 
@@ -424,7 +424,7 @@
       'use strict';
 
       var user = HB_AUTH.getUser();
-      if (!user) { window.location.replace('index.html'); return; }
+      if (!user) { window.location.replace('/index.html'); return; }
 
       var $ = function (id) { return document.getElementById(id); };
 
@@ -437,22 +437,22 @@
       var menuLinks = $('menu-links');
 
       if (isLandlord) {
-        logoLink.href = 'landlord.html';
-        backLink.href = 'landlord.html';
+        logoLink.href = '/pages/landlord/landlord.html';
+        backLink.href = '/pages/landlord/landlord.html';
         backLink.textContent = '\u2190 Back to Landlord Dashboard';
 
         navLinks.innerHTML =
-          '<li><a class="nav-link" href="landlord.html">Dashboard</a></li>' +
-          '<li><a class="nav-link" href="landlord-rooms.html">Rooms</a></li>' +
-          '<li><a class="nav-link" href="landlord-reviews.html">Reviews</a></li>' +
-          '<li><a class="nav-link" href="landlord-messages.html">Messages<span data-msg-badge class=\"chip chip-warn ml-2 hidden\"></span></a></li>' +
+          '<li><a class="nav-link" href="/pages/landlord/landlord.html">Dashboard</a></li>' +
+          '<li><a class="nav-link" href="/pages/landlord/landlord-rooms.html">Rooms</a></li>' +
+          '<li><a class="nav-link" href="/pages/landlord/landlord-reviews.html">Reviews</a></li>' +
+          '<li><a class="nav-link" href="/pages/landlord/landlord-messages.html">Messages<span data-msg-badge class=\"chip chip-warn ml-2 hidden\"></span></a></li>' +
           '<li><a class="nav-link" href="profile.html" aria-current="page">Profile</a></li>';
 
         menuLinks.innerHTML =
-          '<li><a class="nav-link w-full" href="landlord.html">Dashboard</a></li>' +
-          '<li><a class="nav-link w-full" href="landlord-rooms.html">Rooms</a></li>' +
-          '<li><a class="nav-link w-full" href="landlord-reviews.html">Reviews</a></li>' +
-          '<li><a class="nav-link w-full" href="landlord-messages.html">Messages<span data-msg-badge class=\"chip chip-warn ml-2 hidden\"></span></a></li>' +
+          '<li><a class="nav-link w-full" href="/pages/landlord/landlord.html">Dashboard</a></li>' +
+          '<li><a class="nav-link w-full" href="/pages/landlord/landlord-rooms.html">Rooms</a></li>' +
+          '<li><a class="nav-link w-full" href="/pages/landlord/landlord-reviews.html">Reviews</a></li>' +
+          '<li><a class="nav-link w-full" href="/pages/landlord/landlord-messages.html">Messages<span data-msg-badge class=\"chip chip-warn ml-2 hidden\"></span></a></li>' +
           '<li><a class="nav-link w-full" href="profile.html" aria-current="page">Profile</a></li>';
 
         // Hide student-specific fields for landlords
@@ -877,7 +877,7 @@
             });
           } catch (e) {}
 
-          window.location.replace('index.html');
+          window.location.replace('/index.html');
         }
       }
 

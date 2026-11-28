@@ -249,7 +249,7 @@
   // saved rooms, match preferences and comparisons live in userdata.js
   function loadUserData() {
     if (window.HB_USERDATA || !me()) return;
-    var s = document.createElement('script'); s.src = 'assets/js/userdata.js'; document.head.appendChild(s);
+    var s = document.createElement('script'); s.src = '/assets/js/userdata.js'; document.head.appendChild(s);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();

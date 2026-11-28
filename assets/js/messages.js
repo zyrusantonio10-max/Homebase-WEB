@@ -267,7 +267,7 @@
         if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Sending...'; }
         var flush = (window.HB_SYNC && HB_SYNC.flush) ? HB_SYNC.flush() : Promise.resolve();
         Promise.resolve(flush).then(function () {
-          window.location.href = 'messages.html?thread=' + encodeURIComponent(thread.id);
+          window.location.href = '/pages/student/messages.html?thread=' + encodeURIComponent(thread.id);
         });
       };
       if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
@@ -357,7 +357,7 @@
           empty.appendChild(ic);
           empty.appendChild(el('p', 'card-title mt-3', 'No conversations yet'));
           if (isLandlord) empty.appendChild(el('p', 'note mt-1', 'Student questions show up here.'));
-          else { var a = el('a', 'btn mt-4', 'Explore Rooms'); a.href = 'rooms.html'; empty.appendChild(a); }
+          else { var a = el('a', 'btn mt-4', 'Explore Rooms'); a.href = '/pages/student/rooms.html'; empty.appendChild(a); }
           listPane.appendChild(empty); return;
         }
 
@@ -498,7 +498,7 @@
           head.appendChild(vp);
         }
         if (!isLandlord) {
-          var vr = el('a', 'btn btn-outline shrink-0 !px-4 text-sm', 'View room'); vr.href = 'rooms.html?room=' + encodeURIComponent(info.roomId);
+          var vr = el('a', 'btn btn-outline shrink-0 !px-4 text-sm', 'View room'); vr.href = '/pages/student/rooms.html?room=' + encodeURIComponent(info.roomId);
           vr.setAttribute('aria-label', 'View ' + info.roomName + ' in Explore Rooms'); head.appendChild(vr);
         }
         box.appendChild(head);

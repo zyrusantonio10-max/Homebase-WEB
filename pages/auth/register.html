@@ -17,8 +17,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="assets/js/tw-config.js"></script>
-  <link rel="stylesheet" href="assets/css/components.css">
+  <script src="/assets/js/tw-config.js"></script>
+  <link rel="stylesheet" href="/assets/css/components.css">
   <style>
     [hidden] { display: none !important; }
     /* Reserve vertical space for error messages to prevent layout shifting */
@@ -30,8 +30,8 @@
 
   <header class="px-4 pt-5 sm:px-6">
     <div class="mx-auto flex max-w-2xl items-center justify-between gap-3">
-      <a href="index.html" aria-label="Homebase, back to log in" class="inline-flex min-h-[44px] items-center gap-2.5 rounded-full font-display text-xl font-bold tracking-tight text-ink no-underline outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">
-        <img src="assets/images/logo.png" alt="Homebase" class="h-9 w-9 rounded-full object-contain shrink-0">
+      <a href="/index.html" aria-label="Homebase, back to log in" class="inline-flex min-h-[44px] items-center gap-2.5 rounded-full font-display text-xl font-bold tracking-tight text-ink no-underline outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2">
+        <img src="/assets/images/logo.png" alt="Homebase" class="h-9 w-9 rounded-full object-contain shrink-0">
         <span>Homebase</span>
       </a>
       <div class="flex items-center gap-3">
@@ -39,7 +39,7 @@
           <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
           <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
         </button>
-        <a href="index.html" class="textlink">I already have an account</a>
+        <a href="/index.html" class="textlink">I already have an account</a>
       </div>
     </div>
   </header>
@@ -266,7 +266,7 @@
         <p class="mt-4 text-sm text-muted">In the finished system the code is emailed to your parent or guardian. In this version it is shown here, and again on your Home page. You can get a new code there if you lose it.</p>
       </div>
 
-      <div class="mt-8"><a href="home.html" class="btn">Continue to Homebase</a></div>
+      <div class="mt-8"><a href="/pages/student/home.html" class="btn">Continue to Homebase</a></div>
     </div>
   </main>
 
@@ -289,9 +289,9 @@
   </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="assets/js/supabase.js"></script>
-  <script src="assets/js/auth.js"></script>
-  <script src="assets/js/signup.js"></script>
+  <script src="/assets/js/supabase.js"></script>
+  <script src="/assets/js/auth.js"></script>
+  <script src="/assets/js/signup.js"></script>
   <script>
     (function () {
       var $ = function (id) { return document.getElementById(id); };
@@ -299,7 +299,7 @@
 
       // Redirect logged-in users away from registration to their respective dashboard
       var current = HB_AUTH.getUser && HB_AUTH.getUser();
-      if (current && current.email) { window.location.replace(current.role === 'landlord' ? 'landlord.html' : 'home.html'); return; }
+      if (current && current.email) { window.location.replace(current.role === 'landlord' ? '/pages/landlord/landlord.html' : '/pages/student/home.html'); return; }
 
       var STEPS = ['Account', 'About you', 'Safety'];
       var step = 1, touched = {}, busy = false;

@@ -1,4 +1,4 @@
-﻿# Homebase 🏠
+# Homebase 🏠
 
 > A student dormitory discovery and room matching platform for Ariate Dormitory (Naga City, Bicol). It helps students find an affordable, convenient room that fits them, and helps the dorm office manage requests, messages, concerns and reviews.
 
@@ -8,16 +8,16 @@
 
 ## 📋 Features
 
-**Sign-up (`register.html`)**
+**Sign-up (`pages/auth/register.html`)**
 - A 3-step page: account, about you, then safety and consent. Every field is checked as you type, with plain messages.
 - It collects only what a dormitory needs: name, email, password, date of birth, mobile number, school, student ID, course, year level, home province (optional), and an emergency contact. Working professionals and other residents can sign up too, with an occupation and workplace instead of a school.
-- **Students under 18** (worked out from the date of birth) give a parent or guardian instead. They get a 6-digit approval code, and a parent or guardian approves the account on **`guardian.html`** by entering the student's email, the code and their own full name (5 wrong tries lock the code, and the student can get a new one on Home). Until then the student can browse, compare and save rooms but cannot request one. In the finished system the code is emailed to the parent.
+- **Students under 18** (worked out from the date of birth) give a parent or guardian instead. They get a 6-digit approval code, and a parent or guardian approves the account on **`pages/auth/guardian.html`** by entering the student's email, the code and their own full name (5 wrong tries lock the code, and the student can get a new one on Home). Until then the student can browse, compare and save rooms but cannot request one. In the finished system the code is emailed to the parent.
 - Profiles of students under 18 are never shown to other students.
 
 **Landing page (`index.html`)**
 - Log in, create an account, or look at every room first with no account (filter by type, availability only, open a room for its details). A short "How matching works" window explains the score.
 
-**For students**
+**For students** (`pages/student/`)
 - **Home (`home.html`)**: best match, your preferences, your room request and its progress, saved rooms and recent comparisons.
 - **My Matches (`matches.html`)**: tell it what you need and every room with a free bed gets a fit score out of 100. See [How My Matches works](#-how-my-matches-works) below.
 - **Explore Rooms (`rooms.html`)**: browse every room, filter by availability, type and floor, open any room to see its complete details, its reviews and who stays there, save it, request it, ask about it, or tick Compare on up to three rooms.
@@ -29,7 +29,7 @@
 - **Dark mode**: a moon or sun button on every page switches theme. The choice is remembered in the browser.
 - **Live updates**: when the office or another device changes something (a reply, a request status, a concern), open pages refresh by themselves. Realtime is turned on for 8 tables.
 
-**For the dorm office (landlord)**
+**For the dorm office (landlord)** (`pages/landlord/`)
 - **Dashboard (`landlord.html`)**: requests to answer, beds free, and approve / decline / mark as paid / end stay. The office sets how many days a student has to pay. The Building amenities (CCTV, water station, curfew, ...) are chosen here.
 - **Rooms (`landlord-rooms.html`)**: add, edit, delete and close rooms, with up to 5 photos per room.
 - **Messages (`landlord-messages.html`)**: every student conversation, newest first.
@@ -52,7 +52,7 @@
 - **Results:** the best match is shown big, with what each part earned. The other rooms follow as one ranked list, each with its fit score, short reasons (within budget, missing Wi-Fi, ...), and the buttons Request room, Save, Ask about this room and Compare.
 - **On a phone:** once there are results, the form folds into a one-line summary with an **Edit** button.
 - **What it saves:** your last preferences, your best match, your saved rooms and your comparisons. They are saved to the database (`student_data` table), so they follow you to any device. The browser keeps a copy (`homebase_preferences_<id>` and so on) and `userdata.js` syncs it. Home reads them.
-- The scoring numbers are in `matches.html`, in the script, under `SCORING`.
+- The scoring numbers are in `pages/student/matches.html`, in the script, under `SCORING`.
 
 ---
 
@@ -60,38 +60,53 @@
 
 ```text
 Homebase-WEB/
+├── index.html                 # Landing page, login and room preview
+├── pages/
+│   ├── auth/
+│   │   ├── register.html      # 3-step sign-up
+│   │   └── guardian.html      # Parent / guardian approval for students under 18
+│   ├── student/
+│   │   ├── home.html          # Student dashboard: best match, saved rooms, request status
+│   │   ├── matches.html       # Room matching with scored results
+│   │   ├── rooms.html         # Browse, filter, compare and request rooms
+│   │   ├── messages.html      # Student ↔ office messaging about rooms
+│   │   ├── concerns.html      # Tenant concern reporting and tracking
+│   │   └── profile.html       # Profile, habits, password and account deletion
+│   └── landlord/
+│       ├── landlord.html              # Office dashboard: requests, beds, building perks
+│       ├── landlord-rooms.html        # Add, edit, delete and manage rooms
+│       ├── landlord-messages.html     # All student conversations
+│       ├── landlord-concerns.html     # Concern triage and resolution
+│       └── landlord-reviews.html      # Review replies and moderation
 ├── assets/
 │   ├── css/
-│   │   ├── components.css    # Shared buttons, fields, pills and status chips (+ landlord sidebar styles)
-│   │   ├── dark.css          # Dark mode colors and fixes
-│   │   └── shell.css         # Styles for app-shell.js (not used by a page yet)
+│   │   ├── components.css     # Shared buttons, fields, pills and status chips (+ landlord sidebar styles)
+│   │   ├── dark.css           # Dark mode colors and fixes
+│   │   └── shell.css          # Styles for app-shell.js (not used by a page yet)
 │   ├── js/
-│   │   ├── supabase.js       # Connects to Supabase (project URL + public key)
-│   │   ├── auth.js           # Login, sessions, profiles, per-user storage keys, safe avatar helpers
-│   │   ├── signup.js         # Sign-up rules for every field, and creating the account
-│   │   ├── dbsync.js         # Copies reviews, messages, concerns and building perks to and from the database, and refreshes pages live
-│   │   ├── userdata.js       # Saves each student's preferences, best match, saved rooms and comparisons to the database
-│   │   ├── reservation.js    # Beds, room list, requests, house rules (also synced with the database)
-│   │   ├── rooms.js          # The 14 real rooms (starting list) and in-room amenity choices
-│   │   ├── building.js       # Building-wide perks (CCTV, water station, curfew, ...)
-│   │   ├── compare.js        # Side-by-side room comparison
-│   │   ├── reviews.js        # Student reviews, office replies and hidden comments
-│   │   ├── messages.js       # Student <-> office messaging about rooms
-│   │   ├── concerns.js       # Tenant concerns and how they are followed up
-│   │   ├── photos.js         # Room photo upload for the office (Supabase Storage)
-│   │   ├── theme.js          # Light / dark toggle button
-│   │   ├── landlord-shell.js # The office sidebar and mobile menu
-│   │   ├── app-shell.js      # Sidebar for every signed-in page (built, not used yet)
-│   │   └── tw-config.js      # The ONE place for the color palette (Tailwind + CSS variables)
-│   ├── images/               # Logo and room photos
-│   └── README.txt            # Optional hero photo for the landing page
-├── index.html                # Landing page, login and room preview
-├── register.html             # 3-step sign-up
-├── guardian.html             # Parent or guardian approval for students under 18
-├── home.html  matches.html  rooms.html  messages.html  concerns.html  profile.html   # Student pages
-├── landlord.html  landlord-rooms.html  landlord-messages.html  landlord-concerns.html  landlord-reviews.html   # Office pages
-├── supabase/                 # All the SQL for the database, numbered in the order to run it (see supabase/README.md)
-├── vercel.json               # Clean URLs
+│   │   ├── supabase.js        # Connects to Supabase (project URL + public key)
+│   │   ├── auth.js            # Login, sessions, profiles, per-user storage keys, safe avatar helpers
+│   │   ├── signup.js          # Sign-up rules for every field, and creating the account
+│   │   ├── dbsync.js          # Copies reviews, messages, concerns and building perks to/from the database, refreshes pages live
+│   │   ├── userdata.js        # Saves each student's preferences, best match, saved rooms and comparisons to the database
+│   │   ├── reservation.js     # Beds, room list, requests, house rules (also synced with the database)
+│   │   ├── rooms.js           # The 14 real rooms (starting list) and in-room amenity choices
+│   │   ├── building.js        # Building-wide perks (CCTV, water station, curfew, ...)
+│   │   ├── compare.js         # Side-by-side room comparison
+│   │   ├── reviews.js         # Student reviews, office replies and hidden comments
+│   │   ├── messages.js        # Student ↔ office messaging about rooms
+│   │   ├── concerns.js        # Tenant concerns and how they are followed up
+│   │   ├── photos.js          # Room photo upload for the office (Supabase Storage)
+│   │   ├── theme.js           # Light / dark toggle button
+│   │   ├── landlord-shell.js  # The office sidebar and mobile menu
+│   │   ├── app-shell.js       # Sidebar for every signed-in page (built, not used yet)
+│   │   └── tw-config.js       # The ONE place for the color palette (Tailwind + CSS variables)
+│   └── images/
+│       ├── logo.png           # App logo
+│       ├── logo.jpg           # App logo (compressed)
+│       └── rooms/             # Room photos (JPG, PNG, WebP)
+├── vercel.json                # Clean URLs and deployment config
+├── .gitignore
 └── README.md
 ```
 
@@ -101,7 +116,7 @@ Homebase-WEB/
 
 - **Markup:** HTML5
 - **Styling:** [Tailwind CSS](https://tailwindcss.com/) (CDN) configured in `tw-config.js`, plus `components.css`, `dark.css` and `shell.css`
-- **Typography:** Public Sans & Sora via Google Fonts
+- **Typography:** Inter & Plus Jakarta Sans via Google Fonts
 - **Logic:** Vanilla JavaScript. Pages read and write `localStorage`, and sync with the database
 - **Database, login and photos:** [Supabase](https://supabase.com/) (Auth, Postgres, Storage, Realtime), loaded with `supabase-js` v2 from a CDN
 - **Hosting:** [Vercel](https://vercel.com/)
@@ -120,10 +135,10 @@ Homebase-WEB/
 
 ### Setting up a new Supabase project
 
-1. Create a project, then run the files in `supabase/` in order. See [supabase/README.md](supabase/README.md).
+1. Create a project, then run the SQL files in order (see the Supabase dashboard SQL editor).
 2. Authentication settings: switch **Confirm email** off, or sign-up stops at step 3.
 3. Put the project URL and the **publishable (anon) key** in `assets/js/supabase.js`.
-4. Create the office account: sign up normally, then set its profile role to `landlord` (the SQL is in `supabase/README.md`). It is not created on the sign-up page.
+4. Create the office account: sign up normally, then set its profile role to `landlord` in the database. It is not created on the sign-up page.
 
 ### Keys: what is safe
 
@@ -135,7 +150,7 @@ Homebase-WEB/
 
 ## 🔐 Privacy and known limits
 
-- **Only students and other residents can sign up**, on `register.html`. There is one dormitory, so the office account is created by the project owner. Ask the project owner for its login.
+- **Only students and other residents can sign up**, on `pages/auth/register.html`. There is one dormitory, so the office account is created by the project owner. Ask the project owner for its login.
 - **Accounts, rooms, requests, messages, concerns, reviews, profiles and building perks live in the Supabase database.** `localStorage` is used as a cache of them, so anyone with access to a browser can read what that browser has loaded.
 - **Saved rooms, preferences, best match and comparisons are saved in the `student_data` table**, and each student can only read and change their own rows. The browser keeps a cached copy.
 - **Still only in the browser:** the theme choice, and photos in profiles and concerns (they are stored as data in the row, not in Storage yet).
@@ -146,7 +161,7 @@ Homebase-WEB/
 - The sign-up rules are in `signup.js` and are checked again before the account is saved. Browser checks can be bypassed, so the database must enforce them too.
 - The parent approval code is shown to the student in this version. In the finished system it should be emailed to the parent only.
 - Payment is not handled on the site. The dormitory office handles payment and the contract.
-- Check the privacy notice text in `register.html` with the school's Data Protection Officer before real use.
+- Check the privacy notice text in `pages/auth/register.html` with the school's Data Protection Officer before real use.
 
 ---
 
@@ -177,10 +192,10 @@ The pages need an internet connection, because Tailwind, the fonts and Supabase 
 - [x] Dark mode
 - [x] Database, login and room photos with Supabase
 - [x] New My Matches page (ranked list, score breakdown, phone summary)
-- [ ] Use `app-shell.js` on every signed-in page
-- [x] Supabase SQL (tables, policies, functions) is in the repo, in `supabase/`
 - [x] Live updates (Realtime)
 - [x] Saved rooms, preferences and comparisons shared across devices
+- [x] Organized folder structure (student, landlord, auth pages)
+- [ ] Use `app-shell.js` on every signed-in page
 - [ ] Email the parent approval code to the parent
 - [ ] Password reset by email
 - [ ] Move profile and concern photos to Storage

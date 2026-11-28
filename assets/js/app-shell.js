@@ -14,10 +14,10 @@
   var isLL = user.role === 'landlord';
 
   var css = document.createElement('link');
-  css.rel = 'stylesheet'; css.href = 'assets/css/shell.css';
+  css.rel = 'stylesheet'; css.href = '/assets/css/shell.css';
   document.head.appendChild(css);
 
-  var LOGO = '<img src="assets/images/logo.png" alt="Homebase" class="h-9 w-9 rounded-full object-contain shrink-0">';
+  var LOGO = '<img src="/assets/images/logo.png" alt="Homebase" class="h-9 w-9 rounded-full object-contain shrink-0">';
   function icon(p) { return '<svg class="hb-ico" viewBox="0 0 24 24" aria-hidden="true">' + p + '</svg>'; }
   var ICONS = {
     home: icon('<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>'),
@@ -34,19 +34,19 @@
 
   // Navigation link configuration (concerns visible only to active residents)
   var NAV = isLL ? [
-    { href: 'landlord.html', label: 'Dashboard', icon: 'dashboard' },
-    { href: 'landlord-rooms.html', label: 'Rooms', icon: 'rooms' },
-    { href: 'landlord-messages.html', label: 'Messages', icon: 'messages', badge: 'data-msg-badge' },
-    { href: 'landlord-concerns.html', label: 'Concerns', icon: 'concerns', badge: 'data-concern-badge' },
-    { href: 'landlord-reviews.html', label: 'Reviews', icon: 'reviews' },
-    { href: 'profile.html', label: 'Profile', icon: 'profile' }
+    { href: '/pages/landlord/landlord.html', label: 'Dashboard', icon: 'dashboard' },
+    { href: '/pages/landlord/landlord-rooms.html', label: 'Rooms', icon: 'rooms' },
+    { href: '/pages/landlord/landlord-messages.html', label: 'Messages', icon: 'messages', badge: 'data-msg-badge' },
+    { href: '/pages/landlord/landlord-concerns.html', label: 'Concerns', icon: 'concerns', badge: 'data-concern-badge' },
+    { href: '/pages/landlord/landlord-reviews.html', label: 'Reviews', icon: 'reviews' },
+    { href: '/pages/student/profile.html', label: 'Profile', icon: 'profile' }
   ] : [
-    { href: 'home.html', label: 'Home', icon: 'home' },
-    { href: 'matches.html', label: 'My Matches', short: 'Matches', icon: 'matches' },
-    { href: 'rooms.html', label: 'Explore Rooms', short: 'Rooms', icon: 'explore' },
-    { href: 'messages.html', label: 'Messages', icon: 'messages', badge: 'data-msg-badge' },
-    { href: 'concerns.html', label: 'Concerns', icon: 'concerns', studentConcerns: true },
-    { href: 'profile.html', label: 'Profile', icon: 'profile' }
+    { href: '/pages/student/home.html', label: 'Home', icon: 'home' },
+    { href: '/pages/student/matches.html', label: 'My Matches', short: 'Matches', icon: 'matches' },
+    { href: '/pages/student/rooms.html', label: 'Explore Rooms', short: 'Rooms', icon: 'explore' },
+    { href: '/pages/student/messages.html', label: 'Messages', icon: 'messages', badge: 'data-msg-badge' },
+    { href: '/pages/student/concerns.html', label: 'Concerns', icon: 'concerns', studentConcerns: true },
+    { href: '/pages/student/profile.html', label: 'Profile', icon: 'profile' }
   ];
   var home = NAV[0].href;
   // Normalize pathname by stripping file extensions for route matching
@@ -93,7 +93,7 @@
   NAV.forEach(function (item) { ul.appendChild(li(link(item, 'hb-link'), item)); });
   nav.appendChild(ul); side.appendChild(nav);
   var me = el('div', 'hb-user');
-  var meLink = el('a', 'hb-user-link flex-1'); meLink.href = 'profile.html'; meLink.setAttribute('aria-label', 'My profile');
+  var meLink = el('a', 'hb-user-link flex-1'); meLink.href = '/pages/student/profile.html'; meLink.setAttribute('aria-label', 'My profile');
   meLink.appendChild(avatar(isLL ? 'nav-avatar' : 'nav-initial'));
   var who = el('span', 'hb-who');
   var first = String(user.name || user.email || '').split(/\s+/)[0];
@@ -122,7 +122,7 @@
   if (!mThemeToggle.innerHTML) mThemeToggle.innerHTML = themeToggle.innerHTML;
   right.appendChild(mThemeToggle);
 
-  var pl = el('a', 'hb-user-link'); pl.href = 'profile.html'; pl.setAttribute('aria-label', 'My profile'); pl.appendChild(avatar(null));
+  var pl = el('a', 'hb-user-link'); pl.href = '/pages/student/profile.html'; pl.setAttribute('aria-label', 'My profile'); pl.appendChild(avatar(null));
   right.appendChild(pl);
   var mb = el('button', 'btn btn-outline text-sm !min-h-[38px] !px-3', 'Menu');
   mb.type = 'button'; mb.id = 'menu-btn'; mb.setAttribute('aria-expanded', 'false'); mb.setAttribute('aria-controls', 'menu');

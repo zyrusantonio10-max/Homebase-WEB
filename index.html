@@ -239,7 +239,7 @@
 
           <!-- Register button -->
           <a 
-            href="register.html" 
+            href="/pages/auth/register.html" 
             class="btn-transition w-full py-3.5 rounded-full border border-gray-300 bg-white text-[#143826] font-semibold text-base hover:bg-gray-50 active:scale-[0.99] text-center block outline-none focus-visible:ring-2 focus-visible:ring-[#1E4D36] focus-visible:ring-offset-2">
             Create new account
           </a>
@@ -275,7 +275,7 @@
             <p class="mt-1 text-xs text-gray-600 leading-relaxed" id="session-text">
               Explore Ariate Dormitory rooms, set your budget and needs, and see how well each room fits you.
             </p>
-            <a href="home.html" id="session-link" class="btn-transition mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#1E4D36] py-3 text-sm font-semibold text-white no-underline hover:bg-[#153A28]">
+            <a href="/pages/student/home.html" id="session-link" class="btn-transition mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#1E4D36] py-3 text-sm font-semibold text-white no-underline hover:bg-[#153A28]">
               <span id="session-link-text">Go to Student Dashboard</span>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </a>
@@ -346,7 +346,7 @@
           </p>
         </div>
         <div id="rp-cta-actions" class="flex flex-wrap gap-3">
-          <a href="register.html" class="btn btn-lime on-dark">Create new account</a>
+          <a href="/pages/auth/register.html" class="btn btn-lime on-dark">Create new account</a>
           <a href="#login" class="btn btn-outline on-dark">Log in</a>
         </div>
       </div>
@@ -434,7 +434,7 @@
       var $ = function (id) { return document.getElementById(id); };
 
       // Return dashboard URL corresponding to user role
-      function homeFor(role) { return role === 'landlord' ? 'landlord.html' : 'home.html'; }
+      function homeFor(role) { return role === 'landlord' ? '/pages/landlord/landlord.html' : '/pages/student/home.html'; }
 
       // LocalStorage read and remove helper functions
       function read(key, fallback) {
@@ -796,11 +796,11 @@
         var acts = $('room-actions'); acts.textContent = '';
         var u = session();
         if (!u) {
-          var a1 = el('a', 'btn', 'Create an account to request it'); a1.href = 'register.html';
+          var a1 = el('a', 'btn', 'Create an account to request it'); a1.href = '/pages/auth/register.html';
           var a2 = el('a', 'btn btn-outline', 'I already have an account'); a2.href = '#login';
           [a1, a2].forEach(function (a) { a.addEventListener('click', closeDlg); acts.appendChild(a); });
         } else if (u.role !== 'landlord') {
-          var a3 = el('a', 'btn', 'Open in Explore Rooms'); a3.href = 'rooms.html';
+          var a3 = el('a', 'btn', 'Open in Explore Rooms'); a3.href = '/pages/student/rooms.html';
           acts.appendChild(a3);
         }
         var cl = el('button', 'btn btn-outline', 'Close'); cl.type = 'button'; cl.addEventListener('click', closeDlg);
@@ -817,8 +817,8 @@
         $('rp-cta-title').textContent = 'Ready to find your fit?';
         $('rp-cta-text').textContent = 'Open Explore Rooms to request a room, or My Matches to see how well each room fits your budget and needs.';
         var box = $('rp-cta-actions'); box.textContent = '';
-        var go = el('a', 'btn btn-lime on-dark', 'Open Explore Rooms'); go.href = 'rooms.html';
-        var m = el('a', 'btn btn-outline on-dark', 'My Matches'); m.href = 'matches.html';
+        var go = el('a', 'btn btn-lime on-dark', 'Open Explore Rooms'); go.href = '/pages/student/rooms.html';
+        var m = el('a', 'btn btn-outline on-dark', 'My Matches'); m.href = '/pages/student/matches.html';
         box.appendChild(go); box.appendChild(m);
       }
 

@@ -63,14 +63,14 @@
   if (!document.querySelector('link[href*="dark.css"]')) {
     var darkLink = document.createElement('link');
     darkLink.rel = 'stylesheet';
-    darkLink.href = 'assets/css/dark.css';
+    darkLink.href = '/assets/css/dark.css';
     document.head.appendChild(darkLink);
   }
 
   // Auto-inject theme.js if not present
   if (!window.HB_THEME && !document.querySelector('script[src*="theme.js"]')) {
     var themeScript = document.createElement('script');
-    themeScript.src = 'assets/js/theme.js';
+    themeScript.src = '/assets/js/theme.js';
     themeScript.defer = true;
     document.head.appendChild(themeScript);
   }

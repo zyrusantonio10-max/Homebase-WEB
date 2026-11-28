@@ -334,7 +334,7 @@
       form.addEventListener('submit', function (e) { e.preventDefault(); });
       art.appendChild(form);
     }
-    var ml = el('a', 'btn btn-outline mt-3 gap-2 !px-4 text-sm'); ml.href = 'landlord-messages.html?res=' + encodeURIComponent(c.reservationId);
+    var ml = el('a', 'btn btn-outline mt-3 gap-2 !px-4 text-sm'); ml.href = '/pages/landlord/landlord-messages.html?res=' + encodeURIComponent(c.reservationId);
     ml.appendChild(icon('chat', 'h-4 w-4')); ml.appendChild(document.createTextNode('Message'));
     ml.setAttribute('aria-label', 'Message ' + c.studentName);
     art.appendChild(ml);
@@ -465,7 +465,7 @@
         var future = HB.forUser(user.id).filter(function (r) { return r.status === 'confirmed'; })[0];
         var wrap = dashed('lock', future ? 'Opens on your move-in date' : 'Opens when your stay starts',
           future ? day(future.moveIn + 'T00:00:00') : '');
-        var home = el('a', 'btn btn-outline mt-4', 'Go to Home'); home.href = 'home.html'; wrap.appendChild(home);
+        var home = el('a', 'btn btn-outline mt-4', 'Go to Home'); home.href = '/pages/student/home.html'; wrap.appendChild(home);
         root.appendChild(wrap);
       }
 
