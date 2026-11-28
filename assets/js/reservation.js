@@ -284,7 +284,7 @@
         d.className = 'w-[calc(100vw-2rem)] max-w-md rounded-2xl border border-line bg-white p-0 text-ink shadow-xl backdrop:bg-ink/50';
         d.innerHTML = '<div class="p-6"><h2 id="hb-blocked-title" class="font-display text-xl font-bold tracking-tight">Parent or guardian approval needed</h2>' +
           '<p id="hb-blocked-text" class="mt-2 text-base text-muted"></p>' +
-          '<div class="mt-5 flex flex-wrap gap-2"><a href="/pages/student/home.html" class="btn">Go to Home</a><button type="button" id="hb-blocked-close" class="btn btn-outline">Close</button></div></div>';
+          '<div class="mt-5 flex flex-wrap gap-2"><a href="' + (/\/pages\/[^/]+\//.test(location.pathname) ? '../../' : '') + 'pages/student/home.html" class="btn">Go to Home</a><button type="button" id="hb-blocked-close" class="btn btn-outline">Close</button></div></div>';
         document.body.appendChild(d);
         d.addEventListener('click', function (e) { if (e.target === d) d.close(); });
         document.getElementById('hb-blocked-close').addEventListener('click', function () { d.close(); });
@@ -456,7 +456,7 @@
         (res.saved || Promise.resolve({ ok: true })).then(function (s) {
           if (go) go.disabled = false;
           if (!s.ok) { formErr.textContent = s.error; formErr.classList.remove('hidden'); return; }
-          window.location.href = '/pages/student/home.html#reservation';
+          window.location.href = (/\/pages\/[^/]+\//.test(location.pathname) ? '../../' : '') + 'pages/student/home.html#reservation';
         });
       };
 

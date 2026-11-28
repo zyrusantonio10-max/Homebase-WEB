@@ -12,7 +12,8 @@
   try { user = JSON.parse(localStorage.getItem('homebase_currentUser') || '{}') || {}; } catch (e) {}
   if (user.role !== 'landlord') return;
 
-  var LOGO = '<img src="/assets/images/logo.png" alt="Homebase" class="h-9 w-9 rounded-full object-contain shrink-0">';
+  var ROOT = /\/pages\/[^/]+\//.test(location.pathname) ? '../../' : '';
+  var LOGO = '<img src="' + ROOT + 'assets/images/logo.png" alt="Homebase" class="h-9 w-9 rounded-full object-contain shrink-0">';
   function icon(paths) { return '<svg class="ll-ico" viewBox="0 0 24 24" aria-hidden="true">' + paths + '</svg>'; }
   var ICONS = {
     dashboard: icon('<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>'),
@@ -23,12 +24,12 @@
     profile: icon('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>')
   };
   var NAV = [
-    { href: '/pages/landlord/landlord.html', label: 'Dashboard', icon: 'dashboard' },
-    { href: '/pages/landlord/landlord-rooms.html', label: 'Rooms', icon: 'rooms' },
-    { href: '/pages/landlord/landlord-messages.html', label: 'Messages', icon: 'messages', badge: true },
-    { href: '/pages/landlord/landlord-concerns.html', label: 'Concerns', icon: 'concerns', concerns: true },
-    { href: '/pages/landlord/landlord-reviews.html', label: 'Reviews', icon: 'reviews' },
-    { href: '/pages/student/profile.html', label: 'Profile', icon: 'profile' }
+    { href: ROOT + 'pages/landlord/landlord.html', label: 'Dashboard', icon: 'dashboard' },
+    { href: ROOT + 'pages/landlord/landlord-rooms.html', label: 'Rooms', icon: 'rooms' },
+    { href: ROOT + 'pages/landlord/landlord-messages.html', label: 'Messages', icon: 'messages', badge: true },
+    { href: ROOT + 'pages/landlord/landlord-concerns.html', label: 'Concerns', icon: 'concerns', concerns: true },
+    { href: ROOT + 'pages/landlord/landlord-reviews.html', label: 'Reviews', icon: 'reviews' },
+    { href: ROOT + 'pages/student/profile.html', label: 'Profile', icon: 'profile' }
   ];
   var here = (location.pathname.split('/').pop() || '').toLowerCase();
 
@@ -40,12 +41,12 @@
     else a.textContent = String(user.name || user.email || 'M').charAt(0).toUpperCase();
     return a;
   }
-  function logout() { if (window.HB_AUTH && HB_AUTH.logout) { HB_AUTH.logout(); return; } try { localStorage.removeItem('homebase_currentUser'); } catch (e) {} window.location.href = '/index.html'; }
+  function logout() { if (window.HB_AUTH && HB_AUTH.logout) { HB_AUTH.logout(); return; } try { localStorage.removeItem('homebase_currentUser'); } catch (e) {} window.location.href = ROOT + 'index.html'; }
   function brand() {
-    var a = el('a', 'll-brand'); a.href = '/pages/landlord/landlord.html'; a.setAttribute('aria-label', 'Homebase dashboard');
+    var a = el('a', 'll-brand'); a.href = ROOT + 'pages/landlord/landlord.html'; a.setAttribute('aria-label', 'Homebase dashboard');
     a.innerHTML = LOGO; a.appendChild(el('span', null, 'Homebase')); return a;
   }
-  function mark(a, item) { if (here === item.href) a.setAttribute('aria-current', 'page'); }
+  function mark(a, item) { if (here === item.href.split('/').pop().toLowerCase()) a.setAttribute('aria-current', 'page'); }
 
   document.body.classList.add('ll-body');
   document.documentElement.style.scrollPaddingTop = '5rem'; // Offset anchor links below mobile header
@@ -68,7 +69,7 @@
   });
   sideNav.appendChild(ul); side.appendChild(sideNav);
   var me = el('div', 'll-user');
-  var meLink = el('a', 'll-user-link flex-1'); meLink.href = '/pages/student/profile.html'; meLink.setAttribute('aria-label', 'My profile');
+  var meLink = el('a', 'll-user-link flex-1'); meLink.href = ROOT + 'pages/student/profile.html'; meLink.setAttribute('aria-label', 'My profile');
   meLink.appendChild(avatar('nav-avatar'));
   var who = el('span', 'll-who'); var nm = el('span', 'll-name', String(user.name || user.email || '')); nm.id = 'nav-name';
   who.appendChild(nm); who.appendChild(el('span', 'll-role', 'Landlord')); meLink.appendChild(who);
@@ -96,7 +97,7 @@
   if (!mThemeToggle.innerHTML) mThemeToggle.innerHTML = themeToggle.innerHTML;
   right.appendChild(mThemeToggle);
 
-  var pl = el('a', 'rounded-full'); pl.href = '/pages/student/profile.html'; pl.setAttribute('aria-label', 'My profile'); pl.className = 'll-user-link'; pl.style.padding = '0'; pl.appendChild(avatar(null));
+  var pl = el('a', 'rounded-full'); pl.href = ROOT + 'pages/student/profile.html'; pl.setAttribute('aria-label', 'My profile'); pl.className = 'll-user-link'; pl.style.padding = '0'; pl.appendChild(avatar(null));
   var menuBtn = el('button', 'btn btn-outline text-sm !min-h-[38px] !px-3', 'Menu');
   menuBtn.type = 'button'; menuBtn.id = 'menu-btn'; menuBtn.setAttribute('aria-expanded', 'false');
   right.appendChild(pl); right.appendChild(menuBtn); top.appendChild(right);
